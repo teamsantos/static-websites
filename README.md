@@ -16,9 +16,9 @@ No coding required. Just pick, upload, and go live.
 ## 🌐 Live Examples
 
 Check out some sites we've already built:
-- [Example 1 – Portfolio](https://example.com/portfolio)
-- [Example 2 – Small Business](https://example.com/business)
-- [Example 3 – Event Page](https://example.com/event)
+<!-- - [Example 1 – Portfolio](https://example.com/portfolio) -->
+<!-- - [Example 2 – Small Business](https://example.com/business) -->
+<!-- - [Example 3 – Event Page](https://example.com/event) -->
 
 ---
 
@@ -44,8 +44,7 @@ Check out some sites we've already built:
 ## 🛠 Built With
 
 - HTML/CSS/JS
-- Static site generators (e.g., Eleventy, Astro, or similar)
-- Optional deployment via GitHub Pages / Netlify / Vercel
+- Deployment to https://<your-org-name>.e-link.pt or to a custom URL
 
 ---
 
@@ -53,23 +52,4 @@ Check out some sites we've already built:
 
 Want something unique? We offer custom-built static websites tailored to your brand and needs.
 
-📧 Contact us at: [your-email@example.com]
-
----
-
-## 📄 License
-
-MIT License
-
----
-
-## 🤝 Contribute
-
-Pull requests and issues are welcome. If you want to contribute or add templates, feel free to fork and submit a PR.
-
----
-
-## 🔗 Links
-
-- [Documentation](./docs/README.md)
-- [Issue Tracker](https://github.com/your-org/static-website-creator/issues)
+📧 Contact us at: [filipesantosdev@gmail.com]
