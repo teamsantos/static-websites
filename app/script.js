@@ -3,6 +3,23 @@ import translationsPT from '../assets/langs/pt.json' with { type: 'json' };
 
 const lang = translationsPT;
 
+const injectPlans = (plans) => {
+    let container = document.getElementById("plans");
+    plans.forEach((plan) => {
+        container.innerHTML += `
+            <div class="plan-item">
+                <div class="plan-item-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        ${plan.svg}
+                    </svg>
+                </div>
+                <h3>${plan.name}</h3>
+                <h5>${plan.price}</h5>
+                <p>${plan.description}</p>
+            </div>`;
+    });
+}
+
 const injectBenifits = (benifits) => {
     let container = document.getElementById("benifits");
     benifits.forEach((benifit) => {
@@ -103,6 +120,11 @@ async function loadTranslations() {
         let benifits = lang["getStarted.benifits"];
         if (benifits) {
             injectBenifits(benifits)
+        }
+
+        let plans = lang["plans.list"];
+        if (plans) {
+            injectPlans(plans);
         }
 
     } catch (err) {
