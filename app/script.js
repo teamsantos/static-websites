@@ -1,9 +1,12 @@
-import ptPT from '../assets/langs/pt_pt.json';
+import translationsPT from '../assets/langs/pt.json' with { type: 'json' };
+// import translationsFR from '../assets/langs/fr.json' with { type: 'json' };
+
+const lang = translationsPT;
 
 const injectBenifits = (benifits) => {
     let container = document.getElementById("benifits");
     benifits.forEach((benifit) => {
-        container += `
+        container.innerHTML += `
             <div class="benefit-item">
                 <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M9 12l2 2 4-4"/>
@@ -73,33 +76,31 @@ const injectHeroFeatures = (heroFeatures) => {
 
 async function loadTranslations() {
     try {
-        const translations = await ptPT.json();
-
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
-            if (translations[key]) {
-                el.textContent = translations[key];
+            if (lang[key]) {
+                el.textContent = lang[key];
             } else {
                 console.warn(`Missing translation for key: ${key}`);
             }
         });
 
-        let heroFeatures = ptPT["hero.features"];
+        let heroFeatures = lang["hero.features"];
         if (heroFeatures) {
             injectHeroFeatures(heroFeatures);
         }
 
-        let features = ptPT["features"];
+        let features = lang["features"];
         if (features) {
-            injectFeatures();
+            injectFeatures(features);
         }
 
-        let templates = ptPT["templates"];
+        let templates = lang["templates"];
         if (templates) {
-            injectTemplates(templates, ptPT["template.select"] ?? "Use this template");
+            injectTemplates(templates, lang["template.select"] ?? "Use this template");
         }
 
-        let benifits = ptPT["benifits"];
+        let benifits = lang["getStarted.benifits"];
         if (benifits) {
             injectBenifits(benifits)
         }

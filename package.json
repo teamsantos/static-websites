@@ -1,0 +1,22 @@
+{
+  "name": "static-websites",
+  "version": "1.0.0",
+  "description": "A static website generator.",
+  "scripts": {
+    "start": "http-server & sleep 1 && open http://localhost:8080",
+    "build": "echo 'This will build into a single html file'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fmpisantos/static-websites.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fmpisantos/static-websites/issues"
+  },
+  "homepage": "https://github.com/fmpisantos/static-websites#readme",
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
+}

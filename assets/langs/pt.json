@@ -1,5 +1,6 @@
-export default  ptPT = {
+{
     "name": "Internet CC",
+    "title": "StaticBuilder - Crie Websites Estáticos Ultra-Rápidos",
     "footer.rights": "© 2025 Internet CC. Todos os direitos reservados.",
     "hero.title": "Crie Websites Estáticos",
     "hero.highlight": "Ultra-Rápidos",
@@ -142,5 +143,5 @@ export default  ptPT = {
     "support.title": "Suporte",
     "support.documentation": "Documentação",
     "support.help": "Centro de Ajuda",
-    "support.contact": "Contacte-nos",
+    "support.contact": "Contacte-nos"
 }
