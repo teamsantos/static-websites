@@ -4,21 +4,24 @@ import translationsPT from '../assets/langs/pt.json' with { type: 'json' };
 const lang = translationsPT;
 
 const injectPlans = (plans) => {
-    let container = document.getElementById("plans");
-    plans.forEach((plan) => {
-        container.innerHTML += `
-            <div class="plan-item">
-                <div class="plan-item-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        ${plan.svg}
-                    </svg>
-                </div>
-                <h3>${plan.name}</h3>
-                <h5>${plan.price}</h5>
-                <p>${plan.description}</p>
-            </div>`;
-    });
-}
+    const container = document.getElementById("plans");
+    container.innerHTML = plans.map((plan) => `
+        <div class="plan-item">
+            <div class="plan-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    ${plan.svg}
+                </svg>
+            </div>
+            <h3>${plan.name}</h3>
+            <h5 style="padding-bottom: 10px;">${plan.price}</h5>
+            <ul>
+                ${plan.description.map(point => `
+                    <li><p>${point}</p></li>
+                `).join("")}
+            </ul>
+        </div>
+    `).join("");
+};
 
 const injectBenifits = (benifits) => {
     let container = document.getElementById("benifits");
