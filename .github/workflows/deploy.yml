@@ -29,9 +29,6 @@ jobs:
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Debug AWS Region
-        run: echo "AWS Region is '${{ secrets.AWS_REGION }}'"
-      
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
