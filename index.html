@@ -9,7 +9,7 @@
         <script type="module" src="app/script.js"></script>
     </head>
     <body>
-        <section class="hero" id="hero">
+        <section class="hero" id="_hero">
             <div class="container">
                 <div class="hero-content">
                     <h1 class="hero-title">
@@ -18,12 +18,12 @@
                     </h1>
                     <p class="hero-description" data-i18n="hero.description"></p>
                     <div class="hero-buttons">
-                        <button class="btn btn-primary" id="start-building" data-i18n="hero.start" redirect-to="plans" >
+                        <button class="btn btn-primary" id="start-building" data-i18n="hero.start" redirect-to="_plans" >
                             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <path d="M5 12h14M12 5l7 7-7 7"/>
                             </svg>
                         </button>
-                        <button class="btn btn-outline" id="view-templates" data-i18n="hero.templates" redirect-to="templates"></button>
+                        <button class="btn btn-outline" id="view-templates" data-i18n="hero.templates" redirect-to="_templates"></button>
                     </div>
                 </div>
 
@@ -31,7 +31,7 @@
             </div>
         </section>
 
-        <section class="features" id="features">
+        <section class="features" id="_features">
             <div class="container">
                 <div class="section-header">
                     <h2 data-i18n="features.title" ></h2>
@@ -42,7 +42,7 @@
             </div>
         </section>
 
-        <section class="plans" id="plans">
+        <section class="plans" id="_plans">
             <div class="container">
                 <div class="section-header">
                     <h2 data-i18n="plans.title"></h2>
@@ -52,7 +52,7 @@
             </div>
         </section>
 
-        <section class="templates" id="templates">
+        <section class="templates" id="_templates">
             <div class="container">
                 <div class="section-header">
                     <h2 data-i18n="templates.title" ></h2>
@@ -66,7 +66,7 @@
                 </div>
         </section>
 
-        <section class="get-started" id="get-started">
+        <section class="get-started" id="_get-started">
             <div class="container">
                 <div class="section-header">
                     <h2 data-i18n="getStarted.title"></p>
@@ -94,12 +94,14 @@
                 </div>
         </section>
 
-        <footer class="footer" id="footer">
+        <footer class="footer" id="_footer">
             <div class="container">
                 <div class="footer-content">
                     <div class="footer-main">
                         <h3 data-i18n="name"></h3>
-                        <p data-i18n="footer.description"></p>
+                        <center>
+                            <p data-i18n="footer.description"></p>
+                        </center>
                         <div class="social-links">
                             <a href="https://github.com/fmpisantos" aria-label="GitHub">
                                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -123,15 +125,15 @@
                         <div class="footer-column">
                             <h4 data-i18n="product.title" ></h4>
                             <ul>
-                                <li><a redirect-to="plans" data-i18n="product.model"></a></li>
-                                <li><a style="cursor: pointer" redirect-to="features" data-i18n="product.functionality"></a></li>
-                                <li><a style="cursor: pointer" redirect-to="plans" data-i18n="product.prices"></a></li>
+                                <li><a redirect-to="_plans" data-i18n="product.model"></a></li>
+                                <li><a style="cursor: pointer" redirect-to="_features" data-i18n="product.functionality"></a></li>
+                                <li><a style="cursor: pointer" redirect-to="_plans" data-i18n="product.prices"></a></li>
                             </ul>
                         </div>
                         <div class="footer-column">
                             <h4 data-i18n="support.title"></h4>
                             <ul>
-                                <li><a style="cursor: pointer" redirect-to="getStarted" data-i18n="support.contact"></a></li>
+                                <li><a style="cursor: pointer" redirect-to="_getStarted" data-i18n="support.contact"></a></li>
                             </ul>
                         </div>
                     </div>
