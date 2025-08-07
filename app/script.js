@@ -105,6 +105,20 @@ async function loadTranslations() {
             }
         });
 
+        document.querySelectorAll("[redirect-to]").forEach(el => {
+            let key = el.getAttribute("redirect-to");
+            if (!key.startsWith("#")) {
+                key = `#${key}`;
+            }
+            el.addEventListener("click", () => {
+                const target = document.querySelector(key);
+                if (target) {
+                    target.scrollIntoView({ behavior: "smooth" });
+                }
+            });
+            el.style.cursor = "pointer";
+        });
+
         let heroFeatures = lang["hero.features"];
         if (heroFeatures) {
             injectHeroFeatures(heroFeatures);
