@@ -73,6 +73,17 @@ jobs:
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
+      - name: Commit and push version bump
+        working-directory: ${{ github.workspace }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to $(node -p "require('./package.json').version") [skip ci]" || echo "No changes to commit"
+          git push origin master
+
       - name: Upload versioned build to S3
         run: |
           aws s3 sync $BUILD_DIR s3://$S3_BUCKET/v.${{ steps.get_version.outputs.version }}/ \
@@ -98,14 +109,3 @@ jobs:
             --cache-control "no-cache, no-store, must-revalidate" \
             --content-type "text/html" \
             --include "*.html"
-
-      - name: Commit and push version bump
-        working-directory: ${{ github.workspace }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json
-          git commit -m "chore: bump version to $(node -p "require('./package.json').version") [skip ci]" || echo "No changes to commit"
-          git push origin master
