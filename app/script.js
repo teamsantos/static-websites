@@ -3,6 +3,59 @@ import translationsPT from '../assets/langs/pt.json' with { type: 'json' };
 
 const lang = translationsPT;
 
+function addRippleEffect() {
+    document.querySelectorAll('.btn').forEach((button) => {
+        button.addEventListener('click', function (e) {
+            const existing = this.querySelector('.ripple');
+            if (existing) existing.remove();
+            const circle = document.createElement('span');
+            const diameter = Math.max(this.clientWidth, this.clientHeight);
+            const radius = diameter / 2;
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${e.clientX - (this.getBoundingClientRect().left + radius)}px`;
+            circle.style.top = `${e.clientY - (this.getBoundingClientRect().top + radius)}px`;
+            circle.classList.add('ripple');
+            this.appendChild(circle);
+        });
+    });
+}
+
+function setupRevealOnScroll() {
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        },
+        { threshold: 0.14 }
+    );
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+}
+
+function setupTiltEffects() {
+    const tiltSelectors = ['.feature-item', '.plan-item', '.template-card'];
+    const tiltElements = document.querySelectorAll(tiltSelectors.join(','));
+    const constrain = 18;
+    tiltElements.forEach((el) => {
+        el.addEventListener('mousemove', (e) => {
+            const rect = el.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = (e.clientX - cx) / rect.width;
+            const dy = (e.clientY - cy) / rect.height;
+            const rotateX = (+constrain * dy).toFixed(2);
+            const rotateY = (-constrain * dx).toFixed(2);
+            el.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+        el.addEventListener('mouseleave', () => {
+            el.style.transform = '';
+        });
+    });
+}
+
 const injectPlans = (plans) => {
     const container = document.getElementById("plans");
     container.innerHTML = plans.map((plan) => `
@@ -143,6 +196,11 @@ async function loadTranslations() {
         if (plans) {
             injectPlans(plans);
         }
+
+        // Enhance UI interactions
+        addRippleEffect();
+        setupRevealOnScroll();
+        setupTiltEffects();
 
     } catch (err) {
         console.error("Translation loading failed:", err);

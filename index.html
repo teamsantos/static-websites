@@ -11,7 +11,7 @@
     <body>
         <section class="hero" id="_hero">
             <div class="container">
-                <div class="hero-content">
+                <div class="hero-content reveal">
                     <h1 class="hero-title">
                         <span data-i18n="hero.title"></span>
                         <span class="gradient-text" data-i18n="hero.highlight"></span>
@@ -27,24 +27,24 @@
                     </div>
                 </div>
 
-                <div class="hero-features" id="hero-features"/>
+                <div class="hero-features" id="hero-features"></div>
             </div>
         </section>
 
         <section class="features" id="_features">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header reveal">
                     <h2 data-i18n="features.title" ></h2>
                     <p data-i18n="features.subTitle" ></p>
                 </div>
 
-                <div class="features-grid" id="features"/>
+                <div class="features-grid" id="features"></div>
             </div>
         </section>
 
         <section class="plans" id="_plans">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header reveal">
                     <h2 data-i18n="plans.title"></h2>
                     <p data-i18n="plans.subTitle"></p>
                 </div>
@@ -54,7 +54,7 @@
 
         <section class="templates" id="_templates">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header reveal">
                     <h2 data-i18n="templates.title" ></h2>
                     <p data-i18n="templates.subTitle"></p>
                 </div>
@@ -64,17 +64,18 @@
                 <div class="templates-footer">
                     <button class="btn btn-outline btn-large" data-i18n="templates.seeAll"></button>
                 </div>
+            </div>
         </section>
 
         <section class="get-started" id="_get-started">
             <div class="container">
-                <div class="section-header">
-                    <h2 data-i18n="getStarted.title"></p>
+                <div class="section-header reveal">
+                    <h2 data-i18n="getStarted.title"></h2>
                         <p data-i18n="getStarted.subTitle"></p>
                 </div>
 
                 <div class="get-started-content">
-                    <div class="signup-card">
+                    <div class="signup-card reveal">
                         <h3 data-i18n="getStarted.content.title" ></h3>
                         <p data-i18n="getStarted.content.subTitle"></p>
                         <form class="signup-form" id="signup-form">
@@ -90,8 +91,9 @@
                         </form>
                     </div>
 
-                    <div class="benefits-list" id="benifits"></div>
+                    <div class="benefits-list reveal" id="benifits"></div>
                 </div>
+            </div>
         </section>
 
         <footer class="footer" id="_footer">
@@ -99,9 +101,7 @@
                 <div class="footer-content">
                     <div class="footer-main">
                         <h3 data-i18n="name"></h3>
-                        <center>
-                            <p data-i18n="footer.description"></p>
-                        </center>
+                        <p data-i18n="footer.description"></p>
                         <div class="social-links">
                             <a href="https://github.com/fmpisantos" aria-label="GitHub">
                                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -133,7 +133,7 @@
                         <div class="footer-column">
                             <h4 data-i18n="support.title"></h4>
                             <ul>
-                                <li><a style="cursor: pointer" redirect-to="_getStarted" data-i18n="support.contact"></a></li>
+                                <li><a style="cursor: pointer" redirect-to="_get-started" data-i18n="support.contact"></a></li>
                             </ul>
                         </div>
                     </div>
