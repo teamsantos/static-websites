@@ -36,10 +36,11 @@ function setupRevealOnScroll() {
 }
 
 function setupTiltEffects() {
-    const tiltSelectors = ['.feature-item', '.plan-item', '.template-card'];
+    const tiltSelectors = ['.feature-card', '.feature-item', '.plan-item', '.template-card'];
     const tiltElements = document.querySelectorAll(tiltSelectors.join(','));
-    const constrain = 18;
     tiltElements.forEach((el) => {
+        const tilt = 800;
+        const constrain = el.classList.contains("feature-card") ? 36 : 18;
         el.addEventListener('mousemove', (e) => {
             const rect = el.getBoundingClientRect();
             const cx = rect.left + rect.width / 2;
@@ -48,7 +49,7 @@ function setupTiltEffects() {
             const dy = (e.clientY - cy) / rect.height;
             const rotateX = (+constrain * dy).toFixed(2);
             const rotateY = (-constrain * dx).toFixed(2);
-            el.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            el.style.transform = `perspective(${tilt}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
         });
         el.addEventListener('mouseleave', () => {
             el.style.transform = '';

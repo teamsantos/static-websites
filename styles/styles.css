@@ -1,4 +1,5 @@
 :root {
+    --color-soft-white: #cbd5e1;
     --color-bg: #ffffff;
     --color-text: #0f172a;
     --color-muted: #475569;
@@ -12,6 +13,8 @@
     --color-ring: rgb(var(--primary-rgb) / 0.35);
     --card-border: rgb(var(--primary-strong-rgb) / 0.15);
     --card-bg: rgba(255, 255, 255, 0.75);
+    /* Global border color for the theme */
+    --color-border: var(--color-primary-strong);
 }
 
 /* Reset and Base Styles */
@@ -80,7 +83,7 @@ p {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--color-primary-strong), var(--color-primary));
+    background: linear-gradient(135deg, var(--color-border), var(--color-primary));
     color: white;
 }
 
@@ -92,14 +95,25 @@ p {
 
 .btn-outline {
     background: transparent;
-    color: var(--color-primary-strong);
-    border: 2px solid var(--color-primary-strong);
+    color: var(--color-border);
+    border: 2px solid var(--color-border);
 }
 
 .btn-outline:hover {
-    background: linear-gradient(135deg, var(--color-primary-strong), var(--color-primary));
+    background: linear-gradient(135deg, var(--color-border), var(--color-primary));
     color: white;
     box-shadow: 0 10px 24px -12px var(--color-ring);
+}
+
+/* Glassy outline button variant for hero */
+.btn-glass {
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--color-border);
+}
+.btn-glass:hover {
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .btn-large {
@@ -203,7 +217,7 @@ p {
     max-width: 48rem;
     margin-left: auto;
     margin-right: auto;
-    color: #cbd5e1;
+    color: va(--color-soft-white);
 }
 
 .hero-buttons {
@@ -229,12 +243,12 @@ p {
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 9999px;
-    border: 1px solid var(--card-border);
-    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--card-soft-white);
+    background: rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-primary-strong);
+    color: var(--color-soft-white);
     box-shadow: 0 10px 25px -10px rgba(0,0,0,0.2);
     cursor: pointer;
     transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
@@ -242,8 +256,6 @@ p {
 
 .scroll-cue:hover {
     transform: translateX(-50%) translateY(-2px);
-    box-shadow: 0 18px 40px -12px var(--color-ring);
-    background: rgba(255, 255, 255, 0.85);
 }
 
 .scroll-cue svg {
@@ -256,6 +268,9 @@ p {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 1rem;
+    /* box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.25); */
+    z-index: 1;
 }
 
 .feature-icon {
@@ -298,9 +313,9 @@ p {
     font-size: 0.875rem;
 }
 
-/* Improve contrast for hero features text over dark hero */
-.hero .feature-card h3 { color: #e2e8f0; }
-.hero .feature-card p { color: #94a3b8; }
+/* Hero feature card text colors on opaque white */
+.hero .feature-card h3 { color: var(--color-soft-white); opacity: 0.8; }
+.hero .feature-card p { color: var(--color-soft-white); opacity: 0.8; }
 
 .plans {
     padding: 6rem 0;
@@ -332,7 +347,7 @@ p {
     background: var(--card-bg);
     padding: 2rem;
     border-radius: 1rem;
-    border: 1px solid var(--card-border);
+    border: 1px solid var(--color-border);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
     backdrop-filter: saturate(120%) blur(8px);
     -webkit-backdrop-filter: saturate(120%) blur(8px);
@@ -355,7 +370,7 @@ p {
     align-items: center;
     justify-content: center;
     margin-bottom: 1.5rem;
-    color: var(--color-primary-strong);
+    color: var(--color-border);
 }
 
 .feature-item-icon svg {
@@ -384,7 +399,7 @@ p {
     background: var(--card-bg);
     padding: 2rem;
     border-radius: 1rem;
-    border: 1px solid var(--card-border);
+    border: 1px solid var(--color-border);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
     backdrop-filter: saturate(120%) blur(8px);
     -webkit-backdrop-filter: saturate(120%) blur(8px);
@@ -407,7 +422,7 @@ p {
     align-items: center;
     justify-content: center;
     margin-bottom: 1.5rem;
-    color: var(--color-primary-strong);
+    color: var(--color-border);
 }
 
 .plan-item-icon svg {
@@ -442,7 +457,7 @@ p {
     background: var(--card-bg);
     border-radius: 1rem;
     overflow: hidden;
-    border: 1px solid var(--card-border);
+    border: 1px solid var(--color-border);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
     backdrop-filter: saturate(120%) blur(6px);
     -webkit-backdrop-filter: saturate(120%) blur(6px);
@@ -485,7 +500,7 @@ p {
 
 .template-category {
     background: rgb(var(--primary-rgb) / 0.12);
-    color: var(--color-primary-dark);
+    color: var(--color-border);
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     font-size: 0.875rem;
@@ -624,7 +639,7 @@ p {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #cbd5e1;
+    color: va(--color-soft-white);
     transition: all 0.2s ease;
 }
 
