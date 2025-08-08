@@ -153,13 +153,17 @@ p {
 /* Hero Section */
 .hero {
     position: relative;
-    overflow: hidden;
+    /* Allow hero content to extend on small screens */
+    overflow: visible;
     background: linear-gradient(180deg, #0b1220 0%, #0d1b2a 50%, #0b1220 100%);
     padding: clamp(1.25rem, 4vh, 3rem) 0;
+    /* Add extra bottom padding for scroll cue and safe area */
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom));
     text-align: center;
-    height: 100vh;
-    height: 100svh;
-    height: 100dvh;
+    /* Use min-height so content isn't clipped on mobile */
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
 }
@@ -217,11 +221,12 @@ p {
     max-width: 48rem;
     margin-left: auto;
     margin-right: auto;
-    color: va(--color-soft-white);
+    color: var(--color-soft-white);
 }
 
 .hero-buttons {
     display: flex;
+    flex-direction: row;
     gap: 1.5rem;
     justify-content: center;
     flex-wrap: wrap;
@@ -238,12 +243,12 @@ p {
 .scroll-cue {
     position: absolute;
     left: 50%;
-    bottom: 1.25rem;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom));
     transform: translateX(-50%);
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 9999px;
-    border: 1px solid var(--card-soft-white);
+    border: 1px solid var(--color-soft-white);
     background: rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
@@ -252,6 +257,9 @@ p {
     box-shadow: 0 10px 25px -10px rgba(0,0,0,0.2);
     cursor: pointer;
     transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    z-index: 3; /* ensure above content */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .scroll-cue:hover {
@@ -639,7 +647,7 @@ p {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: va(--color-soft-white);
+    color: var(--color-soft-white);
     transition: all 0.2s ease;
 }
 
@@ -757,6 +765,8 @@ p {
 @media (max-width: 480px) {
     .hero {
         padding: 4rem 0;
+        /* Keep extra space for the scroll cue on small screens */
+        padding-bottom: calc(4rem + env(safe-area-inset-bottom));
     }
 
     .hero-title {

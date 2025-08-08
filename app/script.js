@@ -254,9 +254,36 @@ async function loadTranslations() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadTranslations();
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadTranslations();
+    setupScrollCueAutoHide();
 });
+
+function setupScrollCueAutoHide() {
+    const hero = document.querySelector('.hero');
+    const cue = document.querySelector('.scroll-cue');
+    if (!hero || !cue) return;
+
+    const getViewportHeight = () => (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+
+    const update = () => {
+        const heroHeight = hero.getBoundingClientRect().height;
+        const viewportHeight = getViewportHeight();
+        const fits = Math.ceil(heroHeight) <= Math.ceil(viewportHeight + 1);
+        cue.style.display = fits ? '' : 'none';
+        cue.setAttribute('aria-hidden', String(!fits));
+    };
+
+    // Track hero size and viewport changes
+    const ro = new ResizeObserver(update);
+    ro.observe(hero);
+    window.addEventListener('resize', update, { passive: true });
+    window.addEventListener('orientationchange', update);
+    window.addEventListener('load', update);
+
+    requestAnimationFrame(update);
+    setTimeout(update, 300);
+}
 
 // Stars background animation for hero
 (() => {
