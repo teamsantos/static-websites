@@ -167,6 +167,9 @@ async function loadTranslations() {
                 const target = document.querySelector(key);
                 if (target) {
                     target.scrollIntoView({ behavior: "smooth" });
+                    // pulse effect on arrival
+                    target.classList.add('section-pulse');
+                    setTimeout(() => target.classList.remove('section-pulse'), 600);
                 }
             });
             el.style.cursor = "pointer";
@@ -199,8 +202,25 @@ async function loadTranslations() {
 
         // Enhance UI interactions
         addRippleEffect();
-        setupRevealOnScroll();
         setupTiltEffects();
+
+        // Stagger children in grids
+        const staggerParents = [
+            document.querySelector('.hero-features'),
+            document.querySelector('.features-grid'),
+            document.querySelector('.plans-grid'),
+            document.querySelector('.templates-grid')
+        ];
+        staggerParents.forEach((parent) => {
+            if (!parent) return;
+            [...parent.children].forEach((child, idx) => {
+                child.style.transitionDelay = `${Math.min(idx * 60, 420)}ms`;
+                child.classList.add('reveal');
+            });
+        });
+
+        // Now observe all reveals (including newly added ones)
+        setupRevealOnScroll();
 
     } catch (err) {
         console.error("Translation loading failed:", err);
