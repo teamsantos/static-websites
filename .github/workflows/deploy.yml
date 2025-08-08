@@ -100,6 +100,7 @@ jobs:
             --include "*.html"
 
       - name: Commit and push version bump
+        working-directory: ${{ github.workspace }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
