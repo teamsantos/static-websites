@@ -83,7 +83,7 @@ function animateScrollTo(targetY, durationMs = 2200) {
 const injectPlans = (plans) => {
     const container = document.getElementById("plans");
     container.innerHTML = plans.map((plan) => `
-        <div class="plan-item">
+        <div class="plan-item" redirect-to="${plan["redirect-to"]}" >
             <div class="plan-item-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     ${plan.svg}
@@ -182,26 +182,6 @@ async function loadTranslations() {
             }
         });
 
-        document.querySelectorAll("[redirect-to]").forEach(el => {
-            let key = el.getAttribute("redirect-to");
-            if (!key.startsWith("#")) {
-                key = `#${key}`;
-            }
-            // add href for anchors for accessibility and fallback
-            if (el.tagName === 'A' && !el.getAttribute('href')) {
-                el.setAttribute('href', key);
-            }
-            el.addEventListener("click", (evt) => {
-                const target = document.querySelector(key);
-                if (!target) return;
-                // prevent default jumps (esp. if element is an <a>)
-                if (evt) evt.preventDefault();
-                const top = target.getBoundingClientRect().top + window.pageYOffset;
-                animateScrollTo(top, 1000);
-            });
-            el.style.cursor = "pointer";
-        });
-
         let heroFeatures = lang["hero.features"];
         if (heroFeatures) {
             injectHeroFeatures(heroFeatures);
@@ -248,6 +228,26 @@ async function loadTranslations() {
 
         // Now observe all reveals (including newly added ones)
         setupRevealOnScroll();
+
+        document.querySelectorAll("[redirect-to]").forEach(el => {
+            let key = el.getAttribute("redirect-to");
+            if (!key.startsWith("#")) {
+                key = `#${key}`;
+            }
+            // add href for anchors for accessibility and fallback
+            if (el.tagName === 'A' && !el.getAttribute('href')) {
+                el.setAttribute('href', key);
+            }
+            el.addEventListener("click", (evt) => {
+                const target = document.querySelector(key);
+                if (!target) return;
+                // prevent default jumps (esp. if element is an <a>)
+                if (evt) evt.preventDefault();
+                const top = target.getBoundingClientRect().top + window.pageYOffset;
+                animateScrollTo(top, 1000);
+            });
+            el.style.cursor = "pointer";
+        });
 
     } catch (err) {
         console.error("Translation loading failed:", err);

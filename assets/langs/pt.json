@@ -163,7 +163,8 @@
         "Usa um dos nossos templates"
       ],
       "price": "€4,99/mês",
-      "svg": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>\n<path d='M9 12l2 2 4-4'/>\n<circle cx='12' cy='12' r='10'/>\n</svg>"
+      "svg": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>\n<path d='M9 12l2 2 4-4'/>\n<circle cx='12' cy='12' r='10'/>\n</svg>",
+      "redirect-to": "_templates"
     },
     {
       "name": "Médio",
@@ -172,7 +173,8 @@
         "Um domínio personalizado"
       ],
       "price": "€8,99/mês (preço do dominio não incluido)",
-      "svg": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>\n<path d='M12 2l2.92 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 7.08-1.01L12 2z'/>\n</svg>"
+      "svg": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>\n<path d='M12 2l2.92 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 7.08-1.01L12 2z'/>\n</svg>",
+      "redirect-to": "_templates"
     },
     {
       "name": "Premium",
@@ -181,7 +183,8 @@
         "Dominio personalizado"
       ],
       "price": "14,99€ (preço do dominio não incluido)",
-      "svg": "<svg viewBox='0 0 24 24' fill='currentColor'>\n<path d='M12 2l2.92 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 7.08-1.01L12 2z'/>\n</svg>"
+      "svg": "<svg viewBox='0 0 24 24' fill='currentColor'>\n<path d='M12 2l2.92 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 7.08-1.01L12 2z'/>\n</svg>",
+      "redirect-to": "_get-started"
     }
   ]
 }
