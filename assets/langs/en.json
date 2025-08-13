@@ -1,0 +1,190 @@
+{
+  "name": "Internet CC",
+  "title": "StaticBuilder - Crie Websites Estáticos Ultra-Rápidos",
+  "footer.rights": "© 2025 Internet CC. Todos os direitos reservados.",
+  "hero.title": "Crie Websites Estáticos",
+  "hero.highlight": "Ultra-Rápidos",
+  "hero.description": "Crie websites bonitos, rápidos e seguros em minutos. Não é necessário programar. Escolha entre modelos profissionais e personalize com o nosso construtor intuitivo de arrastar e largar.",
+  "hero.start": "Ver Planos",
+  "hero.templates": "Ver Modelos",
+  "hero.features": [
+    {
+      "title": "Ultra-Rápido",
+      "description": "Optimizado para velocidade e desempenho",
+      "icon": {
+        "svg": "<polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'/>",
+        "color": "blue"
+      }
+    },
+    {
+      "title": "Seguro por Defeito",
+      "description": "Sem vulnerabilidades de servidor para se preocupar",
+      "icon": {
+        "svg": "<path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/>",
+        "color": "green"
+      }
+    },
+    {
+      "title": "CDN Global",
+      "description": "Implementado mundialmente para carregamento instantâneo",
+      "icon": {
+        "svg": "<circle cx='12' cy='12' r='10'/>\n<line x1='2' y1='12' x2='22' y2='12'/>\n<path d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/>",
+        "color": "purple"
+      }
+    }
+  ],
+  "features": [
+    {
+      "title": "Construtor Arrastar e Largar",
+      "description": "Editor visual intuitivo com componentes pré-construídos. Não são necessárias competências de programação.",
+      "icon": {
+        "svg": "<path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/>"
+      }
+    },
+    {
+      "title": "Responsivo para Telemóveis",
+      "description": "Todos os modelos são totalmente responsivos e ficam perfeitos em qualquer dispositivo.",
+      "icon": {
+        "svg": "<rect x='2' y='3' width='20' height='14' rx='2' ry='2'/>\n<line x1='8' y1='21' x2='16' y2='21'/>\n<line x1='12' y1='17' x2='12' y2='21'/>"
+      }
+    },
+    {
+      "title": "Optimizado para visibilidade",
+      "description": "Ferramentas integradas para ajudar o seu website a classificar-se melhor nos resultados de pesquisa.",
+      "icon": {
+        "svg": "<polyline points='16 18 22 12 16 6'/>\n<polyline points='8 6 2 12 8 18'/>"
+      }
+    },
+    {
+      "title": "Implementação com Um Clique",
+      "description": "Implemente em plataformas populares como Vercel, Netlify ou GitHub Pages instantaneamente.",
+      "icon": {
+        "svg": "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/>\n<polyline points='7 10 12 15 17 10'/>\n<line x1='12' y1='15' x2='12' y2='3'/>"
+      }
+    },
+    {
+      "title": "Desempenho em Primeiro",
+      "description": "Construções optimizadas com carregamento lazy, compressão de imagens e minificação.",
+      "icon": {
+        "svg": "<path d='M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/>\n<line x1='3' y1='6' x2='21' y2='6'/>\n<path d='M16 10a4 4 0 0 1-8 0'/>"
+      }
+    }
+  ],
+  "features.title": "Tudo o que precisa para criar websites incríveis",
+  "features.subTitle": "Funcionalidades poderosas que tornam a criação de websites simples e agradável",
+  "templates": [
+    {
+      "title": "Business Pro",
+      "subTitle": "Negócios",
+      "description": "Modelo profissional para negócios com secção hero, serviços e formulários de contacto",
+      "imageURL": "./assets/business/business.svg",
+      "url": "https://google.com"
+    },
+    {
+      "title": "Portfolio Criativo",
+      "subTitle": "Portfólio",
+      "description": "Mostre o seu trabalho com este modelo de portfólio deslumbrante",
+      "imageURL": "./assets/business/portfolio.svg",
+      "url": "https://google.com"
+    },
+    {
+      "title": "Restaurante Deluxe",
+      "subTitle": "Restaurante",
+      "description": "Perfeito para restaurantes com exibição de menu e sistema de reservas",
+      "imageURL": "./assets/business/restaurante.svg",
+      "url": "https://google.com"
+    },
+    {
+      "title": "Tech Startup",
+      "subTitle": "Tecnologia",
+      "description": "Modelo moderno para empresas de tecnologia e startups",
+      "imageURL": "./assets/business/startup.svg",
+      "url": "https://google.com"
+    },
+    {
+      "title": "Blog Minimalista",
+      "subTitle": "Blog",
+      "description": "Modelo de blog limpo e minimalista para criadores de conteúdo",
+      "imageURL": "./assets/business/blog.svg",
+      "url": "https://google.com"
+    },
+    {
+      "title": "Loja E-comerce",
+      "subTitle": "E-comerce",
+      "description": "Modelo completo de loja online com vitrine de produtos",
+      "imageURL": "./assets/business/ecomerce.svg",
+      "url": "https://google.com"
+    }
+  ],
+  "templates.title": "Escolha entre Modelos Profissionais",
+  "templates.subTitle": "Comece com um modelo bonito e personalize-o para corresponder à sua marca",
+  "templates.seeAll": "Ver Todos os Modelos",
+  "template.select": "Usar Este Modelo",
+  "getStarted.title": "Pronto para criar o seu website?",
+  "getStarted.subTitle": "Comece em menos de 2 minutos. Não é necessário cartão de crédito.",
+  "getStarted.content.title": "Comece a Construir Agora",
+  "getStarted.content.subTitle": "Introduza o seu email para criar a sua conta gratuita e começar a construir",
+  "getStarted.content.start": "Começar",
+  "getStarted.content.disclamer": "Ao inscrever-se, concorda com os nossos Termos de Serviço e Política de Privacidade",
+  "getStarted.benifits": [
+    {
+      "title": "Plano gratuito para sempre disponível"
+    },
+    {
+      "title": "Não é necessário conhecimento de programação"
+    },
+    {
+      "title": "Modelos profissionais incluídos"
+    },
+    {
+      "title": "Implementação com um clique"
+    },
+    {
+      "title": "Suporte ao cliente 24/7"
+    }
+  ],
+  "getStarted.": "",
+  "footer.description": "A forma mais fácil de criar websites estáticos bonitos, rápidos e seguros. Não é necessário programar, resultados profissionais garantidos.",
+  "product.title": "Producto",
+  "product.model": "Modelos",
+  "product.functionality": "Funcionalidades",
+  "product.prices": "Preços",
+  "product.examples": "Exemplos",
+  "support.title": "Suporte",
+  "support.documentation": "Documentação",
+  "support.help": "Centro de Ajuda",
+  "support.contact": "Contacte-nos",
+  "plans.title": "Planos",
+  "plans.subTitle": "Escolha o plano que melhor se adapta às suas necessidades",
+  "plans.list": [
+    {
+      "name": "Básico",
+      "description": [
+        "Usa um dos nossos templates"
+      ],
+      "price": "€4,99/mês",
+      "svg": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>\n<path d='M9 12l2 2 4-4'/>\n<circle cx='12' cy='12' r='10'/>\n</svg>",
+      "redirect-to": "_templates"
+    },
+    {
+      "name": "Médio",
+      "description": [
+        "Usa um dos nossos templates",
+        "Um domínio personalizado"
+      ],
+      "price": "€8,99/mês (preço do dominio não incluido)",
+      "svg": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>\n<path d='M12 2l2.92 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 7.08-1.01L12 2z'/>\n</svg>",
+      "redirect-to": "_templates"
+    },
+    {
+      "name": "Premium",
+      "description": [
+        "Website personalizado de acordo com o seu pedido",
+        "Dominio personalizado"
+      ],
+      "price": "14,99€ (preço do dominio não incluido)",
+      "svg": "<svg viewBox='0 0 24 24' fill='currentColor'>\n<path d='M12 2l2.92 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 7.08-1.01L12 2z'/>\n</svg>",
+      "redirect-to": "_get-started"
+    }
+  ]
+}

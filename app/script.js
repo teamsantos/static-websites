@@ -1,6 +1,7 @@
 import translationsPT from '../assets/langs/pt.json' with { type: 'json' };
+import translationsEN from '../assets/langs/en.json' with { type: 'json' };
 
-const lang = translationsPT;
+const lang = translationsEN;
 
 function addRippleEffect() {
     document.querySelectorAll('.btn').forEach((button) => {
