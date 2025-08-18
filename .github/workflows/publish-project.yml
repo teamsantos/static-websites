@@ -5,7 +5,12 @@ on:
     types:
       - completed
   push:
-    branches: [master]
+    branches: 
+      - master
+    paths-ignore:
+      - 'infra/**'
+      - 'package.json'
+      - 'package-lock.json'
 
 env:
   S3_BUCKET: teamsantos-static-websites
