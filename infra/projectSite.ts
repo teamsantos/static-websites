@@ -10,7 +10,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 interface ProjectSiteProps extends cdk.StackProps {
     projectName: string;
     domainName: string;
-    hostedZoneDomainName: string; // Changed from hostedZone to domain name
+    hostedZoneDomainName: string; 
     s3Bucket: string;
     region: string;
 }
