@@ -76,6 +76,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Install infra dependencies
         working-directory: infra
         run: npm ci
@@ -88,7 +95,7 @@ jobs:
           for project in "${PROJ_ARR[@]}"; do
             if [ -n "$project" ]; then
               echo "Deploying infra for $project"
-              npx cdk deploy --app "npx ts-node index.ts" --require-approval never -c projects="$project"
+              npx cdk deploy --require-approval never -c projects="$project"
             fi
           done
 
