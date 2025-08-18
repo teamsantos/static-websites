@@ -1,0 +1,77 @@
+name: Deploy Projects
+on:
+  push:
+    branches: [main]
+
+env:
+  S3_BUCKET: teamsantos-static-websites
+  BUILD_DIR: dist
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.changed.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: changed
+        run: |
+          # get list of changed project folders
+          CHANGED=$(git diff --name-only ${{ github.sha }} ${{ github.event.before }} \
+            | grep '^projects/' | cut -d/ -f2 | sort -u)
+          echo "projects=$CHANGED" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.projects != ''
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'master' && 'production' || 'staging' }}
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/static-websites:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy infrastructure
+        run: |
+          IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
+          for project in "${PROJ_ARR[@]}"; do
+            echo "Deploying infra for $project"
+            npx cdk deploy --require-approval never -c projects="$project"
+          done
+
+      - name: Wait for CDK outputs
+        id: cdk-outputs
+        run: |
+          IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
+          for project in "${PROJ_ARR[@]}"; do
+            BUCKET=$(aws cloudformation describe-stacks \
+              --stack-name Site-$project \
+              --query "Stacks[0].Outputs[?ExportName=='${project}-bucket'].OutputValue" \
+              --output text)
+            echo "${project}_BUCKET=$BUCKET" >> $GITHUB_ENV
+          done
+
+      - name: Build projects
+        run: |
+          IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
+          for project in "${PROJ_ARR[@]}"; do
+            npm run build -- --root projects/$project --outDir dist/$project
+          done
+
+      - name: Sync built sites
+        run: |
+          IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
+          for project in "${PROJ_ARR[@]}"; do
+            aws s3 sync $BUILD_DIR/$project s3://${project}_BUCKET/$project --delete
+          done
