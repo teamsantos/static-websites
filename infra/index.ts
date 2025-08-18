@@ -3,7 +3,7 @@ import { ProjectSite } from "./projectSite";
 
 const app = new cdk.App();
 const region = "eu-south-2";
-const domain = "e-info.link";
+const domain = "e-info.click";
 const s3Bucket = "teamsantos-static-websites";
 
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
