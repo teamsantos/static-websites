@@ -108,9 +108,15 @@ jobs:
         run: |
           echo "Checking if CDK bootstrap is needed..."
           # Check if bootstrap stack exists
-          if ! aws cloudformation describe-stacks --stack-name CDKToolkit --region us-east-1 2>/dev/null; then
-            echo "CDK not bootstrapped, running bootstrap..."
-            npx cdk bootstrap aws://${{ secrets.AWS_ACCOUNT_ID }}/us-east-1
+          if ! aws cloudformation describe-stacks --stack-name CDKToolkit 2>/dev/null; then
+
+            IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
+            for project in "${PROJ_ARR[@]}"; do
+            if [ -n "$project" ]; then
+                echo "CDK not bootstrapped, running bootstrap..."
+                npx cdk bootstrap --require-approval never -c "projects=$project"
+            fi
+            done
           else
             echo "CDK already bootstrapped"
           fi
