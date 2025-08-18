@@ -83,7 +83,7 @@ jobs:
           for project in "${PROJ_ARR[@]}"; do
             if [ -n "$project" ]; then
               echo "Deploying infra for $project"
-              npx cdk deploy --app "npx ts-node index.ts" --require-approval never -c projects="$project"
+              npx cdk deploy --app "npx ts-node infra/index.ts" --require-approval never -c projects="$project"
             fi
           done
 
