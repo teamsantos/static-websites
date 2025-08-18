@@ -1,7 +1,11 @@
 name: Deploy Projects
 on:
+  workflow_run:
+    workflows: ["Build & Push Docker Image"]
+    types:
+      - completed
   push:
-    branches: [main]
+    branches: [master]
 
 env:
   S3_BUCKET: teamsantos-static-websites

@@ -10,6 +10,7 @@ on:
     paths-ignore: # avoid redeploy on version bump commits
       - 'package.json'
       - 'package-lock.json'
+
 env:
   S3_BUCKET: teamsantos-static-websites
   BUILD_DIR: dist
