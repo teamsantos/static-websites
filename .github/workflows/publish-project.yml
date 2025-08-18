@@ -77,6 +77,7 @@ jobs:
         run: npm ci
 
       - name: Deploy infrastructure
+        shell: bash
         run: |
           IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
           for project in "${PROJ_ARR[@]}"; do
@@ -88,6 +89,7 @@ jobs:
 
       - name: Wait for CDK outputs
         id: cdk-outputs
+        shell: bash
         run: |
           IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
           for project in "${PROJ_ARR[@]}"; do
@@ -101,6 +103,7 @@ jobs:
           done
 
       - name: Build projects
+        shell: bash
         run: |
           IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
           for project in "${PROJ_ARR[@]}"; do
@@ -111,6 +114,7 @@ jobs:
           done
 
       - name: Sync built sites
+        shell: bash
         run: |
           IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
           for project in "${PROJ_ARR[@]}"; do
