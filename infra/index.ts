@@ -9,26 +9,23 @@ const s3Bucket = "teamsantos-static-websites"
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
 
 if (!projectsParam) {
-    throw new Error(
-        'No projects provided. Run with: cdk deploy -c projects="proj1,proj2"'
-    );
-}
+    console.log("No projects provided. Creating empty app for bootstrap.");
+} else {
+    const projects = projectsParam.split(",").map((p) => p.trim());
 
-const projects = projectsParam.split(",").map((p) => p.trim());
-
-projects.forEach((project) => {
-    // Create each ProjectSite as a separate Stack
-    new ProjectSite(app, `Site-${project}`, {
-        s3Bucket: s3Bucket,
-        region: region,
-        projectName: project,
-        domainName: `${project}.${domain}`,
-        hostedZoneDomainName: domain, // Pass domain name instead of hosted zone
-        env: {
-            account: process.env.CDK_DEFAULT_ACCOUNT,
-            region: "us-east-1", // CloudFront certs requirement (us-east-1)
-        },
+    projects.forEach((project) => {
+        new ProjectSite(app, `Site-${project}`, {
+            s3Bucket: s3Bucket,
+            region: region,
+            projectName: project,
+            domainName: `${project}.${domain}`,
+            hostedZoneDomainName: domain,
+            env: {
+                account: process.env.CDK_DEFAULT_ACCOUNT,
+                region: "us-east-1", // CloudFront certs requirement (us-east-1)
+            },
+        });
     });
-});
+}
 
 app.synth();
