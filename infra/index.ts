@@ -22,6 +22,7 @@ if (!projectsParam) {
 const projects = projectsParam.split(",").map((p) => p.trim());
 
 projects.forEach((project) => {
+    // Create each ProjectSite as a separate Stack
     new ProjectSite(app, `Site-${project}`, {
         s3Bucket: s3Bucket,
         region: region,
@@ -32,5 +33,8 @@ projects.forEach((project) => {
             account: process.env.CDK_DEFAULT_ACCOUNT,
             region: "us-east-1", // CloudFront certs requirement (us-east-1)
         },
+        stackName: `Site-${project}`, // Explicitly set stack name
     });
 });
+
+app.synth();
