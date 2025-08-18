@@ -27,25 +27,48 @@ jobs:
 
       - id: changed
         run: |
-          echo "Checking for newly added projects..."
+          echo "Checking for changed projects..."
+          echo "Before commit: ${{ github.event.before }}"
           echo "Current commit: ${{ github.sha }}"
-
-          # Get newly added directories under projects/ in the current commit
-          CHANGED=$(git diff --name-status "${{ github.event.before }}" "${{ github.sha }}" 2>/dev/null \
-              | grep '^A' \
-              | awk '{print $2}' \
-              | grep '^projects/' \
-              | cut -d/ -f2 \
-              | sort -u || echo "")
-
-          # Fallback if no changes detected
-          if [ -z "$CHANGED" ]; then
-              echo "No new projects detected"
+          
+          # Check if this is a manual dispatch with force deploy
+          if [ "${{ github.event.inputs.force_deploy_all }}" == "true" ]; then
+            echo "Force deploy all projects requested"
+            CHANGED=$(find projects -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
+          elif [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
+            # First push or new branch - check all project folders
+            echo "First push detected, checking all projects"
+            CHANGED=$(find projects -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
+          else
+            # Check if both commits exist
+            if git cat-file -e "${{ github.event.before }}" 2>/dev/null && git cat-file -e "${{ github.sha }}" 2>/dev/null; then
+              echo "Both commits found, doing normal diff"
+              CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" 2>/dev/null \
+                | grep '^projects/' | cut -d/ -f2 | sort -u || echo "")
+            else
+              echo "One or both commits not found, trying fallback methods..."
+              # Try HEAD~1 comparison
+              if git cat-file -e "HEAD~1" 2>/dev/null; then
+                echo "Using HEAD~1 comparison"
+                CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
+                  | grep '^projects/' | cut -d/ -f2 | sort -u || echo "")
+              else
+                # Last resort - deploy all projects
+                echo "Cannot determine changes, deploying all projects"
+                CHANGED=$(find projects -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
+              fi
+            fi
           fi
-
+          
+          # If still no changes detected, force deploy all as fallback
+          if [ -z "$CHANGED" ]; then
+            echo "No changes detected, falling back to deploy all projects"
+            CHANGED=$(find projects -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
+          fi
+          
           # Convert to space-separated string for output
           CHANGED_STR=$(echo "$CHANGED" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-          echo "Newly added projects: $CHANGED_STR"
+          echo "Changed projects: $CHANGED_STR"
           echo "projects=$CHANGED_STR" >> $GITHUB_OUTPUT
 
   deploy:
@@ -96,13 +119,17 @@ jobs:
         working-directory: infra
         shell: bash
         run: |
-          IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
-          for project in "${PROJ_ARR[@]}"; do
+            echo "Raw projects output: '${{ needs.detect-changes.outputs.projects }}'"
+            IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
+            for project in "${PROJ_ARR[@]}"; do
             if [ -n "$project" ]; then
               echo "Deploying infra for $project"
-              npx cdk deploy --require-approval never -c projects="$project"
+              # Fix: Make sure the context parameter is properly quoted and formatted
+              npx cdk deploy --require-approval never -c "projects=$project"
+              # Alternative: You might need to pass it differently depending on your CDK app
+              # npx cdk deploy --require-approval never --context "projects=$project"
             fi
-          done
+            done
 
       - name: Wait for CDK outputs
         working-directory: infra
