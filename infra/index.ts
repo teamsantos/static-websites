@@ -4,15 +4,23 @@ import { ProjectSite } from "./projectSite";
 const app = new cdk.App();
 const region = "eu-south-2";
 const domain = "e-info.link";
-const s3Bucket = "teamsantos-static-websites"
+const s3Bucket = "teamsantos-static-websites";
 
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
 
-if (!projectsParam) {
-    console.log("No projects provided. Creating empty app for bootstrap.");
-} else {
-    const projects = projectsParam.split(",").map((p) => p.trim());
+// Check if this is a bootstrap operation
+const isBootstrap = process.argv.some(arg => arg.includes('bootstrap'));
 
+if (!projectsParam) {
+    if (isBootstrap) {
+        console.log("Bootstrap mode detected. Skipping project stacks.");
+        // Create a minimal empty app for bootstrap
+    } else {
+        console.log("No projects provided. Creating empty app for bootstrap.");
+    }
+} else {
+    console.log(`Deploying projects: ${projectsParam}`);
+    const projects = projectsParam.split(",").map((p) => p.trim());
     projects.forEach((project) => {
         new ProjectSite(app, `Site-${project}`, {
             s3Bucket: s3Bucket,
