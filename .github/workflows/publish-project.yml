@@ -4,6 +4,12 @@ on:
     branches: [master]
     paths:
         - 'projects/**'
+  workflow_dispatch:
+    inputs:
+      force_deploy_all:
+        description: 'Force deploy all projects'
+        required: false
+        default: 'false'
 
 env:
   S3_BUCKET: teamsantos-static-websites
@@ -25,8 +31,11 @@ jobs:
           echo "Before commit: ${{ github.event.before }}"
           echo "Current commit: ${{ github.sha }}"
           
-          # Handle different scenarios for git diff
-          if [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
+          # Check if this is a manual dispatch with force deploy
+          if [ "${{ github.event.inputs.force_deploy_all }}" == "true" ]; then
+            echo "Force deploy all projects requested"
+            CHANGED=$(find projects -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
+          elif [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
             # First push or new branch - check all project folders
             echo "First push detected, checking all projects"
             CHANGED=$(find projects -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
@@ -49,6 +58,12 @@ jobs:
                 CHANGED=$(find projects -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
               fi
             fi
+          fi
+          
+          # If still no changes detected, force deploy all as fallback
+          if [ -z "$CHANGED" ]; then
+            echo "No changes detected, falling back to deploy all projects"
+            CHANGED=$(find projects -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
           fi
           
           # Convert to space-separated string for output
