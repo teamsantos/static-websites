@@ -10,7 +10,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 interface ProjectSiteProps extends cdk.StackProps {
     projectName: string;
     domainName: string;
-    hostedZone: route53.IHostedZone;
+    hostedZoneDomainName: string; // Changed from hostedZone to domain name
     s3Bucket: string;
     region: string;
 }
@@ -18,6 +18,11 @@ interface ProjectSiteProps extends cdk.StackProps {
 export class ProjectSite extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props: ProjectSiteProps) {
         super(scope, id, props);
+
+        // Look up the hosted zone within the Stack context
+        const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+            domainName: props.hostedZoneDomainName,
+        });
 
         const siteBucket = s3.Bucket.fromBucketAttributes(
             this,
@@ -35,7 +40,7 @@ export class ProjectSite extends cdk.Stack {
 
         const certificate = new acm.Certificate(this, 'Certificate', {
             domainName: props.domainName,
-            validation: acm.CertificateValidation.fromDns(props.hostedZone),
+            validation: acm.CertificateValidation.fromDns(hostedZone),
         });
 
         try {
@@ -76,7 +81,7 @@ export class ProjectSite extends cdk.Stack {
         });
 
         new route53.ARecord(this, "AliasRecord", {
-            zone: props.hostedZone,
+            zone: hostedZone,
             recordName: props.domainName,
             target: route53.RecordTarget.fromAlias(
                 new targets.CloudFrontTarget(distribution)

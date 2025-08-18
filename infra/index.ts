@@ -1,15 +1,10 @@
 import * as cdk from "aws-cdk-lib";
-import * as route53 from "aws-cdk-lib/aws-route53";
 import { ProjectSite } from "./projectSite";
 
 const app = new cdk.App();
 const region = "eu-south-2";
 const domain = "e-info.link";
 const s3Bucket = "teamsantos-static-websites"
-
-const hostedZone = route53.HostedZone.fromLookup(app, "HostedZone", {
-    domainName: domain,
-});
 
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
 
@@ -28,12 +23,11 @@ projects.forEach((project) => {
         region: region,
         projectName: project,
         domainName: `${project}.${domain}`,
-        hostedZone,
+        hostedZoneDomainName: domain, // Pass domain name instead of hosted zone
         env: {
             account: process.env.CDK_DEFAULT_ACCOUNT,
             region: "us-east-1", // CloudFront certs requirement (us-east-1)
         },
-        stackName: `Site-${project}`, // Explicitly set stack name
     });
 });
 
