@@ -1,7 +1,9 @@
 name: Deploy Projects
 on:
   push:
-    branches: [main]
+    branches: [master]
+    paths:
+        - 'projects/**'
 
 env:
   S3_BUCKET: teamsantos-static-websites
