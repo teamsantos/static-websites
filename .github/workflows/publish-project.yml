@@ -103,13 +103,16 @@ jobs:
         run: npm ci
 
       - name: Bootstrap CDK (if needed)
-        shell: bash  # Don't set working-directory: infra
+        shell: bash
         run: |
           echo "Checking if CDK bootstrap is needed in us-east-1..."
           if ! aws cloudformation describe-stacks --stack-name CDKToolkit --region us-east-1 2>/dev/null; then
             echo "CDK not bootstrapped in us-east-1, running bootstrap..."
-            # Bootstrap without going through your app
-            npx cdk bootstrap ${{ secrets.AWS_ACCOUNT_ID }}/us-east-1 --require-approval never
+            # Set required environment variables
+            export CDK_DEFAULT_ACCOUNT=${{ secrets.AWS_ACCOUNT_ID }}
+            export CDK_DEFAULT_REGION=us-east-1
+            export AWS_REGION=us-east-1
+            npx cdk bootstrap --require-approval never
           else
             echo "CDK already bootstrapped in us-east-1"
           fi
