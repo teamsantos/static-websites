@@ -7,13 +7,18 @@ const domain = "e-info.click";
 const s3Bucket = "teamsantos-static-websites";
 
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
-
-// Check if this is a bootstrap operation
 const isBootstrap = process.argv.some(arg => arg.includes('bootstrap'));
 
 if (!projectsParam) {
     if (isBootstrap) {
-        console.log("Bootstrap mode detected. Creating empty app for bootstrap.");
+        console.log("Bootstrap mode detected. Creating minimal stack for synthesis.");
+        // Create a minimal stack for bootstrap - CDK needs at least one stack to synthesize
+        new cdk.Stack(app, 'BootstrapPlaceholder', {
+            env: {
+                account: process.env.CDK_DEFAULT_ACCOUNT,
+                region: "us-east-1",
+            },
+        });
     } else {
         console.log("No projects provided and not bootstrap. Creating empty app.");
     }
@@ -29,7 +34,7 @@ if (!projectsParam) {
             hostedZoneDomainName: domain,
             env: {
                 account: process.env.CDK_DEFAULT_ACCOUNT,
-                region: "us-east-1", // Stack region for CloudFront & Certificate
+                region: "us-east-1",
             },
         });
     });
