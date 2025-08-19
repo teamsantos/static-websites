@@ -8,15 +8,13 @@ const s3Bucket = "teamsantos-static-websites";
 
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
 
-// Check if this is a bootstrap operation
 const isBootstrap = process.argv.some(arg => arg.includes('bootstrap'));
 
 if (!projectsParam) {
     if (isBootstrap) {
-        console.log("Bootstrap mode detected. Skipping project stacks.");
-        // Create a minimal empty app for bootstrap
+        console.log("Bootstrap mode detected. Creating empty app for bootstrap.");
     } else {
-        console.log("No projects provided. Creating empty app for bootstrap.");
+        console.log("No projects provided and not bootstrap. Creating empty app.");
     }
 } else {
     console.log(`Deploying projects: ${projectsParam}`);
@@ -30,7 +28,7 @@ if (!projectsParam) {
             hostedZoneDomainName: domain,
             env: {
                 account: process.env.CDK_DEFAULT_ACCOUNT,
-                region: "us-east-1", // CloudFront certs requirement (us-east-1)
+                region: region,
             },
         });
     });
