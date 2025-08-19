@@ -107,13 +107,13 @@ jobs:
         shell: bash
         run: |
           echo "Checking if CDK bootstrap is needed in us-east-1..."
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          
           if ! aws cloudformation describe-stacks --stack-name CDKToolkit --region us-east-1 2>/dev/null; then
             echo "CDK not bootstrapped in us-east-1, running bootstrap..."
-            # Set required environment variables
-            export CDK_DEFAULT_ACCOUNT=${{ secrets.AWS_ACCOUNT_ID }}
-            export CDK_DEFAULT_REGION=us-east-1
-            export AWS_REGION=us-east-1
-            npx cdk bootstrap --require-approval never
+            # Pass a dummy project to make your app create stacks for synthesis
+            CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
+            npx cdk bootstrap aws://$ACCOUNT_ID/us-east-1 --require-approval never -c "projects=dummy"
           else
             echo "CDK already bootstrapped in us-east-1"
           fi
