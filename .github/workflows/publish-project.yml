@@ -103,6 +103,7 @@ jobs:
         run: npm ci
 
       - name: Bootstrap CDK (if needed)
+        working-directory: infra
         shell: bash
         run: |
           echo "Checking if CDK bootstrap is needed in us-east-1..."
