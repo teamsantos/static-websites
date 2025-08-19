@@ -106,12 +106,12 @@ jobs:
         working-directory: infra
         shell: bash
         run: |
-          echo "Checking if CDK bootstrap is needed..."
-          # Check if bootstrap stack exists
-          if ! aws cloudformation describe-stacks --stack-name CDKToolkit 2>/dev/null; then
-                npx cdk bootstrap --require-approval never
+          echo "Checking if CDK bootstrap is needed in us-east-1..."
+          if ! aws cloudformation describe-stacks --stack-name CDKToolkit --region us-east-1 2>/dev/null; then
+            echo "CDK not bootstrapped in us-east-1, running bootstrap..."
+            npx cdk bootstrap aws://${{ secrets.AWS_ACCOUNT_ID }}/us-east-1 --require-approval never
           else
-            echo "CDK already bootstrapped"
+            echo "CDK already bootstrapped in us-east-1"
           fi
 
       - name: Deploy infrastructure

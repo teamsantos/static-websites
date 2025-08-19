@@ -8,6 +8,7 @@ const s3Bucket = "teamsantos-static-websites";
 
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
 
+// Check if this is a bootstrap operation
 const isBootstrap = process.argv.some(arg => arg.includes('bootstrap'));
 
 if (!projectsParam) {
@@ -28,7 +29,7 @@ if (!projectsParam) {
             hostedZoneDomainName: domain,
             env: {
                 account: process.env.CDK_DEFAULT_ACCOUNT,
-                region: region,
+                region: "us-east-1", // Stack region for CloudFront & Certificate
             },
         });
     });
