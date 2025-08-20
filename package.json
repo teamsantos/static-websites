@@ -1,6 +1,6 @@
 {
   "name": "static-websites",
-  "version": "1.0.49",
+  "version": "1.0.50",
   "type": "module",
   "description": "A static website generator.",
   "scripts": {
