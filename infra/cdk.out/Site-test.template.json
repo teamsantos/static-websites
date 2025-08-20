@@ -1,0 +1,228 @@
+{
+ "Resources": {
+  "OAIE1EFC67F": {
+   "Type": "AWS::CloudFront::CloudFrontOriginAccessIdentity",
+   "Properties": {
+    "CloudFrontOriginAccessIdentityConfig": {
+     "Comment": "OAI for test"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "Site-test/OAI/Resource"
+   }
+  },
+  "Certificate4E7ABB08": {
+   "Type": "AWS::CertificateManager::Certificate",
+   "Properties": {
+    "DomainName": "test.e-info.click",
+    "DomainValidationOptions": [
+     {
+      "DomainName": "test.e-info.click",
+      "HostedZoneId": "Z0068973FIJHW12TF0OH"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "Site-test/Certificate"
+     }
+    ],
+    "ValidationMethod": "DNS"
+   },
+   "Metadata": {
+    "aws:cdk:path": "Site-test/Certificate/Resource"
+   }
+  },
+  "Distribution830FAC52": {
+   "Type": "AWS::CloudFront::Distribution",
+   "Properties": {
+    "DistributionConfig": {
+     "Aliases": [
+      "test.e-info.click"
+     ],
+     "Comment": "CloudFront distribution for test",
+     "CustomErrorResponses": [
+      {
+       "ErrorCachingMinTTL": 1800,
+       "ErrorCode": 403,
+       "ResponseCode": 200,
+       "ResponsePagePath": "/index.html"
+      },
+      {
+       "ErrorCachingMinTTL": 1800,
+       "ErrorCode": 404,
+       "ResponseCode": 200,
+       "ResponsePagePath": "/index.html"
+      }
+     ],
+     "DefaultCacheBehavior": {
+      "AllowedMethods": [
+       "GET",
+       "HEAD"
+      ],
+      "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+      "CachedMethods": [
+       "GET",
+       "HEAD"
+      ],
+      "Compress": true,
+      "TargetOriginId": "SitetestDistributionOrigin1BCF6BE1F",
+      "ViewerProtocolPolicy": "redirect-to-https"
+     },
+     "DefaultRootObject": "index.html",
+     "Enabled": true,
+     "HttpVersion": "http2",
+     "IPV6Enabled": true,
+     "Origins": [
+      {
+       "DomainName": "teamsantos-static-websites.s3.eu-south-2.amazonaws.com",
+       "Id": "SitetestDistributionOrigin1BCF6BE1F",
+       "OriginPath": "/test",
+       "S3OriginConfig": {
+        "OriginAccessIdentity": {
+         "Fn::Join": [
+          "",
+          [
+           "origin-access-identity/cloudfront/",
+           {
+            "Ref": "OAIE1EFC67F"
+           }
+          ]
+         ]
+        }
+       }
+      }
+     ],
+     "ViewerCertificate": {
+      "AcmCertificateArn": {
+       "Ref": "Certificate4E7ABB08"
+      },
+      "MinimumProtocolVersion": "TLSv1.2_2021",
+      "SslSupportMethod": "sni-only"
+     }
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "Site-test/Distribution/Resource"
+   }
+  },
+  "AliasRecord851000D2": {
+   "Type": "AWS::Route53::RecordSet",
+   "Properties": {
+    "AliasTarget": {
+     "DNSName": {
+      "Fn::GetAtt": [
+       "Distribution830FAC52",
+       "DomainName"
+      ]
+     },
+     "HostedZoneId": {
+      "Fn::FindInMap": [
+       "AWSCloudFrontPartitionHostedZoneIdMap",
+       {
+        "Ref": "AWS::Partition"
+       },
+       "zoneId"
+      ]
+     }
+    },
+    "HostedZoneId": "Z0068973FIJHW12TF0OH",
+    "Name": "test.e-info.click.",
+    "Type": "A"
+   },
+   "Metadata": {
+    "aws:cdk:path": "Site-test/AliasRecord/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22QwWrDMAyGn2V3R1taynZtMwY7jEL6AMOVlaCmtYMsdwzjd1+8HrrDTvo/6UMIrWDVtvD0YL9ig25qznyEfFCLk+kphiRIZpl95riGXcKJdGcjGTyH5AYJXiHvhUf2W0SK8d2RV9Zv0w2+q85bdf41Xjmq8DEpB1/1v1wMkigPjFbpYr0dSSB3997v/jsWIyEpbdaQtz1hEFeFWzqQllLxw84z+7HGfdI5aTE+OIJTfLy2L/C8fOEUmRtJy4EXgv5WfwCpYBl8IgEAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "Site-test/CDKMetadata/Default"
+   }
+  }
+ },
+ "Mappings": {
+  "AWSCloudFrontPartitionHostedZoneIdMap": {
+   "aws": {
+    "zoneId": "Z2FDTNDATAQYW2"
+   },
+   "aws-cn": {
+    "zoneId": "Z3RFFRIM2A3IF5"
+   }
+  }
+ },
+ "Outputs": {
+  "testBucketName": {
+   "Description": "S3 bucket name for test",
+   "Value": "teamsantos-static-websites",
+   "Export": {
+    "Name": "test-bucket-name"
+   }
+  },
+  "testDistributionId": {
+   "Description": "CloudFront distribution ID for test",
+   "Value": {
+    "Ref": "Distribution830FAC52"
+   },
+   "Export": {
+    "Name": "test-distribution-id"
+   }
+  },
+  "testDomainName": {
+   "Description": "Domain name for test",
+   "Value": "test.e-info.click",
+   "Export": {
+    "Name": "test-domain-name"
+   }
+  },
+  "testCloudFrontDomainName": {
+   "Description": "CloudFront domain name for test",
+   "Value": {
+    "Fn::GetAtt": [
+     "Distribution830FAC52",
+     "DomainName"
+    ]
+   },
+   "Export": {
+    "Name": "test-cloudfront-domain"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

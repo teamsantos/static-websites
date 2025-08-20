@@ -5,7 +5,18 @@
   "main": "index.ts",
   "type": "commonjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk",
+    "bootstrap": "cdk bootstrap --region us-east-1",
+    "bootstrap-all": "cdk bootstrap --region us-east-1 && cdk bootstrap --region eu-south-2",
+    "deploy": "npm run build && cdk deploy --all",
+    "deploy-project": "npm run build && cdk deploy --context",
+    "destroy": "cdk destroy --all",
+    "diff": "cdk diff --all",
+    "synth": "cdk synth --all",
+    "list": "cdk list"
   },
   "author": "Filipe Santos",
   "license": "ISC",
