@@ -11,12 +11,20 @@
     "cdk": "cdk",
     "bootstrap": "cdk bootstrap --region us-east-1",
     "bootstrap-all": "cdk bootstrap --region us-east-1 && cdk bootstrap --region eu-south-2",
-    "deploy": "npm run build && cdk deploy --all",
-    "deploy-project": "npm run build && cdk deploy --context",
+    "bootstrap-check": "npm run bootstrap-check:us-east-1 && npm run bootstrap-check:eu-south-2",
+    "bootstrap-check:us-east-1": "aws cloudformation describe-stacks --region us-east-1 --stack-name CDKToolkit --query 'Stacks[0].StackStatus' --output text",
+    "bootstrap-check:eu-south-2": "aws cloudformation describe-stacks --region eu-south-2 --stack-name CDKToolkit --query 'Stacks[0].StackStatus' --output text",
+    "deploy": "npm run build && cdk deploy --all --require-approval never",
+    "deploy-project": "npm run build && cdk deploy --all --require-approval never --context",
+    "deploy-with-projects": "npm run build && cdk deploy --all --require-approval never --context projects=",
     "destroy": "cdk destroy --all",
+    "destroy-project": "cdk destroy --context",
     "diff": "cdk diff --all",
+    "diff-project": "cdk diff --all --context",
     "synth": "cdk synth --all",
-    "list": "cdk list"
+    "synth-project": "cdk synth --all --context",
+    "list": "cdk list",
+    "list-project": "cdk list --context"
   },
   "author": "Filipe Santos",
   "license": "ISC",
@@ -24,6 +32,7 @@
     "aws-cdk-lib": "^2.211.0"
   },
   "devDependencies": {
-    "@types/node": "^24.3.0"
+    "@types/node": "^24.3.0",
+    "typescript": "^5.0.0"
   }
 }
