@@ -248,7 +248,7 @@ jobs:
             if [ -n "$project" ]; then
               echo "Building project: $project"
               if [ -d "projects/$project" ]; then
-                npm run build -- --root "projects/$project" --outDir "$BUILD_DIR/$project"
+                PROJECT=$project npx vite build
                 echo "✅ Built $project"
               else
                 echo "⚠️ Project directory projects/$project not found"
