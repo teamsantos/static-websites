@@ -96,66 +96,217 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: us-east-1  # Set to us-east-1 for CloudFront certificates
 
       - name: Install infra dependencies
         working-directory: infra
         run: npm ci
 
-      - name: Bootstrap CDK (if needed)
+      - name: Check if CDK bootstrap is needed
+        id: check-bootstrap
         working-directory: infra
         shell: bash
         run: |
-          echo "Checking if CDK bootstrap is needed in us-east-1..."
+          echo "Checking CDK bootstrap status..."
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           
-          if ! aws cloudformation describe-stacks --stack-name CDKToolkit --region us-east-1 2>/dev/null; then
-            echo "CDK not bootstrapped in us-east-1, running bootstrap..."
-            # Pass a dummy project to make your app create stacks for synthesis
-            CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
-            npx cdk bootstrap aws://$ACCOUNT_ID/us-east-1 --require-approval never -c "projects=dummy"
-          else
-            echo "CDK already bootstrapped in us-east-1"
+          # Function to check if region is bootstrapped
+          check_bootstrap() {
+            local region=$1
+            echo "Checking bootstrap for region: $region"
+            
+            if aws cloudformation describe-stacks \
+              --region "$region" \
+              --stack-name CDKToolkit \
+              --query 'Stacks[0].StackStatus' \
+              --output text 2>/dev/null | grep -q "COMPLETE"; then
+              echo "✅ Region $region is already bootstrapped"
+              return 0
+            else
+              echo "❌ Region $region needs bootstrapping"
+              return 1
+            fi
+          }
+          
+          # Check required regions
+          BOOTSTRAP_NEEDED=""
+          
+          # Check us-east-1 (required for CloudFront certificates)
+          if ! check_bootstrap "us-east-1"; then
+            BOOTSTRAP_NEEDED="$BOOTSTRAP_NEEDED us-east-1"
           fi
+          
+          # Check eu-south-2 (your S3 bucket region - optional but recommended)
+          if ! check_bootstrap "eu-south-2"; then
+            BOOTSTRAP_NEEDED="$BOOTSTRAP_NEEDED eu-south-2"
+          fi
+          
+          # Clean up and set output
+          BOOTSTRAP_NEEDED=$(echo "$BOOTSTRAP_NEEDED" | xargs)
+          echo "bootstrap-needed=$BOOTSTRAP_NEEDED" >> $GITHUB_OUTPUT
+          echo "account-id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+          
+          if [ -n "$BOOTSTRAP_NEEDED" ]; then
+            echo "🔄 Bootstrap needed for regions: $BOOTSTRAP_NEEDED"
+          else
+            echo "✅ All regions are already bootstrapped"
+          fi
+
+      - name: Bootstrap CDK regions
+        if: steps.check-bootstrap.outputs.bootstrap-needed != ''
+        working-directory: infra
+        shell: bash
+        run: |
+          echo "Bootstrapping CDK for regions: ${{ steps.check-bootstrap.outputs.bootstrap-needed }}"
+          ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
+          
+          for region in ${{ steps.check-bootstrap.outputs.bootstrap-needed }}; do
+            echo "🔄 Bootstrapping region: $region"
+            CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=$region \
+            npx cdk bootstrap "aws://$ACCOUNT_ID/$region" \
+              --require-approval never \
+              --verbose \
+              -c "projects=dummy"
+            
+            # Verify bootstrap was successful
+            if aws cloudformation describe-stacks \
+              --region "$region" \
+              --stack-name CDKToolkit \
+              --query 'Stacks[0].StackStatus' \
+              --output text 2>/dev/null | grep -q "COMPLETE"; then
+              echo "✅ Successfully bootstrapped $region"
+            else
+              echo "❌ Failed to bootstrap $region"
+              exit 1
+            fi
+          done
+
+      - name: Build CDK project
+        working-directory: infra
+        run: npm run build
+
+      - name: Convert projects to comma-separated format
+        id: format-projects
+        shell: bash
+        run: |
+          # Convert space-separated projects to comma-separated
+          PROJECTS_SPACE="${{ needs.detect-changes.outputs.projects }}"
+          PROJECTS_COMMA=$(echo "$PROJECTS_SPACE" | tr ' ' ',' | sed 's/,*$//' | sed 's/^,*//')
+          echo "projects-comma=$PROJECTS_COMMA" >> $GITHUB_OUTPUT
+          echo "📦 Projects to deploy (comma-separated): $PROJECTS_COMMA"
+
+      - name: Preview infrastructure changes
+        working-directory: infra
+        shell: bash
+        run: |
+          echo "🔍 Previewing changes for projects: ${{ steps.format-projects.outputs.projects-comma }}"
+          ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
+          CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
+          npx cdk diff --all \
+            --context "projects=${{ steps.format-projects.outputs.projects-comma }}" || true
 
       - name: Deploy infrastructure
         working-directory: infra
         shell: bash
         run: |
-            echo "Raw projects output: '${{ needs.detect-changes.outputs.projects }}'"
-            IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
-            for project in "${PROJ_ARR[@]}"; do
-            if [ -n "$project" ]; then
-              echo "Deploying infra for $project"
-              # Fix: Make sure the context parameter is properly quoted and formatted
-              npx cdk deploy --require-approval never -c "projects=$project"
-              # Alternative: You might need to pass it differently depending on your CDK app
-              # npx cdk deploy --require-approval never --context "projects=$project"
-            fi
-            done
-
+          echo "🚀 Deploying infrastructure for projects: ${{ steps.format-projects.outputs.projects-comma }}"
+          ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
+          
+          # Deploy all stacks at once with comma-separated projects
+          CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
+          npx cdk deploy --all \
+            --context "projects=${{ steps.format-projects.outputs.projects-comma }}" \
+            --require-approval never \
+            --verbose
+          
+          echo "✅ Successfully deployed infrastructure for all projects"
 
       - name: Build projects
         shell: bash
         run: |
+          echo "🔨 Building projects..."
           IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
           for project in "${PROJ_ARR[@]}"; do
             if [ -n "$project" ]; then
               echo "Building project: $project"
-              npm run build -- --root projects/$project --outDir dist/$project
+              if [ -d "projects/$project" ]; then
+                npm run build -- --root "projects/$project" --outDir "$BUILD_DIR/$project"
+                echo "✅ Built $project"
+              else
+                echo "⚠️ Project directory projects/$project not found"
+              fi
             fi
           done
 
-      - name: Sync built sites
+      - name: Sync built sites to S3
         shell: bash
         run: |
+          echo "📤 Syncing built sites to S3..."
           IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
           for project in "${PROJ_ARR[@]}"; do
             if [ -n "$project" ]; then
-              # Fix the variable reference
-              BUCKET_VAR="${project}_BUCKET"
-              BUCKET_VALUE="${!BUCKET_VAR}"
-              echo "Syncing $project to bucket: $BUCKET_VALUE"
-              aws s3 sync $BUILD_DIR/$project s3://$BUCKET_VALUE/$project --delete
+              echo "Syncing $project to S3..."
+              
+              if [ -d "$BUILD_DIR/$project" ]; then
+                # Sync to the fixed bucket with project path
+                aws s3 sync "$BUILD_DIR/$project" "s3://$S3_BUCKET/$project" \
+                  --delete \
+                  --region eu-south-2 \
+                  --exclude ".*"
+                
+                echo "✅ Synced $project to s3://$S3_BUCKET/$project"
+              else
+                echo "⚠️ Build directory $BUILD_DIR/$project not found for $project"
+              fi
             fi
           done
+
+      - name: Invalidate CloudFront caches
+        shell: bash
+        run: |
+          echo "🔄 Invalidating CloudFront caches for updated projects..."
+          IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
+          
+          for project in "${PROJ_ARR[@]}"; do
+            if [ -n "$project" ]; then
+              echo "Invalidating cache for: $project"
+              
+              # Get distribution ID from stack outputs
+              DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+                --region us-east-1 \
+                --stack-name "Site-$project" \
+                --query 'Stacks[0].Outputs[?OutputKey==`'$project'DistributionId`].OutputValue' \
+                --output text 2>/dev/null)
+              
+              if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
+                echo "Creating invalidation for distribution: $DISTRIBUTION_ID"
+                aws cloudfront create-invalidation \
+                  --distribution-id "$DISTRIBUTION_ID" \
+                  --paths "/*" \
+                  --output table
+                echo "✅ Cache invalidated for $project"
+              else
+                echo "⚠️ No distribution ID found for $project"
+              fi
+            fi
+          done
+
+      - name: Deployment Summary
+        shell: bash
+        run: |
+          echo "🎉 Deployment Summary"
+          echo "===================="
+          echo "Deployed projects: ${{ needs.detect-changes.outputs.projects }}"
+          echo "Total projects: $(echo '${{ needs.detect-changes.outputs.projects }}' | wc -w)"
+          echo ""
+          echo "🌐 Access your sites at:"
+          IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
+          for project in "${PROJ_ARR[@]}"; do
+            if [ -n "$project" ]; then
+              echo "  • https://$project.e-info.click"
+            fi
+          done
+          echo ""
+          echo "📊 S3 bucket: $S3_BUCKET"
+          echo "🌍 Certificate region: us-east-1"
+          echo "🗂️ S3 region: eu-south-2"
