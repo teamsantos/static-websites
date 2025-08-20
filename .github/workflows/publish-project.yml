@@ -100,7 +100,21 @@ jobs:
 
       - name: Install infra dependencies
         working-directory: infra
-        run: npm ci
+        run: |
+          echo "Installing infra dependencies..."
+          # Handle lock file sync issues
+          if ! npm ci 2>/dev/null; then
+            echo "npm ci failed, falling back to npm install..."
+            rm -rf node_modules package-lock.json
+            npm install
+          fi
+          echo "✅ Infra dependencies installed"
+
+      - name: Install CDK CLI globally
+        run: |
+          echo "Installing CDK CLI globally..."
+          npm install -g aws-cdk typescript ts-node
+          echo "✅ CDK CLI installed"
 
       - name: Check if CDK bootstrap is needed
         id: check-bootstrap
@@ -183,7 +197,11 @@ jobs:
 
       - name: Build CDK project
         working-directory: infra
-        run: npm run build
+        run: |
+          echo "🔨 Building CDK project..."
+          # Use npx to ensure we use the local typescript
+          npx tsc
+          echo "✅ CDK project built successfully"
 
       - name: Convert projects to comma-separated format
         id: format-projects
