@@ -60,6 +60,7 @@ if (!projectsParam) {
                     ManagedBy: "CDK",
                     Environment: "production",
                 },
+                useOAC: true
             });
         });
         
