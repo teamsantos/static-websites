@@ -1,34 +1,34 @@
 {
   "version": "48.0.0",
   "artifacts": {
-    "Site-test.assets": {
+    "Site-temp22.assets": {
       "type": "cdk:asset-manifest",
       "properties": {
-        "file": "Site-test.assets.json",
+        "file": "Site-temp22.assets.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
       }
     },
-    "Site-test": {
+    "Site-temp22": {
       "type": "aws:cloudformation:stack",
       "environment": "aws://396913706953/us-east-1",
       "properties": {
-        "templateFile": "Site-test.template.json",
+        "templateFile": "Site-temp22.template.json",
         "terminationProtection": false,
         "tags": {
-          "Domain": "test.e-info.click",
+          "Domain": "temp22.e-info.click",
           "Environment": "production",
           "ManagedBy": "CDK",
-          "Project": "test"
+          "Project": "temp22"
         },
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-us-east-1/28831fe41c487085bcf7197c7f270e348cb3e109491015b5acad23ff34a53ba6.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-us-east-1/dedd91dde144050ba069f422203d8da3ef96245caa116a279791dd2e903781fd.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
-          "Site-test.assets"
+          "Site-temp22.assets"
         ],
         "lookupRole": {
           "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-us-east-1",
@@ -37,16 +37,16 @@
         }
       },
       "dependencies": [
-        "Site-test.assets"
+        "Site-temp22.assets"
       ],
       "metadata": {
-        "/Site-test": [
+        "/Site-temp22": [
           {
             "type": "aws:cdk:stack-tags",
             "data": [
               {
                 "Key": "Domain",
-                "Value": "test.e-info.click"
+                "Value": "temp22.e-info.click"
               },
               {
                 "Key": "Environment",
@@ -58,65 +58,12 @@
               },
               {
                 "Key": "Project",
-                "Value": "test"
+                "Value": "temp22"
               }
             ]
           }
         ],
-        "/Site-test/Certificate/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "Certificate4E7ABB08"
-          }
-        ],
-        "/Site-test/OAC/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "OAC5B452445"
-          }
-        ],
-        "/Site-test/Distribution/Origin1": [
-          {
-            "type": "aws:cdk:warning",
-            "data": "Cannot update bucket policy of an imported bucket. You will need to update the policy manually instead.\nSee the \"Setting up OAC with imported S3 buckets\" section of module's README for more info. [ack: @aws-cdk/aws-cloudfront-origins:updateImportedBucketPolicyOac]",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addWarningV2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:896)",
-              "S3BucketOriginWithOAC.bind (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront-origins/lib/s3-bucket-origin.js:2:282)",
-              "WrappedClass.addOrigin (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:14065)",
-              "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
-              "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
-              "new ProjectSite (/Users/fmpi.santos/Projects/static-websites/infra/projectSite.ts:65:33)",
-              "/Users/fmpi.santos/Projects/static-websites/infra/index.ts:46:13",
-              "Array.forEach (<anonymous>)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:38:18)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
-              "node:internal/main/run_main_module:17:47"
-            ]
-          }
-        ],
-        "/Site-test/Distribution/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "Distribution830FAC52"
-          }
-        ],
-        "/Site-test/BucketPolicyUpdater": [
+        "/Site-temp22/RecordExistsCheck": [
           {
             "type": "aws:cdk:warning",
             "data": "installLatestAwsSdk was not specified, and defaults to true. You probably do not want this. Set the global context flag '@aws-cdk/customresources:installLatestAwsSdkDefault' to false to switch this behavior off project-wide, or set the property explicitly to true if you know you need to call APIs that are not in Lambda's built-in SDK version. [ack: @aws-cdk/custom-resources:installLatestAwsSdkNotSpecified]",
@@ -125,10 +72,11 @@
               "Annotations.addWarningV2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:896)",
               "new AwsCustomResource2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/custom-resources/lib/aws-custom-resource/aws-custom-resource.js:1:5991)",
               "new AwsCustomResource2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
-              "new ProjectSite (/Users/fmpi.santos/Projects/static-websites/infra/projectSite.ts:125:13)",
-              "/Users/fmpi.santos/Projects/static-websites/infra/index.ts:46:13",
+              "existsRecord (/Users/fmpi.santos/Projects/static-websites/infra/mineProjectSite.ts:20:12)",
+              "new ProjectSite (/Users/fmpi.santos/Projects/static-websites/infra/mineProjectSite.ts:44:13)",
+              "/Users/fmpi.santos/Projects/static-websites/infra/index.ts:40:13",
               "Array.forEach (<anonymous>)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:38:18)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:33:18)",
               "Module._compile (node:internal/modules/cjs/loader:1120:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
@@ -149,19 +97,19 @@
             ]
           }
         ],
-        "/Site-test/BucketPolicyUpdater/Resource/Default": [
+        "/Site-temp22/RecordExistsCheck/Resource/Default": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "BucketPolicyUpdaterDBA84720"
+            "data": "RecordExistsCheckF872F08F"
           }
         ],
-        "/Site-test/BucketPolicyUpdater/CustomResourcePolicy/Resource": [
+        "/Site-temp22/RecordExistsCheck/CustomResourcePolicy/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "BucketPolicyUpdaterCustomResourcePolicyBDE1BF98"
+            "data": "RecordExistsCheckCustomResourcePolicyDEB16024"
           }
         ],
-        "/Site-test/AWS679f53fac002430cb0da5b7982bd2287": [
+        "/Site-temp22/AWS679f53fac002430cb0da5b7982bd2287": [
           {
             "type": "aws:cdk:is-custom-resource-handler-singleton",
             "data": true
@@ -171,80 +119,38 @@
             "data": 0
           }
         ],
-        "/Site-test/AWS679f53fac002430cb0da5b7982bd2287/ServiceRole/Resource": [
+        "/Site-temp22/AWS679f53fac002430cb0da5b7982bd2287/ServiceRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
           }
         ],
-        "/Site-test/AWS679f53fac002430cb0da5b7982bd2287/Resource": [
+        "/Site-temp22/AWS679f53fac002430cb0da5b7982bd2287/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "AWS679f53fac002430cb0da5b7982bd22872D164C4C"
           }
         ],
-        "/Site-test/AliasRecord/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "AliasRecord851000D2"
-          }
-        ],
-        "/Site-test/AWSCloudFrontPartitionHostedZoneIdMap": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "AWSCloudFrontPartitionHostedZoneIdMap"
-          }
-        ],
-        "/Site-test/testBucketName": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "testBucketName"
-          }
-        ],
-        "/Site-test/testDistributionId": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "testDistributionId"
-          }
-        ],
-        "/Site-test/testDomainName": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "testDomainName"
-          }
-        ],
-        "/Site-test/testCloudFrontDomainName": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "testCloudFrontDomainName"
-          }
-        ],
-        "/Site-test/testAccessMethod": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "testAccessMethod"
-          }
-        ],
-        "/Site-test/CDKMetadata/Default": [
+        "/Site-temp22/CDKMetadata/Default": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CDKMetadata"
           }
         ],
-        "/Site-test/BootstrapVersion": [
+        "/Site-temp22/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "BootstrapVersion"
           }
         ],
-        "/Site-test/CheckBootstrapVersion": [
+        "/Site-temp22/CheckBootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CheckBootstrapVersion"
           }
         ]
       },
-      "displayName": "Site-test"
+      "displayName": "Site-temp22"
     },
     "Tree": {
       "type": "cdk:tree",
