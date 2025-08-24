@@ -38,10 +38,10 @@ const cdk = __importStar(require("aws-cdk-lib"));
 const acm = __importStar(require("aws-cdk-lib/aws-certificatemanager"));
 const cloudfront = __importStar(require("aws-cdk-lib/aws-cloudfront"));
 const origins = __importStar(require("aws-cdk-lib/aws-cloudfront-origins"));
-const iam = __importStar(require("aws-cdk-lib/aws-iam"));
 const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
 const targets = __importStar(require("aws-cdk-lib/aws-route53-targets"));
 const s3 = __importStar(require("aws-cdk-lib/aws-s3"));
+const cr = __importStar(require("aws-cdk-lib/custom-resources"));
 class ProjectSite extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
@@ -54,60 +54,203 @@ class ProjectSite extends cdk.Stack {
             bucketName: props.s3Bucket,
             region: props.region,
         });
-        // Create Origin Access Identity for secure S3 access
-        const oai = new cloudfront.OriginAccessIdentity(this, "OAI", {
-            comment: `OAI for ${props.projectName}`,
-        });
-        // Grant OAI read access to the bucket
-        siteBucket.grantRead(oai);
         // Create SSL certificate for CloudFront (must be in us-east-1)
         this.certificate = new acm.Certificate(this, 'Certificate', {
             domainName: props.domainName,
             validation: acm.CertificateValidation.fromDns(hostedZone),
         });
-        // Add bucket policy to allow OAI access (with error handling for existing buckets)
-        try {
-            siteBucket.addToResourcePolicy(new iam.PolicyStatement({
-                actions: ['s3:GetObject'],
-                resources: [siteBucket.arnForObjects(`${props.projectName}/*`)],
-                principals: [new iam.CanonicalUserPrincipal(oai.cloudFrontOriginAccessIdentityS3CanonicalUserId)]
-            }));
-        }
-        catch (error) {
-            console.warn(`Could not modify bucket policy - ensure OAI has access to ${props.s3Bucket}/${props.projectName}/*: ${error}`);
-        }
-        // Create CloudFront distribution
-        this.distribution = new cloudfront.Distribution(this, "Distribution", {
-            defaultBehavior: {
-                origin: new origins.S3Origin(siteBucket, {
-                    originAccessIdentity: oai,
-                    originPath: `/${props.projectName}`,
-                }),
-                viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
-                cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-                compress: true,
-            },
-            domainNames: [props.domainName],
-            defaultRootObject: "index.html",
-            certificate: this.certificate,
-            minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-            errorResponses: [
-                {
-                    httpStatus: 403,
-                    responseHttpStatus: 200,
-                    responsePagePath: '/index.html',
-                    ttl: cdk.Duration.minutes(30),
+        let origin;
+        if (props.useOAC) {
+            // ========== OPTION 2: Using Origin Access Control (OAC) - Fully Automated ==========
+            // Create Origin Access Control (OAC)
+            const oac = new cloudfront.S3OriginAccessControl(this, "OAC", {
+                description: `OAC for ${props.projectName}`,
+                signing: cloudfront.Signing.SIGV4_ALWAYS,
+            });
+            // Create S3 origin with OAC (modern approach)
+            origin = origins.S3BucketOrigin.withOriginAccessControl(siteBucket, {
+                originPath: `/${props.projectName}`,
+                originAccessControl: oac,
+            });
+            // Create CloudFront distribution
+            this.distribution = new cloudfront.Distribution(this, "Distribution", {
+                defaultBehavior: {
+                    origin: origin,
+                    viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                    allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+                    cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+                    compress: true,
                 },
-                {
-                    httpStatus: 404,
-                    responseHttpStatus: 200,
-                    responsePagePath: '/index.html',
-                    ttl: cdk.Duration.minutes(30),
-                }
-            ],
-            comment: `CloudFront distribution for ${props.projectName}`,
-        });
+                domainNames: [props.domainName],
+                defaultRootObject: "index.html",
+                certificate: this.certificate,
+                minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+                errorResponses: [
+                    {
+                        httpStatus: 403,
+                        responseHttpStatus: 200,
+                        responsePagePath: '/index.html',
+                        ttl: cdk.Duration.minutes(30),
+                    },
+                    {
+                        httpStatus: 404,
+                        responseHttpStatus: 200,
+                        responsePagePath: '/index.html',
+                        ttl: cdk.Duration.minutes(30),
+                    }
+                ],
+                comment: `CloudFront distribution for ${props.projectName}`,
+            });
+            // Associate OAC with the CloudFront distribution explicitly
+            // This ensures the OAC is properly linked to the distribution
+            const cfnDistribution = this.distribution.node.defaultChild;
+            cfnDistribution.addPropertyOverride('DistributionConfig.Origins.0.S3OriginAccessControlId', oac.originAccessControlId);
+            // AUTOMATED BUCKET POLICY UPDATE using CDK Custom Resource
+            const bucketPolicyDocument = {
+                Version: "2012-10-17",
+                Statement: [
+                    {
+                        Effect: "Allow",
+                        Principal: {
+                            Service: "cloudfront.amazonaws.com"
+                        },
+                        Action: "s3:GetObject",
+                        Resource: `arn:aws:s3:::${props.s3Bucket}/${props.projectName}/*`,
+                        Condition: {
+                            StringEquals: {
+                                "AWS:SourceArn": cdk.Stack.of(this).formatArn({
+                                    service: 'cloudfront',
+                                    region: '',
+                                    resource: 'distribution',
+                                    resourceName: this.distribution.distributionId,
+                                })
+                            }
+                        }
+                    }
+                ]
+            };
+            // Use AwsCustomResource to automatically update bucket policy
+            new cr.AwsCustomResource(this, 'BucketPolicyUpdater', {
+                onCreate: {
+                    service: 'S3',
+                    action: 'putBucketPolicy',
+                    parameters: {
+                        Bucket: props.s3Bucket,
+                        Policy: JSON.stringify(bucketPolicyDocument)
+                    },
+                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-${props.s3Bucket}-bucket-policy`)
+                },
+                onUpdate: {
+                    service: 'S3',
+                    action: 'putBucketPolicy',
+                    parameters: {
+                        Bucket: props.s3Bucket,
+                        Policy: JSON.stringify(bucketPolicyDocument)
+                    },
+                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-${props.s3Bucket}-bucket-policy`)
+                },
+                onDelete: {
+                    service: 'S3',
+                    action: 'deleteBucketPolicy',
+                    parameters: {
+                        Bucket: props.s3Bucket
+                    }
+                },
+                policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+                    resources: [`arn:aws:s3:::${props.s3Bucket}`, `arn:aws:s3:::${props.s3Bucket}/*`]
+                })
+            });
+            // Ensure distribution is created before bucket policy to get the correct ARN
+            // This helps with CloudFormation resource ordering
+            const bucketPolicyHelper = this.node.findChild('BucketPolicyUpdater');
+            bucketPolicyHelper.node.addDependency(this.distribution);
+        }
+        else {
+            // ========== OPTION 1: Using Origin Access Identity (OAI) - Fully Automated ==========
+            // Create Origin Access Identity for secure S3 access
+            const oai = new cloudfront.OriginAccessIdentity(this, "OAI", {
+                comment: `OAI for ${props.projectName}`,
+            });
+            // Create S3 origin with OAI (modern approach)
+            origin = origins.S3BucketOrigin.withOriginAccessIdentity(siteBucket, {
+                originAccessIdentity: oai,
+                originPath: `/${props.projectName}`,
+            });
+            // Create CloudFront distribution
+            this.distribution = new cloudfront.Distribution(this, "Distribution", {
+                defaultBehavior: {
+                    origin: origin,
+                    viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                    allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+                    cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+                    compress: true,
+                },
+                domainNames: [props.domainName],
+                defaultRootObject: "index.html",
+                certificate: this.certificate,
+                minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+                errorResponses: [
+                    {
+                        httpStatus: 403,
+                        responseHttpStatus: 200,
+                        responsePagePath: '/index.html',
+                        ttl: cdk.Duration.minutes(30),
+                    },
+                    {
+                        httpStatus: 404,
+                        responseHttpStatus: 200,
+                        responsePagePath: '/index.html',
+                        ttl: cdk.Duration.minutes(30),
+                    }
+                ],
+                comment: `CloudFront distribution for ${props.projectName}`,
+            });
+            // AUTOMATED BUCKET POLICY UPDATE using CDK Custom Resource
+            const bucketPolicyDocument = {
+                Version: "2012-10-17",
+                Statement: [
+                    {
+                        Effect: "Allow",
+                        Principal: {
+                            AWS: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${oai.originAccessIdentityId}`
+                        },
+                        Action: "s3:GetObject",
+                        Resource: `arn:aws:s3:::${props.s3Bucket}/${props.projectName}/*`
+                    }
+                ]
+            };
+            // Use AwsCustomResource to automatically update bucket policy
+            new cr.AwsCustomResource(this, 'BucketPolicyUpdater', {
+                onCreate: {
+                    service: 'S3',
+                    action: 'putBucketPolicy',
+                    parameters: {
+                        Bucket: props.s3Bucket,
+                        Policy: JSON.stringify(bucketPolicyDocument)
+                    },
+                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-${props.s3Bucket}-bucket-policy`)
+                },
+                onUpdate: {
+                    service: 'S3',
+                    action: 'putBucketPolicy',
+                    parameters: {
+                        Bucket: props.s3Bucket,
+                        Policy: JSON.stringify(bucketPolicyDocument)
+                    },
+                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-${props.s3Bucket}-bucket-policy`)
+                },
+                onDelete: {
+                    service: 'S3',
+                    action: 'deleteBucketPolicy',
+                    parameters: {
+                        Bucket: props.s3Bucket
+                    }
+                },
+                policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+                    resources: [`arn:aws:s3:::${props.s3Bucket}`, `arn:aws:s3:::${props.s3Bucket}/*`]
+                })
+            });
+        }
         // Create Route53 A record to point domain to CloudFront distribution
         new route53.ARecord(this, "AliasRecord", {
             zone: hostedZone,
@@ -134,6 +277,11 @@ class ProjectSite extends cdk.Stack {
             value: this.distribution.distributionDomainName,
             exportName: `${props.projectName}-cloudfront-domain`,
             description: `CloudFront domain name for ${props.projectName}`,
+        });
+        // Output which method is being used
+        new cdk.CfnOutput(this, `${props.projectName}AccessMethod`, {
+            value: props.useOAC ? 'Origin Access Control (OAC) - Automated' : 'Origin Access Identity (OAI) - Automated',
+            description: `Access method used for ${props.projectName} with automated bucket policy`,
         });
     }
 }

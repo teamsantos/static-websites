@@ -91,11 +91,10 @@ export class ProjectSite extends cdk.Stack {
                 comment: `CloudFront distribution for ${props.projectName}`,
             });
 
-            // Associate OAC with the CloudFront distribution - this might not be needed with the new origin approach
-            // The S3BucketOrigin.withOriginAccessControl should handle this automatically
-            // But if needed, you can still override:
-            // const cfnDistribution = this.distribution.node.defaultChild as cloudfront.CfnDistribution;
-            // cfnDistribution.addPropertyOverride('DistributionConfig.Origins.0.S3OriginAccessControlId', oac.originAccessControlId);
+            // Associate OAC with the CloudFront distribution explicitly
+            // This ensures the OAC is properly linked to the distribution
+            const cfnDistribution = this.distribution.node.defaultChild as cloudfront.CfnDistribution;
+            cfnDistribution.addPropertyOverride('DistributionConfig.Origins.0.S3OriginAccessControlId', oac.originAccessControlId);
 
             // AUTOMATED BUCKET POLICY UPDATE using CDK Custom Resource
             const bucketPolicyDocument = {
@@ -131,7 +130,7 @@ export class ProjectSite extends cdk.Stack {
                         Bucket: props.s3Bucket,
                         Policy: JSON.stringify(bucketPolicyDocument)
                     },
-                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-bucket-policy-${Date.now()}`)
+                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-${props.s3Bucket}-bucket-policy`)
                 },
                 onUpdate: {
                     service: 'S3',
@@ -140,7 +139,7 @@ export class ProjectSite extends cdk.Stack {
                         Bucket: props.s3Bucket,
                         Policy: JSON.stringify(bucketPolicyDocument)
                     },
-                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-bucket-policy-${Date.now()}`)
+                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-${props.s3Bucket}-bucket-policy`)
                 },
                 onDelete: {
                     service: 'S3',
@@ -153,6 +152,11 @@ export class ProjectSite extends cdk.Stack {
                     resources: [`arn:aws:s3:::${props.s3Bucket}`, `arn:aws:s3:::${props.s3Bucket}/*`]
                 })
             });
+
+            // Ensure distribution is created before bucket policy to get the correct ARN
+            // This helps with CloudFormation resource ordering
+            const bucketPolicyHelper = this.node.findChild('BucketPolicyUpdater') as cr.AwsCustomResource;
+            bucketPolicyHelper.node.addDependency(this.distribution);
 
         } else {
             // ========== OPTION 1: Using Origin Access Identity (OAI) - Fully Automated ==========
@@ -222,7 +226,7 @@ export class ProjectSite extends cdk.Stack {
                         Bucket: props.s3Bucket,
                         Policy: JSON.stringify(bucketPolicyDocument)
                     },
-                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-bucket-policy-${Date.now()}`)
+                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-${props.s3Bucket}-bucket-policy`)
                 },
                 onUpdate: {
                     service: 'S3',
@@ -231,7 +235,7 @@ export class ProjectSite extends cdk.Stack {
                         Bucket: props.s3Bucket,
                         Policy: JSON.stringify(bucketPolicyDocument)
                     },
-                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-bucket-policy-${Date.now()}`)
+                    physicalResourceId: cr.PhysicalResourceId.of(`${props.projectName}-${props.s3Bucket}-bucket-policy`)
                 },
                 onDelete: {
                     service: 'S3',

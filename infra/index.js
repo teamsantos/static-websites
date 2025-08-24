@@ -87,6 +87,7 @@ else {
                     ManagedBy: "CDK",
                     Environment: "production",
                 },
+                useOAC: true
             });
         });
         console.log(`✅ Created ${projects.length} stack(s) successfully`);

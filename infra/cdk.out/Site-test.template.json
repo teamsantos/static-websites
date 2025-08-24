@@ -1,16 +1,5 @@
 {
  "Resources": {
-  "OAIE1EFC67F": {
-   "Type": "AWS::CloudFront::CloudFrontOriginAccessIdentity",
-   "Properties": {
-    "CloudFrontOriginAccessIdentityConfig": {
-     "Comment": "OAI for test"
-    }
-   },
-   "Metadata": {
-    "aws:cdk:path": "Site-test/OAI/Resource"
-   }
-  },
   "Certificate4E7ABB08": {
    "Type": "AWS::CertificateManager::Certificate",
    "Properties": {
@@ -31,6 +20,21 @@
    },
    "Metadata": {
     "aws:cdk:path": "Site-test/Certificate/Resource"
+   }
+  },
+  "OAC5B452445": {
+   "Type": "AWS::CloudFront::OriginAccessControl",
+   "Properties": {
+    "OriginAccessControlConfig": {
+     "Description": "OAC for test",
+     "Name": "SitetestOACBCFDCDDE",
+     "OriginAccessControlOriginType": "s3",
+     "SigningBehavior": "always",
+     "SigningProtocol": "sigv4"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "Site-test/OAC/Resource"
    }
   },
   "Distribution830FAC52": {
@@ -77,19 +81,21 @@
       {
        "DomainName": "teamsantos-static-websites.s3.eu-south-2.amazonaws.com",
        "Id": "SitetestDistributionOrigin1BCF6BE1F",
+       "OriginAccessControlId": {
+        "Fn::GetAtt": [
+         "OAC5B452445",
+         "Id"
+        ]
+       },
        "OriginPath": "/test",
        "S3OriginConfig": {
-        "OriginAccessIdentity": {
-         "Fn::Join": [
-          "",
-          [
-           "origin-access-identity/cloudfront/",
-           {
-            "Ref": "OAIE1EFC67F"
-           }
-          ]
-         ]
-        }
+        "OriginAccessIdentity": ""
+       },
+       "S3OriginAccessControlId": {
+        "Fn::GetAtt": [
+         "OAC5B452445",
+         "Id"
+        ]
        }
       }
      ],
@@ -104,6 +110,159 @@
    },
    "Metadata": {
     "aws:cdk:path": "Site-test/Distribution/Resource"
+   }
+  },
+  "BucketPolicyUpdaterDBA84720": {
+   "Type": "Custom::AWS",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "AWS679f53fac002430cb0da5b7982bd22872D164C4C",
+      "Arn"
+     ]
+    },
+    "Create": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"S3\",\"action\":\"putBucketPolicy\",\"parameters\":{\"Bucket\":\"teamsantos-static-websites\",\"Policy\":\"{\\\"Version\\\":\\\"2012-10-17\\\",\\\"Statement\\\":[{\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"cloudfront.amazonaws.com\\\"},\\\"Action\\\":\\\"s3:GetObject\\\",\\\"Resource\\\":\\\"arn:aws:s3:::teamsantos-static-websites/test/*\\\",\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceArn\\\":\\\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":cloudfront::396913706953:distribution/",
+       {
+        "Ref": "Distribution830FAC52"
+       },
+       "\\\"}}}]}\"},\"physicalResourceId\":{\"id\":\"test-teamsantos-static-websites-bucket-policy\"}}"
+      ]
+     ]
+    },
+    "Update": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"S3\",\"action\":\"putBucketPolicy\",\"parameters\":{\"Bucket\":\"teamsantos-static-websites\",\"Policy\":\"{\\\"Version\\\":\\\"2012-10-17\\\",\\\"Statement\\\":[{\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"cloudfront.amazonaws.com\\\"},\\\"Action\\\":\\\"s3:GetObject\\\",\\\"Resource\\\":\\\"arn:aws:s3:::teamsantos-static-websites/test/*\\\",\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceArn\\\":\\\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":cloudfront::396913706953:distribution/",
+       {
+        "Ref": "Distribution830FAC52"
+       },
+       "\\\"}}}]}\"},\"physicalResourceId\":{\"id\":\"test-teamsantos-static-websites-bucket-policy\"}}"
+      ]
+     ]
+    },
+    "Delete": "{\"service\":\"S3\",\"action\":\"deleteBucketPolicy\",\"parameters\":{\"Bucket\":\"teamsantos-static-websites\"}}",
+    "InstallLatestAwsSdk": true
+   },
+   "DependsOn": [
+    "BucketPolicyUpdaterCustomResourcePolicyBDE1BF98",
+    "Distribution830FAC52"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "Site-test/BucketPolicyUpdater/Resource/Default"
+   }
+  },
+  "BucketPolicyUpdaterCustomResourcePolicyBDE1BF98": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "s3:PutBucketPolicy",
+       "Effect": "Allow",
+       "Resource": [
+        "arn:aws:s3:::teamsantos-static-websites",
+        "arn:aws:s3:::teamsantos-static-websites/*"
+       ]
+      },
+      {
+       "Action": "s3:DeleteBucketPolicy",
+       "Effect": "Allow",
+       "Resource": [
+        "arn:aws:s3:::teamsantos-static-websites",
+        "arn:aws:s3:::teamsantos-static-websites/*"
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BucketPolicyUpdaterCustomResourcePolicyBDE1BF98",
+    "Roles": [
+     {
+      "Ref": "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
+     }
+    ]
+   },
+   "DependsOn": [
+    "Distribution830FAC52"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "Site-test/BucketPolicyUpdater/CustomResourcePolicy/Resource"
+   }
+  },
+  "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "Site-test/AWS679f53fac002430cb0da5b7982bd2287/ServiceRole/Resource"
+   }
+  },
+  "AWS679f53fac002430cb0da5b7982bd22872D164C4C": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-396913706953-us-east-1",
+     "S3Key": "c099eb4e32cbf1c3da9c45a3b280efe2bed38d27d74aa72702b67d86d1b52354.zip"
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Timeout": 120
+   },
+   "DependsOn": [
+    "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "Site-test/AWS679f53fac002430cb0da5b7982bd2287/Resource",
+    "aws:asset:path": "asset.c099eb4e32cbf1c3da9c45a3b280efe2bed38d27d74aa72702b67d86d1b52354",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
    }
   },
   "AliasRecord851000D2": {
@@ -137,7 +296,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22QwWrDMAyGn2V3R1taynZtMwY7jEL6AMOVlaCmtYMsdwzjd1+8HrrDTvo/6UMIrWDVtvD0YL9ig25qznyEfFCLk+kphiRIZpl95riGXcKJdGcjGTyH5AYJXiHvhUf2W0SK8d2RV9Zv0w2+q85bdf41Xjmq8DEpB1/1v1wMkigPjFbpYr0dSSB3997v/jsWIyEpbdaQtz1hEFeFWzqQllLxw84z+7HGfdI5aTE+OIJTfLy2L/C8fOEUmRtJy4EXgv5WfwCpYBl8IgEAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/21Ry07DMBD8Fu6OIY0QXNMgbqgo/YDIcbbRNo4deddUKMq/Y4dQKsRpZ2f24R3v5C7P5cOdulCmuyEz2Mr5yEoPogZywWsQUWtmKuQ+6AF4rwiEBs94Qq0YRmVVD17O1S8nqpO9SRehjQvdyTvLcXpx8NijLbUGoipy3pnU8R/9gsQe28DobKq5zRdh1Nh2Ko5E2xtgZ1+D1WvpFcSeH7wIVKOc351B/ZmEDdXOrC9OcRFUNIoImGSZgvAuMDwWci5r0M53a+WKjsBLPC0Qu7Hxm1ux7ULVyl0N/JumARted0S/4+F9Et7UNG3wEHgKvAjrOpBnuv/In+VT/KozIWY+WMYRZP0dvwCooAycxwEAAA=="
    },
    "Metadata": {
     "aws:cdk:path": "Site-test/CDKMetadata/Default"
@@ -189,6 +348,10 @@
    "Export": {
     "Name": "test-cloudfront-domain"
    }
+  },
+  "testAccessMethod": {
+   "Description": "Access method used for test with automated bucket policy",
+   "Value": "Origin Access Control (OAC) - Automated"
   }
  },
  "Parameters": {
