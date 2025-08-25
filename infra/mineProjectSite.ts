@@ -73,7 +73,9 @@ export class ProjectSite extends cdk.Stack {
 
         const uniqueSid = `AllowCloudFrontServicePrincipal-${props.projectName}-${distribution.distributionId.substring(0, 8)}`;
 
-        siteBucket.addToResourcePolicy(
+        new s3.BucketPolicy(this, "SiteBucketPolicy", {
+            bucket: siteBucket,
+        }).document.addStatements(
             new iam.PolicyStatement({
                 sid: uniqueSid,
                 effect: iam.Effect.ALLOW,
@@ -82,9 +84,9 @@ export class ProjectSite extends cdk.Stack {
                 resources: [`${siteBucket.bucketArn}/${props.projectName}/*`],
                 conditions: {
                     StringEquals: {
-                        "AWS:SourceArn": `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/${distribution.distributionId}`
-                    }
-                }
+                        "AWS:SourceArn": `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/${distribution.distributionId}`,
+                    },
+                },
             })
         );
 

@@ -24,7 +24,6 @@ if (!projectsParam) {
         console.log(`Deploying ${projects.length} project(s): ${projects.join(", ")}`);
 
         const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('account');
-        const region = config.certificateRegion;
 
         if (!account) {
             console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
@@ -45,7 +44,7 @@ if (!projectsParam) {
                 hostedZoneDomainName: config.domain,
                 env: {
                     account: account,
-                    region: region,
+                    region: config.certificateRegion,
                 },
                 tags: {
                     Project: project,
