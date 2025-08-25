@@ -6,7 +6,6 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as cr from "aws-cdk-lib/custom-resources";
 
 interface MineProjectSiteProps extends cdk.StackProps {
     projectName: string;
@@ -16,35 +15,12 @@ interface MineProjectSiteProps extends cdk.StackProps {
     region: string;
 }
 
-const existsRecord = (_this: cdk.Stack, hostedZone: route53.IHostedZone, recordName: string, recordType: string = 'A') => {
-    return new cr.AwsCustomResource(_this, 'RecordExistsCheck', {
-        onUpdate: {
-            service: 'Route53',
-            action: 'listResourceRecordSets',
-            parameters: {
-                HostedZoneId: hostedZone.hostedZoneId,
-                StartRecordName: recordName.endsWith('.') ? recordName : `${recordName}.`,
-                StartRecordType: recordType,
-                MaxItems: '1'
-            },
-            physicalResourceId: cr.PhysicalResourceId.of(`RecordCheck-${recordName}-${recordType}`)
-        },
-        policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
-            resources: [hostedZone.hostedZoneArn]
-        })
-    });
-};
-
 export class ProjectSite extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props: MineProjectSiteProps) {
         super(scope, id, props);
         const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
             domainName: props.hostedZoneDomainName
         });
-        if (existsRecord(this, hostedZone, props.domainName)) {
-            console.log(`HostedZone record already exists(${props.domainName})`);
-            return;
-        }
         const certificate = new acm.Certificate(this, 'Certificate', {
             domainName: props.domainName,
             validation: acm.CertificateValidation.fromDns(hostedZone),
