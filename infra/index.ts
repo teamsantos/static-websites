@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
-import { ProjectSite } from "./mineProjectSite";
+import { BucketStack } from "./bucketStack";
+import { ProjectSite } from "./ProjectStack";
 
 const app = new cdk.App();
 
@@ -9,6 +10,25 @@ const config = {
     s3Bucket: "teamsantos-static-websites",
     certificateRegion: "us-east-1",
 };
+
+const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('account');
+
+if (!account) {
+    console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
+}
+
+new BucketStack(app, "StaticWebsitesBucket", {
+    bucketName: config.s3Bucket,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "StaticWebsiteHosting",
+    },
+});
 
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
 
@@ -22,12 +42,6 @@ if (!projectsParam) {
         console.error("No valid projects found after parsing.");
     } else {
         console.log(`Deploying ${projects.length} project(s): ${projects.join(", ")}`);
-
-        const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('account');
-
-        if (!account) {
-            console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
-        }
 
         projects.forEach((project) => {
             if (!/^[a-z0-9-]+$/.test(project)) {

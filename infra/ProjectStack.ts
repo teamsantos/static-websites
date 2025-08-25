@@ -2,7 +2,6 @@ import * as cdk from "aws-cdk-lib";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
-import * as iam from 'aws-cdk-lib/aws-iam';
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -18,13 +17,16 @@ interface MineProjectSiteProps extends cdk.StackProps {
 export class ProjectSite extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props: MineProjectSiteProps) {
         super(scope, id, props);
+
         const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
             domainName: props.hostedZoneDomainName
         });
+
         const certificate = new acm.Certificate(this, 'Certificate', {
             domainName: props.domainName,
             validation: acm.CertificateValidation.fromDns(hostedZone),
         });
+
         const siteBucket = s3.Bucket.fromBucketAttributes(
             this,
             "StaticWebSitesBucket",
@@ -33,10 +35,12 @@ export class ProjectSite extends cdk.Stack {
                 region: props.region
             }
         );
+
         const oac = new cloudfront.S3OriginAccessControl(this, "OAC", {
             description: `OAC for ${props.projectName}`,
             signing: cloudfront.Signing.SIGV4_ALWAYS,
         });
+
         const origin = origins.S3BucketOrigin.withOriginAccessControl(siteBucket, {
             originPath: `/${props.projectName}`,
             originAccessControl: oac,
@@ -71,24 +75,7 @@ export class ProjectSite extends cdk.Stack {
             comment: `CloudFront distribution for ${props.projectName}`,
         });
 
-        const uniqueSid = `AllowCloudFrontServicePrincipal-${props.projectName}-${distribution.distributionId.substring(0, 8)}`;
-
-        new s3.BucketPolicy(this, "SiteBucketPolicy", {
-            bucket: siteBucket,
-        }).document.addStatements(
-            new iam.PolicyStatement({
-                sid: uniqueSid,
-                effect: iam.Effect.ALLOW,
-                principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
-                actions: ["s3:GetObject"],
-                resources: [`${siteBucket.bucketArn}/${props.projectName}/*`],
-                conditions: {
-                    StringEquals: {
-                        "AWS:SourceArn": `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/${distribution.distributionId}`,
-                    },
-                },
-            })
-        );
+        // No need for individual bucket policies since the bucket stack handles access for all distributions
 
         new route53.ARecord(this, "AliasRecord", {
             zone: hostedZone,
@@ -96,6 +83,22 @@ export class ProjectSite extends cdk.Stack {
             target: route53.RecordTarget.fromAlias(
                 new route53Targets.CloudFrontTarget(distribution)
             ),
+        });
+
+        // Output the distribution details
+        new cdk.CfnOutput(this, "DistributionId", {
+            value: distribution.distributionId,
+            description: `CloudFront distribution ID for ${props.projectName}`,
+        });
+
+        new cdk.CfnOutput(this, "DistributionDomainName", {
+            value: distribution.distributionDomainName,
+            description: `CloudFront distribution domain name for ${props.projectName}`,
+        });
+
+        new cdk.CfnOutput(this, "WebsiteURL", {
+            value: `https://${props.domainName}`,
+            description: `Website URL for ${props.projectName}`,
         });
     }
 }

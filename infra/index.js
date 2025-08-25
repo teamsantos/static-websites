@@ -34,7 +34,8 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const cdk = __importStar(require("aws-cdk-lib"));
-const mineProjectSite_1 = require("./mineProjectSite");
+const bucketStack_1 = require("./bucketStack");
+const ProjectStack_1 = require("./ProjectStack");
 const app = new cdk.App();
 const config = {
     region: "eu-south-2",
@@ -42,6 +43,22 @@ const config = {
     s3Bucket: "teamsantos-static-websites",
     certificateRegion: "us-east-1",
 };
+const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('account');
+if (!account) {
+    console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
+}
+new bucketStack_1.BucketStack(app, "StaticWebsitesBucket", {
+    bucketName: config.s3Bucket,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "StaticWebsiteHosting",
+    },
+});
 const projectsParam = app.node.tryGetContext("projects");
 if (!projectsParam) {
     console.error("No projects provided.");
@@ -54,17 +71,12 @@ else {
     }
     else {
         console.log(`Deploying ${projects.length} project(s): ${projects.join(", ")}`);
-        const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('account');
-        const region = config.certificateRegion;
-        if (!account) {
-            console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
-        }
         projects.forEach((project) => {
             if (!/^[a-z0-9-]+$/.test(project)) {
                 console.warn(`Warning: Project name '${project}' may not be DNS-safe. Use lowercase letters, numbers, and hyphens only.`);
             }
             console.log(`Creating stack for: ${project}.${config.domain}`);
-            new mineProjectSite_1.ProjectSite(app, `Site-${project}`, {
+            new ProjectStack_1.ProjectSite(app, `Site-${project}`, {
                 s3Bucket: config.s3Bucket,
                 region: config.region,
                 projectName: project,
@@ -72,7 +84,7 @@ else {
                 hostedZoneDomainName: config.domain,
                 env: {
                     account: account,
-                    region: region,
+                    region: config.certificateRegion,
                 },
                 tags: {
                     Project: project,

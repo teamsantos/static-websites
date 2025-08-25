@@ -38,7 +38,6 @@ const cdk = __importStar(require("aws-cdk-lib"));
 const acm = __importStar(require("aws-cdk-lib/aws-certificatemanager"));
 const cloudfront = __importStar(require("aws-cdk-lib/aws-cloudfront"));
 const origins = __importStar(require("aws-cdk-lib/aws-cloudfront-origins"));
-const iam = __importStar(require("aws-cdk-lib/aws-iam"));
 const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
 const route53Targets = __importStar(require("aws-cdk-lib/aws-route53-targets"));
 const s3 = __importStar(require("aws-cdk-lib/aws-s3"));
@@ -92,23 +91,24 @@ class ProjectSite extends cdk.Stack {
             ],
             comment: `CloudFront distribution for ${props.projectName}`,
         });
-        const uniqueSid = `AllowCloudFrontServicePrincipal-${props.projectName}-${distribution.distributionId.substring(0, 8)}`;
-        siteBucket.addToResourcePolicy(new iam.PolicyStatement({
-            sid: uniqueSid,
-            effect: iam.Effect.ALLOW,
-            principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
-            actions: ["s3:GetObject"],
-            resources: [`${siteBucket.bucketArn}/${props.projectName}/*`],
-            conditions: {
-                StringEquals: {
-                    "AWS:SourceArn": `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/${distribution.distributionId}`
-                }
-            }
-        }));
+        // No need for individual bucket policies since the bucket stack handles access for all distributions
         new route53.ARecord(this, "AliasRecord", {
             zone: hostedZone,
             recordName: props.domainName,
             target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(distribution)),
+        });
+        // Output the distribution details
+        new cdk.CfnOutput(this, "DistributionId", {
+            value: distribution.distributionId,
+            description: `CloudFront distribution ID for ${props.projectName}`,
+        });
+        new cdk.CfnOutput(this, "DistributionDomainName", {
+            value: distribution.distributionDomainName,
+            description: `CloudFront distribution domain name for ${props.projectName}`,
+        });
+        new cdk.CfnOutput(this, "WebsiteURL", {
+            value: `https://${props.domainName}`,
+            description: `Website URL for ${props.projectName}`,
         });
     }
 }
