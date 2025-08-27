@@ -72,50 +72,7 @@
   ],
   "features.title": "Tudo o que precisa para criar websites incríveis",
   "features.subTitle": "Funcionalidades poderosas que tornam a criação de websites simples e agradável",
-  "templates": [
-    {
-      "title": "Business Pro",
-      "subTitle": "Negócios",
-      "description": "Modelo profissional para negócios com secção hero, serviços e formulários de contacto",
-      "imageURL": "./assets/business/business.svg",
-      "url": "https://google.com"
-    },
-    {
-      "title": "Portfolio Criativo",
-      "subTitle": "Portfólio",
-      "description": "Mostre o seu trabalho com este modelo de portfólio deslumbrante",
-      "imageURL": "./assets/business/portfolio.svg",
-      "url": "https://google.com"
-    },
-    {
-      "title": "Restaurante Deluxe",
-      "subTitle": "Restaurante",
-      "description": "Perfeito para restaurantes com exibição de menu e sistema de reservas",
-      "imageURL": "./assets/business/restaurante.svg",
-      "url": "https://google.com"
-    },
-    {
-      "title": "Tech Startup",
-      "subTitle": "Tecnologia",
-      "description": "Modelo moderno para empresas de tecnologia e startups",
-      "imageURL": "./assets/business/startup.svg",
-      "url": "https://google.com"
-    },
-    {
-      "title": "Blog Minimalista",
-      "subTitle": "Blog",
-      "description": "Modelo de blog limpo e minimalista para criadores de conteúdo",
-      "imageURL": "./assets/business/blog.svg",
-      "url": "https://google.com"
-    },
-    {
-      "title": "Loja E-comerce",
-      "subTitle": "E-comerce",
-      "description": "Modelo completo de loja online com vitrine de produtos",
-      "imageURL": "./assets/business/ecomerce.svg",
-      "url": "https://google.com"
-    }
-  ],
+
   "templates.title": "Escolha entre Modelos Profissionais",
   "templates.subTitle": "Comece com um modelo bonito e personalize-o para corresponder à sua marca",
   "templates.seeAll": "Ver Todos os Modelos",

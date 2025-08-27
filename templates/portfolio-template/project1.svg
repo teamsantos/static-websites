@@ -1,0 +1,12 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="#f1f5f9"/>
+  <rect x="20" y="20" width="360" height="260" fill="white" rx="8" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="40" y="40" width="320" height="40" fill="#3b82f6" rx="4"/>
+  <rect x="40" y="100" width="150" height="20" fill="#e5e7eb" rx="2"/>
+  <rect x="40" y="130" width="100" height="20" fill="#e5e7eb" rx="2"/>
+  <rect x="40" y="170" width="80" height="30" fill="#10b981" rx="15"/>
+  <circle cx="320" cy="200" r="25" fill="#f59e0b"/>
+  <path d="M310 200 L320 210 L330 200 L320 220 Z" fill="white"/>
+  <text x="200" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#374151" font-weight="bold">E-Commerce Platform</text>
+  <text x="200" y="255" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#6b7280">Project Showcase</text>
+</svg>

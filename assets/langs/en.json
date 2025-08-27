@@ -72,50 +72,7 @@
   ],
   "features.title": "Everything You Need to Create Amazing Websites",
   "features.subTitle": "Powerful features that make website creation simple and enjoyable",
-  "templates": [
-    {
-      "title": "Business Pro",
-      "subTitle": "Business",
-      "description": "Professional template for businesses with hero section, services, and contact forms",
-      "imageURL": "./assets/business/business.svg",
-      "url": "https://google.com"
-    },
-    {
-      "title": "Creative Portfolio",
-      "subTitle": "Portfolio",
-      "description": "Showcase your work with this stunning portfolio template",
-      "imageURL": "./assets/business/portfolio.svg",
-      "url": "https://google.com"
-    },
-    {
-      "title": "Deluxe Restaurant",
-      "subTitle": "Restaurant",
-      "description": "Perfect for restaurants with menu display and reservation system",
-      "imageURL": "./assets/business/restaurante.svg",
-      "url": "https://google.com"
-    },
-    {
-      "title": "Tech Startup",
-      "subTitle": "Technology",
-      "description": "Modern template for tech companies and startups",
-      "imageURL": "./assets/business/startup.svg",
-      "url": "https://google.com"
-    },
-    {
-      "title": "Minimalist Blog",
-      "subTitle": "Blog",
-      "description": "Clean and minimalist blog template for content creators",
-      "imageURL": "./assets/business/blog.svg",
-      "url": "https://google.com"
-    },
-    {
-      "title": "E-Commerce Store",
-      "subTitle": "E-Commerce",
-      "description": "Complete online store template with product showcase",
-      "imageURL": "./assets/business/ecomerce.svg",
-      "url": "https://google.com"
-    }
-  ],
+
   "templates.title": "Choose from Professional Templates",
   "templates.subTitle": "Start with a beautiful template and customize it to match your brand",
   "templates.seeAll": "View All Templates",

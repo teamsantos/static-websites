@@ -1,0 +1,134 @@
+{
+  "name": "Creative Portfolio",
+  "title": "Creative Portfolio Template",
+  "hero": {
+    "greeting": "Hello, I'm",
+    "name": "Your Name",
+    "title": "Creative Designer & Developer",
+    "description": "I create beautiful, functional, and user-centered digital experiences that tell your story and engage your audience.",
+    "cta": "View My Work",
+    "contact": "Get In Touch"
+  },
+  "about": {
+    "title": "About Me",
+    "description": "Passionate creative professional with expertise in design and development. I love bringing ideas to life through thoughtful design and clean code.",
+    "skills": [
+      {
+        "category": "Design",
+        "items": ["UI/UX Design", "Branding", "Graphic Design", "Prototyping"]
+      },
+      {
+        "category": "Development",
+        "items": ["HTML/CSS", "JavaScript", "React", "Node.js"]
+      },
+      {
+        "category": "Tools",
+        "items": ["Figma", "Adobe Creative Suite", "VS Code", "Git"]
+      }
+    ]
+  },
+  "projects": [
+    {
+      "title": "E-Commerce Platform",
+      "description": "A modern e-commerce solution with seamless user experience and secure payment integration.",
+      "image": "./templates/portfolio-template/project1.jpg",
+      "tags": ["React", "Node.js", "MongoDB"],
+      "link": "#",
+      "featured": true
+    },
+    {
+      "title": "Mobile App Design",
+      "description": "Clean and intuitive mobile app design for a fitness tracking application.",
+      "image": "./templates/portfolio-template/project2.jpg",
+      "tags": ["UI/UX", "Mobile", "Figma"],
+      "link": "#",
+      "featured": true
+    },
+    {
+      "title": "Brand Identity",
+      "description": "Complete brand identity design including logo, typography, and brand guidelines.",
+      "image": "./templates/portfolio-template/project3.jpg",
+      "tags": ["Branding", "Logo Design", "Typography"],
+      "link": "#",
+      "featured": false
+    },
+    {
+      "title": "Web Dashboard",
+      "description": "Analytics dashboard with data visualization and interactive charts.",
+      "image": "./templates/portfolio-template/project4.jpg",
+      "tags": ["Dashboard", "Data Viz", "React"],
+      "link": "#",
+      "featured": false
+    },
+    {
+      "title": "Landing Page",
+      "description": "High-converting landing page design with modern animations and responsive layout.",
+      "image": "./templates/portfolio-template/project5.jpg",
+      "tags": ["Landing Page", "Animation", "CSS"],
+      "link": "#",
+      "featured": false
+    },
+    {
+      "title": "Portfolio Website",
+      "description": "Personal portfolio website showcasing creative work and professional experience.",
+      "image": "./templates/portfolio-template/project6.jpg",
+      "tags": ["Portfolio", "JavaScript", "SCSS"],
+      "link": "#",
+      "featured": false
+    }
+  ],
+  "projectsTitle": "Featured Projects",
+  "projectsSubtitle": "A selection of my recent work and creative projects",
+  "experience": [
+    {
+      "position": "Senior UI/UX Designer",
+      "company": "Tech Innovations Inc.",
+      "period": "2022 - Present",
+      "description": "Leading design initiatives and mentoring junior designers. Responsible for user research, prototyping, and design system development."
+    },
+    {
+      "position": "Frontend Developer",
+      "company": "Digital Solutions Co.",
+      "period": "2020 - 2022",
+      "description": "Developed responsive web applications using modern JavaScript frameworks. Collaborated closely with design team to implement pixel-perfect interfaces."
+    },
+    {
+      "position": "Junior Designer",
+      "company": "Creative Agency",
+      "period": "2019 - 2020",
+      "description": "Created visual concepts and designs for various clients. Worked on branding, print design, and digital marketing materials."
+    }
+  ],
+  "experienceTitle": "Work Experience",
+  "experienceSubtitle": "My professional journey and career highlights",
+  "contact": {
+    "title": "Let's Work Together",
+    "subtitle": "Have a project in mind? I'd love to hear about it.",
+    "form": {
+      "name": "Your Name",
+      "email": "Your Email",
+      "subject": "Project Subject",
+      "message": "Tell me about your project",
+      "submit": "Send Message"
+    },
+    "info": {
+      "email": "hello@yourname.com",
+      "phone": "+1 (555) 123-4567",
+      "location": "San Francisco, CA"
+    },
+    "social": {
+      "linkedin": "LinkedIn Profile",
+      "dribbble": "Dribbble Portfolio",
+      "behance": "Behance Portfolio"
+    }
+  },
+  "footer": {
+    "description": "Creating beautiful digital experiences, one pixel at a time.",
+    "rights": "© 2025 Your Name. All rights reserved.",
+    "links": {
+      "about": "About",
+      "projects": "Projects",
+      "contact": "Contact"
+    }
+  }
+}

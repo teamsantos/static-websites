@@ -1,0 +1,15 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="aboutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fef3c7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fde68a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#aboutGrad)"/>
+  <rect x="50" y="50" width="500" height="300" fill="white" rx="8" stroke="#f59e0b" stroke-width="2"/>
+  <circle cx="200" cy="150" r="30" fill="#f59e0b" opacity="0.3"/>
+  <circle cx="300" cy="150" r="20" fill="#f59e0b" opacity="0.4"/>
+  <circle cx="400" cy="150" r="25" fill="#f59e0b" opacity="0.3"/>
+  <text x="300" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#92400e" font-weight="bold">About Our Company</text>
+  <text x="300" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#a16207">Placeholder Image</text>
+</svg>

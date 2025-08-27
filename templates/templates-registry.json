@@ -1,0 +1,63 @@
+{
+  "templates": [
+    {
+      "id": "business-template",
+      "name": "Business Pro",
+      "subTitle": "Business",
+      "description": "Professional template for businesses with hero section, services, and contact forms",
+      "imageURL": "./assets/business/business.svg",
+      "url": "./templates/business-template/",
+      "template": "business-template",
+      "featured": true,
+      "order": 1,
+      "category": "business",
+      "tags": ["corporate", "professional", "services"],
+      "features": ["Hero Section", "Services", "About", "Contact", "Gallery"]
+    },
+    {
+      "id": "portfolio-template",
+      "name": "Creative Portfolio",
+      "subTitle": "Portfolio",
+      "description": "Showcase your work with this stunning portfolio template",
+      "imageURL": "./assets/business/portfolio.svg",
+      "url": "./templates/portfolio-template/",
+      "template": "portfolio-template",
+      "featured": true,
+      "order": 2,
+      "category": "portfolio",
+      "tags": ["creative", "designer", "showcase"],
+      "features": ["Hero", "Projects", "About", "Skills", "Contact"]
+    }
+  ],
+  "categories": [
+    {
+      "id": "business",
+      "name": "Business",
+      "icon": "building",
+      "description": "Professional business templates"
+    },
+    {
+      "id": "portfolio",
+      "name": "Portfolio",
+      "icon": "user",
+      "description": "Creative portfolio templates"
+    },
+    {
+      "id": "restaurant",
+      "name": "Restaurant",
+      "icon": "utensils",
+      "description": "Restaurant and food service templates"
+    },
+    {
+      "id": "ecommerce",
+      "name": "E-Commerce",
+      "icon": "shopping-cart",
+      "description": "Online store templates"
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "lastUpdated": "2025-01-27",
+    "description": "Registry of available templates for the static website generator"
+  }
+}

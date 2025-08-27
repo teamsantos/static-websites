@@ -1,0 +1,104 @@
+{
+  "hero": {
+    "type": "single",
+    "src": "./templates/portfolio-template/hero-profile.svg",
+    "alt": "Professional headshot",
+    "fallback": "./assets/placeholder-profile.svg"
+  },
+  "about": {
+    "type": "single",
+    "src": "./templates/portfolio-template/about-image.svg",
+    "alt": "About me workspace",
+    "fallback": "./assets/placeholder-workspace.svg"
+  },
+  "projects": {
+    "type": "array",
+    "images": [
+      {
+        "src": "./templates/portfolio-template/project1.svg",
+        "alt": "E-commerce platform project",
+        "fallback": "./assets/placeholder-project.svg"
+      },
+      {
+        "src": "./templates/portfolio-template/project2.svg",
+        "alt": "Mobile app design project",
+        "fallback": "./assets/placeholder-project.svg"
+      },
+      {
+        "src": "./templates/portfolio-template/project3.svg",
+        "alt": "Brand identity project",
+        "fallback": "./assets/placeholder-project.svg"
+      },
+      {
+        "src": "./templates/portfolio-template/project4.svg",
+        "alt": "Web dashboard project",
+        "fallback": "./assets/placeholder-project.svg"
+      },
+      {
+        "src": "./templates/portfolio-template/project5.svg",
+        "alt": "Landing page project",
+        "fallback": "./assets/placeholder-project.svg"
+      },
+      {
+        "src": "./templates/portfolio-template/project6.svg",
+        "alt": "Portfolio website project",
+        "fallback": "./assets/placeholder-project.svg"
+      }
+    ],
+    "fallback": "./assets/placeholder-project.svg"
+  },
+  "experience": {
+    "type": "single",
+    "src": "./templates/portfolio-template/experience-bg.svg",
+    "alt": "Experience background",
+    "fallback": "./assets/placeholder-bg.svg"
+  },
+  "skills": {
+    "type": "carousel",
+    "images": [
+      {
+        "src": "./templates/portfolio-template/skill-design.svg",
+        "alt": "Design skills illustration",
+        "fallback": "./assets/placeholder-skill.svg"
+      },
+      {
+        "src": "./templates/portfolio-template/skill-dev.svg",
+        "alt": "Development skills illustration",
+        "fallback": "./assets/placeholder-skill.svg"
+      },
+      {
+        "src": "./templates/portfolio-template/skill-tools.svg",
+        "alt": "Tools and software illustration",
+        "fallback": "./assets/placeholder-skill.svg"
+      }
+    ],
+    "autoplay": true,
+    "interval": 4000,
+    "showDots": false,
+    "showArrows": false
+  },
+  "testimonials": {
+    "type": "carousel",
+    "images": [
+      {
+        "src": "./templates/portfolio-template/client1.svg",
+        "alt": "Client testimonial 1",
+        "fallback": "./assets/placeholder-testimonial.svg"
+      },
+      {
+        "src": "./templates/portfolio-template/client2.svg",
+        "alt": "Client testimonial 2",
+        "fallback": "./assets/placeholder-testimonial.svg"
+      },
+      {
+        "src": "./templates/portfolio-template/client3.svg",
+        "alt": "Client testimonial 3",
+        "fallback": "./assets/placeholder-testimonial.svg"
+      }
+    ],
+    "autoplay": false,
+    "interval": 6000,
+    "showDots": true,
+    "showArrows": true
+  }
+}

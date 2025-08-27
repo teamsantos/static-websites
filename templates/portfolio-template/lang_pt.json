@@ -1,0 +1,134 @@
+{
+  "name": "Portfólio Criativo",
+  "title": "Modelo de Portfólio Criativo",
+  "hero": {
+    "greeting": "Olá, eu sou",
+    "name": "Seu Nome",
+    "title": "Designer Criativo & Desenvolvedor",
+    "description": "Crio experiências digitais bonitas, funcionais e centradas no usuário que contam sua história e envolvem seu público.",
+    "cta": "Veja Meu Trabalho",
+    "contact": "Entre em Contato"
+  },
+  "about": {
+    "title": "Sobre Mim",
+    "description": "Profissional criativo apaixonado com experiência em design e desenvolvimento. Adoro dar vida às ideias através de design cuidadoso e código limpo.",
+    "skills": [
+      {
+        "category": "Design",
+        "items": ["UI/UX Design", "Branding", "Design Gráfico", "Prototipagem"]
+      },
+      {
+        "category": "Desenvolvimento",
+        "items": ["HTML/CSS", "JavaScript", "React", "Node.js"]
+      },
+      {
+        "category": "Ferramentas",
+        "items": ["Figma", "Adobe Creative Suite", "VS Code", "Git"]
+      }
+    ]
+  },
+  "projects": [
+    {
+      "title": "Plataforma E-Commerce",
+      "description": "Uma solução moderna de e-commerce com experiência de usuário perfeita e integração de pagamento segura.",
+      "image": "./templates/portfolio-template/project1.jpg",
+      "tags": ["React", "Node.js", "MongoDB"],
+      "link": "#",
+      "featured": true
+    },
+    {
+      "title": "Design de App Mobile",
+      "description": "Design limpo e intuitivo de aplicativo móvel para um aplicativo de rastreamento de fitness.",
+      "image": "./templates/portfolio-template/project2.jpg",
+      "tags": ["UI/UX", "Mobile", "Figma"],
+      "link": "#",
+      "featured": true
+    },
+    {
+      "title": "Identidade Visual",
+      "description": "Design completo de identidade visual incluindo logo, tipografia e diretrizes de marca.",
+      "image": "./templates/portfolio-template/project3.jpg",
+      "tags": ["Branding", "Logo Design", "Typography"],
+      "link": "#",
+      "featured": false
+    },
+    {
+      "title": "Dashboard Web",
+      "description": "Dashboard de análise com visualização de dados e gráficos interativos.",
+      "image": "./templates/portfolio-template/project4.jpg",
+      "tags": ["Dashboard", "Data Viz", "React"],
+      "link": "#",
+      "featured": false
+    },
+    {
+      "title": "Página de Destino",
+      "description": "Design de página de destino de alta conversão com animações modernas e layout responsivo.",
+      "image": "./templates/portfolio-template/project5.jpg",
+      "tags": ["Landing Page", "Animation", "CSS"],
+      "link": "#",
+      "featured": false
+    },
+    {
+      "title": "Website Portfólio",
+      "description": "Website portfólio pessoal apresentando trabalho criativo e experiência profissional.",
+      "image": "./templates/portfolio-template/project6.jpg",
+      "tags": ["Portfolio", "JavaScript", "SCSS"],
+      "link": "#",
+      "featured": false
+    }
+  ],
+  "projectsTitle": "Projetos em Destaque",
+  "projectsSubtitle": "Uma seleção do meu trabalho recente e projetos criativos",
+  "experience": [
+    {
+      "position": "Designer Sênior UI/UX",
+      "company": "Tech Innovations Inc.",
+      "period": "2022 - Presente",
+      "description": "Liderando iniciativas de design e mentorando designers juniores. Responsável por pesquisa de usuário, prototipagem e desenvolvimento de sistema de design."
+    },
+    {
+      "position": "Desenvolvedor Frontend",
+      "company": "Digital Solutions Co.",
+      "period": "2020 - 2022",
+      "description": "Desenvolveu aplicações web responsivas usando frameworks JavaScript modernos. Colaborou estreitamente com a equipe de design para implementar interfaces pixel-perfect."
+    },
+    {
+      "position": "Designer Júnior",
+      "company": "Agência Criativa",
+      "period": "2019 - 2020",
+      "description": "Criou conceitos visuais e designs para vários clientes. Trabalhou em branding, design gráfico e materiais de marketing digital."
+    }
+  ],
+  "experienceTitle": "Experiência Profissional",
+  "experienceSubtitle": "Minha jornada profissional e destaques da carreira",
+  "contact": {
+    "title": "Vamos Trabalhar Juntos",
+    "subtitle": "Tem um projeto em mente? Adoraria ouvir sobre ele.",
+    "form": {
+      "name": "Seu Nome",
+      "email": "Seu Email",
+      "subject": "Assunto do Projeto",
+      "message": "Conte-me sobre seu projeto",
+      "submit": "Enviar Mensagem"
+    },
+    "info": {
+      "email": "hello@yourname.com",
+      "phone": "+1 (555) 123-4567",
+      "location": "São Francisco, CA"
+    },
+    "social": {
+      "linkedin": "Perfil LinkedIn",
+      "dribbble": "Portfólio Dribbble",
+      "behance": "Portfólio Behance"
+    }
+  },
+  "footer": {
+    "description": "Criando experiências digitais bonitas, um pixel de cada vez.",
+    "rights": "© 2025 Seu Nome. Todos os direitos reservados.",
+    "links": {
+      "about": "Sobre",
+      "projects": "Projetos",
+      "contact": "Contato"
+    }
+  }
+}

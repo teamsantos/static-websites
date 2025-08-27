@@ -1,4 +1,3 @@
-import translationsPT from '../assets/langs/pt.json' with { type: 'json' };
 import translationsEN from '../assets/langs/en.json' with { type: 'json' };
 
 const lang = translationsEN;
@@ -113,17 +112,81 @@ const injectBenifits = (benifits) => {
     `).join("");
 };
 
+// Dynamic template loading system
+const loadTemplatesFromFolders = async (mainLang) => {
+    try {
+        // Load the templates registry
+        const registryResponse = await fetch('./templates/templates-registry.json');
+        if (!registryResponse.ok) {
+            throw new Error('Failed to load templates registry');
+        }
+        const registry = await registryResponse.json();
+
+        // Detect current language (similar to template loader logic)
+        let currentLang = 'en'; // default
+        const urlParams = new URLSearchParams(window.location.search);
+        const langParam = urlParams.get('lang');
+        if (langParam && ['en', 'pt'].includes(langParam)) {
+            currentLang = langParam;
+        } else if (navigator.language.startsWith('pt')) {
+            currentLang = 'pt';
+        }
+
+        // Load template data for each registered template
+        const templatesWithData = await Promise.all(
+            registry.templates.map(async (template) => {
+                try {
+                    // Load template-specific language data
+                    const templateLangPath = `./templates/${template.id}/lang_${currentLang}.json`;
+                    const templateLangResponse = await fetch(templateLangPath);
+
+                    if (!templateLangResponse.ok) {
+                        console.warn(`Language file not found for template ${template.id}, using registry data`);
+                        return template;
+                    }
+
+                    const templateLangData = await templateLangResponse.json();
+
+                    // Merge registry data with template language data
+                    return {
+                        ...template,
+                        // Use template-specific data where available, fallback to registry
+                        name: templateLangData.name || template.name,
+                        description: templateLangData.description || template.description,
+                        // Add any other template-specific data you want to expose
+                        templateData: templateLangData
+                    };
+                } catch (error) {
+                    console.warn(`Error loading data for template ${template.id}:`, error);
+                    return template;
+                }
+            })
+        );
+
+        // Sort templates by order
+        return templatesWithData.sort((a, b) => (a.order || 999) - (b.order || 999));
+
+    } catch (error) {
+        console.error('Error loading templates from folders:', error);
+        throw error;
+    }
+};
+
 const injectTemplates = (templates, selectText) => {
     const container = document.getElementById("templates");
     const fragment = document.createDocumentFragment();
 
     templates.forEach((template) => {
         const card = document.createElement("div");
-        card.className = "template-card";
-        card.style.cursor = "pointer";
+        card.className = `template-card ${template.comingSoon ? 'coming-soon' : ''}`;
+
+        const buttonText = template.comingSoon ? 'Coming Soon' : selectText;
+        const buttonClass = template.comingSoon ? 'btn btn-secondary btn-full' : 'btn btn-primary btn-full';
+
         card.innerHTML = `
             <div class="template-image">
                 <img src="${template.imageURL}" alt="${template.title}">
+                ${template.comingSoon ? '<div class="coming-soon-badge">Coming Soon</div>' : ''}
             </div>
             <div class="template-content">
                 <div class="template-header">
@@ -131,14 +194,62 @@ const injectTemplates = (templates, selectText) => {
                     <span class="template-category">${template.subTitle}</span>
                 </div>
                 <p>${template.description}</p>
-                <button class="btn btn-primary btn-full">${selectText}</button>
+                <button class="${buttonClass}" ${template.comingSoon ? 'disabled' : ''}>
+                    ${buttonText}
+                </button>
             </div>
         `;
-        card.onclick = () => window.location.href = template.url;
+
+        // Handle click events
+        if (!template.comingSoon && template.url && template.url !== '#') {
+            card.style.cursor = "pointer";
+            card.onclick = () => {
+                // Check if it's a template URL (contains templates/)
+                if (template.url.includes('templates/')) {
+                    window.location.href = template.url;
+                } else {
+                    // Handle other types of URLs (external links, etc.)
+                    window.open(template.url, '_blank');
+                }
+            };
+        } else if (template.comingSoon) {
+            card.style.cursor = "default";
+            card.onclick = (e) => {
+                e.stopPropagation();
+                // Optional: Show a notification or modal about coming soon
+                showComingSoonNotification(template.title);
+            };
+        }
+
         fragment.appendChild(card);
     });
 
     container.appendChild(fragment);
+};
+
+const showComingSoonNotification = (templateName) => {
+    // Create a simple notification
+    const notification = document.createElement('div');
+    notification.className = 'notification coming-soon-notification';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <h4>Coming Soon!</h4>
+            <p>The ${templateName} template is currently in development. Check back soon!</p>
+            <button class="btn btn-primary notification-close">Got it</button>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Auto-remove after 5 seconds or on button click
+    const closeButton = notification.querySelector('.notification-close');
+    closeButton.onclick = () => notification.remove();
+
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
 };
 
 const injectFeatures = (features) => {
@@ -199,10 +310,19 @@ async function loadTranslations() {
             injectFeatures(features);
         }
 
-        let templates = lang["templates"];
-        if (templates) {
-            injectTemplates(templates, lang["template.select"] ?? "Use this template");
-        }
+        // Load templates dynamically from template folders
+        loadTemplatesFromFolders(lang).then(templates => {
+            if (templates && templates.length > 0) {
+                injectTemplates(templates, lang["template.select"] ?? "Use this template");
+            }
+        }).catch(error => {
+            console.error('Error loading templates:', error);
+            // Fallback to language file templates if dynamic loading fails
+            let templates = lang["templates"];
+            if (templates) {
+                injectTemplates(templates, lang["template.select"] ?? "Use this template");
+            }
+        });
 
         let benifits = lang["getStarted.benifits"];
         if (benifits) {
