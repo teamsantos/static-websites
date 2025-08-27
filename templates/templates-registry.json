@@ -1,13 +1,13 @@
 {
   "templates": [
     {
-      "id": "business-template",
+      "id": "business",
       "name": "Business Pro",
       "subTitle": "Business",
       "description": "Professional template for businesses with hero section, services, and contact forms",
       "imageURL": "./assets/business/business.svg",
-      "url": "./templates/business-template/",
-      "template": "business-template",
+      "url": "./templates/business/",
+      "template": "business",
       "featured": true,
       "order": 1,
       "category": "business",
@@ -15,13 +15,13 @@
       "features": ["Hero Section", "Services", "About", "Contact", "Gallery"]
     },
     {
-      "id": "portfolio-template",
+      "id": "portfolio",
       "name": "Creative Portfolio",
       "subTitle": "Portfolio",
       "description": "Showcase your work with this stunning portfolio template",
       "imageURL": "./assets/business/portfolio.svg",
-      "url": "./templates/portfolio-template/",
-      "template": "portfolio-template",
+      "url": "./templates/portfolio/",
+      "template": "portfolio",
       "featured": true,
       "order": 2,
       "category": "portfolio",

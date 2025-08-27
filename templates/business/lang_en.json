@@ -83,13 +83,13 @@
       "quote": "Outstanding service and exceptional results. Highly recommended!",
       "author": "John Smith",
       "position": "CEO, TechCorp",
-      "image": "./templates/business-template/testimonial1.jpg"
+      "image": "./templates/business/testimonial1.jpg"
     },
     {
       "quote": "Professional team that delivers on their promises.",
       "author": "Sarah Johnson",
       "position": "Marketing Director, GrowthCo",
-      "image": "./templates/business-template/testimonial2.jpg"
+      "image": "./templates/business/testimonial2.jpg"
     }
   ],
   "testimonialsTitle": "What Our Clients Say",

@@ -9,12 +9,12 @@ templates/
 ├── templates-registry.json    # Central registry of all templates
 ├── manage-templates.js       # Utility script for managing templates
 ├── README.md                 # This file
-├── business-template/        # Example business template
+├── business/        # Example business template
 │   ├── index.html           # Template HTML structure
 │   ├── lang_en.json         # English translations
 │   ├── lang_pt.json         # Portuguese translations
 │   └── images.json          # Image configuration
-└── portfolio-template/      # Example portfolio template
+└── portfolio/      # Example portfolio template
     ├── index.html
     ├── lang_en.json
     ├── lang_pt.json

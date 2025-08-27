@@ -4,46 +4,60 @@ import { createHtmlPlugin } from 'vite-plugin-html'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 
 const projectName = process.env.PROJECT
+const templateName = process.env.TEMPLATE
 
 // Resolve paths depending on PROJECT env
-const rootDir = projectName
-  ? resolve(__dirname, `projects/${projectName}`)
-  : resolve(__dirname, '.')
+function parseEnv() {
+    if (projectName) {
+        return {
+            rootDir: resolve(__dirname, `projects/${projectName}`),
+            inputFile: resolve(__dirname, `projects/${projectName}/index.html`),
+            outDir: resolve(__dirname, `dist/${projectName}`)
+        };
 
-const inputFile = projectName
-  ? resolve(__dirname, `projects/${projectName}/index.html`)
-  : resolve(__dirname, 'index.html')
+    }
+    if (templateName) {
+        return {
+            rootDir: resolve(__dirname, `templates/${templateName}`),
+            inputFile: resolve(__dirname, `templates/${templateName}/index.html`),
+            outDir: resolve(__dirname, `templates/${templateName}/dist`)
+        };
+    }
+    return {
+        rootDir: resolve(__dirname, '.'),
+        inputFile: resolve(__dirname, 'index.html'),
+        outDir: resolve(__dirname, 'dist')
+    };
+}
 
-const outDir = projectName
-  ? resolve(__dirname, `dist/${projectName}`)
-  : resolve(__dirname, 'dist')
+const { rootDir, inputFile, outDir } = parseEnv();
 
 export default defineConfig({
-  root: rootDir,
-  build: {
-    rollupOptions: {
-      input: inputFile,
+    root: rootDir,
+    build: {
+        rollupOptions: {
+            input: inputFile,
+        },
+        assetsInlineLimit: Infinity,
+        outDir,
+        emptyOutDir: true,
+        minify: 'terser',
+        terserOptions: {
+            compress: true,
+            mangle: true,
+        },
     },
-    assetsInlineLimit: Infinity,
-    outDir,
-    emptyOutDir: true,
-    minify: 'terser',
-    terserOptions: {
-      compress: true,
-      mangle: true,
-    },
-  },
-  plugins: [
-    viteSingleFile(),
-    createHtmlPlugin({
-      minify: {
-        collapseWhitespace: true,
-        removeComments: true,
-        removeRedundantAttributes: true,
-        removeEmptyAttributes: true,
-        minifyJS: true,
-        minifyCSS: true,
-      },
-    }),
-  ],
+    plugins: [
+        viteSingleFile(),
+        createHtmlPlugin({
+            minify: {
+                collapseWhitespace: true,
+                removeComments: true,
+                removeRedundantAttributes: true,
+                removeEmptyAttributes: true,
+                minifyJS: true,
+                minifyCSS: true,
+            },
+        }),
+    ],
 })

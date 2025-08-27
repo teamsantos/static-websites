@@ -1,19 +1,19 @@
 {
   "hero": {
     "type": "single",
-    "src": "./templates/business-template/hero-image.svg",
+    "src": "./templates/business/hero-image.svg",
     "alt": "Business professional hero image",
     "fallback": "./assets/placeholder-hero.svg"
   },
   "about": {
     "type": "single",
-    "src": "./templates/business-template/about-image.svg",
+    "src": "./templates/business/about-image.svg",
     "alt": "About our company",
     "fallback": "./assets/placeholder-about.svg"
   },
   "services": {
     "type": "single",
-    "src": "./templates/business-template/services-image.svg",
+    "src": "./templates/business/services-image.svg",
     "alt": "Our services",
     "fallback": "./assets/placeholder-services.svg"
   },
@@ -21,22 +21,22 @@
     "type": "carousel",
     "images": [
       {
-        "src": "./templates/business-template/gallery1.svg",
+        "src": "./templates/business/gallery1.svg",
         "alt": "Business meeting",
         "fallback": "./assets/placeholder-gallery.svg"
       },
       {
-        "src": "./templates/business-template/gallery2.svg",
+        "src": "./templates/business/gallery2.svg",
         "alt": "Team collaboration",
         "fallback": "./assets/placeholder-gallery.svg"
       },
       {
-        "src": "./templates/business-template/gallery3.svg",
+        "src": "./templates/business/gallery3.svg",
         "alt": "Office workspace",
         "fallback": "./assets/placeholder-gallery.svg"
       },
       {
-        "src": "./templates/business-template/gallery4.svg",
+        "src": "./templates/business/gallery4.svg",
         "alt": "Business presentation",
         "fallback": "./assets/placeholder-gallery.svg"
       }
@@ -50,12 +50,12 @@
     "type": "carousel",
     "images": [
       {
-        "src": "./templates/business-template/testimonial1.svg",
+        "src": "./templates/business/testimonial1.svg",
         "alt": "Client testimonial 1",
         "fallback": "./assets/placeholder-testimonial.svg"
       },
       {
-        "src": "./templates/business-template/testimonial2.svg",
+        "src": "./templates/business/testimonial2.svg",
         "alt": "Client testimonial 2",
         "fallback": "./assets/placeholder-testimonial.svg"
       }
@@ -68,11 +68,11 @@
   "logos": {
     "type": "array",
     "images": [
-      "./templates/business-template/logo1.svg",
-      "./templates/business-template/logo2.svg",
-      "./templates/business-template/logo3.svg",
-      "./templates/business-template/logo4.svg",
-      "./templates/business-template/logo5.svg"
+      "./templates/business/logo1.svg",
+      "./templates/business/logo2.svg",
+      "./templates/business/logo3.svg",
+      "./templates/business/logo4.svg",
+      "./templates/business/logo5.svg"
     ],
     "alt": "Client logos",
     "fallback": "./assets/placeholder-logo.svg"

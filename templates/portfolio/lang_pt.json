@@ -31,7 +31,7 @@
     {
       "title": "Plataforma E-Commerce",
       "description": "Uma solução moderna de e-commerce com experiência de usuário perfeita e integração de pagamento segura.",
-      "image": "./templates/portfolio-template/project1.jpg",
+      "image": "./templates/portfolio/project1.jpg",
       "tags": ["React", "Node.js", "MongoDB"],
       "link": "#",
       "featured": true
@@ -39,7 +39,7 @@
     {
       "title": "Design de App Mobile",
       "description": "Design limpo e intuitivo de aplicativo móvel para um aplicativo de rastreamento de fitness.",
-      "image": "./templates/portfolio-template/project2.jpg",
+      "image": "./templates/portfolio/project2.jpg",
       "tags": ["UI/UX", "Mobile", "Figma"],
       "link": "#",
       "featured": true
@@ -47,7 +47,7 @@
     {
       "title": "Identidade Visual",
       "description": "Design completo de identidade visual incluindo logo, tipografia e diretrizes de marca.",
-      "image": "./templates/portfolio-template/project3.jpg",
+      "image": "./templates/portfolio/project3.jpg",
       "tags": ["Branding", "Logo Design", "Typography"],
       "link": "#",
       "featured": false
@@ -55,7 +55,7 @@
     {
       "title": "Dashboard Web",
       "description": "Dashboard de análise com visualização de dados e gráficos interativos.",
-      "image": "./templates/portfolio-template/project4.jpg",
+      "image": "./templates/portfolio/project4.jpg",
       "tags": ["Dashboard", "Data Viz", "React"],
       "link": "#",
       "featured": false
@@ -63,7 +63,7 @@
     {
       "title": "Página de Destino",
       "description": "Design de página de destino de alta conversão com animações modernas e layout responsivo.",
-      "image": "./templates/portfolio-template/project5.jpg",
+      "image": "./templates/portfolio/project5.jpg",
       "tags": ["Landing Page", "Animation", "CSS"],
       "link": "#",
       "featured": false
@@ -71,7 +71,7 @@
     {
       "title": "Website Portfólio",
       "description": "Website portfólio pessoal apresentando trabalho criativo e experiência profissional.",
-      "image": "./templates/portfolio-template/project6.jpg",
+      "image": "./templates/portfolio/project6.jpg",
       "tags": ["Portfolio", "JavaScript", "SCSS"],
       "link": "#",
       "featured": false

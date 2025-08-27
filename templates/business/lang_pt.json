@@ -83,13 +83,13 @@
       "quote": "Serviço excepcional e resultados extraordinários. Altamente recomendado!",
       "author": "João Silva",
       "position": "CEO, TechCorp",
-      "image": "./templates/business-template/testimonial1.jpg"
+      "image": "./templates/business/testimonial1.jpg"
     },
     {
       "quote": "Equipe profissional que cumpre suas promessas.",
       "author": "Sara João",
       "position": "Diretora de Marketing, GrowthCo",
-      "image": "./templates/business-template/testimonial2.jpg"
+      "image": "./templates/business/testimonial2.jpg"
     }
   ],
   "testimonialsTitle": "O que Nossos Clientes Dizem",

@@ -130,7 +130,7 @@ class TemplateLoader {
 
     injectDynamicContent() {
         // Inject hero features for business template
-        if (this.currentTemplate === 'business-template') {
+        if (this.currentTemplate === 'business') {
             this.injectHeroFeatures();
             this.injectServices();
             this.injectStats();
@@ -138,7 +138,7 @@ class TemplateLoader {
         }
 
         // Inject projects for portfolio template
-        if (this.currentTemplate === 'portfolio-template') {
+        if (this.currentTemplate === 'portfolio') {
             this.injectProjects();
             this.injectExperience();
         }
