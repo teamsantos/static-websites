@@ -31,7 +31,7 @@
     {
       "title": "Plataforma E-Commerce",
       "description": "Uma solução moderna de e-commerce com experiência de usuário perfeita e integração de pagamento segura.",
-      "image": "./templates/portfolio/project1.jpg",
+      "image": "./templates/portfolio/images/project1.jpg",
       "tags": ["React", "Node.js", "MongoDB"],
       "link": "#",
       "featured": true
@@ -39,7 +39,7 @@
     {
       "title": "Design de App Mobile",
       "description": "Design limpo e intuitivo de aplicativo móvel para um aplicativo de rastreamento de fitness.",
-      "image": "./templates/portfolio/project2.jpg",
+      "image": "./templates/portfolio/images/project2.jpg",
       "tags": ["UI/UX", "Mobile", "Figma"],
       "link": "#",
       "featured": true

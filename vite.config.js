@@ -14,7 +14,6 @@ function parseEnv() {
             inputFile: resolve(__dirname, `projects/${projectName}/index.html`),
             outDir: resolve(__dirname, `dist/${projectName}`)
         };
-
     }
     if (templateName) {
         return {

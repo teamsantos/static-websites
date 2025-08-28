@@ -1,13 +1,13 @@
 {
   "hero": {
     "type": "single",
-    "src": "./templates/portfolio/hero-profile.svg",
+    "src": "./templates/portfolio/images/hero-profile.svg",
     "alt": "Professional headshot",
     "fallback": "./assets/placeholder-profile.svg"
   },
   "about": {
     "type": "single",
-    "src": "./templates/portfolio/about-image.svg",
+    "src": "./templates/portfolio/images/about-image.svg",
     "alt": "About me workspace",
     "fallback": "./assets/placeholder-workspace.svg"
   },
@@ -15,12 +15,12 @@
     "type": "array",
     "images": [
       {
-        "src": "./templates/portfolio/project1.svg",
+        "src": "./templates/portfolio/images/project1.svg",
         "alt": "E-commerce platform project",
         "fallback": "./assets/placeholder-project.svg"
       },
       {
-        "src": "./templates/portfolio/project2.svg",
+        "src": "./templates/portfolio/images/project2.svg",
         "alt": "Mobile app design project",
         "fallback": "./assets/placeholder-project.svg"
       },

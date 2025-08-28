@@ -1,151 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title data-i18n="title"></title>
-        <link rel="stylesheet" href="../../styles/styles.css">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <script type="module" src="../../app/template-loader.js"></script>
-        <script type="module" src="../../app/carousel.js"></script>
-    </head>
-    <body data-template="business">
-        <!-- Navigation -->
-        <nav class="navbar">
-            <div class="container">
-                <div class="navbar-brand">
-                    <h1 data-i18n="name"></h1>
-                </div>
-                <div class="navbar-menu">
-                    <a href="#about" data-i18n="about.title" class="nav-link">About</a>
-                    <a href="#services" data-i18n="servicesTitle" class="nav-link">Services</a>
-                    <a href="#testimonials" data-i18n="testimonialsTitle" class="nav-link">Testimonials</a>
-                    <a href="#contact" data-i18n="contact.title" class="nav-link">Contact</a>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title"></title>
+    <link rel="stylesheet" href="../../styles/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" src="../../app/template-loader.js"></script>
+    <script type="module" src="../../app/carousel.js"></script>
+</head>
+
+<body data-template="business">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1 data-i18n="name"></h1>
+            </div>
+            <div class="navbar-menu">
+                <a href="#about" data-i18n="about.title" class="nav-link">About</a>
+                <a href="#services" data-i18n="servicesTitle" class="nav-link">Services</a>
+                <a href="#testimonials" data-i18n="testimonialsTitle" class="nav-link">Testimonials</a>
+                <a href="#contact" data-i18n="contact.title" class="nav-link">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="container">
+            <div class="hero-content reveal">
+                <h1 class="hero-title">
+                    <span data-i18n="hero.title"></span>
+                    <span class="gradient-text" data-i18n="hero.highlight"></span>
+                </h1>
+                <p class="hero-description" data-i18n="hero.description"></p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary" data-i18n="hero.cta">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                    <button class="btn btn-outline btn-glass" data-i18n="hero.learnMore"></button>
                 </div>
             </div>
-        </nav>
+            <div class="hero-features" id="hero-features"></div>
+        </div>
+    </section>
 
-        <!-- Hero Section -->
-        <section class="hero" id="hero">
-            <div class="container">
-                <div class="hero-content reveal">
-                    <h1 class="hero-title">
-                        <span data-i18n="hero.title"></span>
-                        <span class="gradient-text" data-i18n="hero.highlight"></span>
-                    </h1>
-                    <p class="hero-description" data-i18n="hero.description"></p>
-                    <div class="hero-buttons">
-                        <button class="btn btn-primary" data-i18n="hero.cta">
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text reveal">
+                    <h2 data-i18n="about.title"></h2>
+                    <h3 data-i18n="about.subtitle"></h3>
+                    <p data-i18n="about.description"></p>
+                    <div class="stats-grid" id="stats"></div>
+                </div>
+                <div class="about-image reveal">
+                    <img data-template-image="about" alt="" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2 data-i18n="servicesTitle"></h2>
+                <p data-i18n="servicesSubtitle"></p>
+            </div>
+            <div class="services-grid" id="services-grid"></div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="gallery">
+        <div class="container">
+            <div class="gallery-carousel" data-template-image="gallery"></div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2 data-i18n="testimonialsTitle"></h2>
+                <p data-i18n="testimonialsSubtitle"></p>
+            </div>
+            <div class="testimonials-carousel" data-template-image="testimonials"></div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <div class="contact-content">
+                <div class="contact-info reveal">
+                    <h2 data-i18n="contact.title"></h2>
+                    <p data-i18n="contact.subtitle"></p>
+                    <div class="contact-details">
+                        <p data-i18n="contact.info.phone"></p>
+                        <p data-i18n="contact.info.email"></p>
+                        <p data-i18n="contact.info.address"></p>
+                    </div>
+                </div>
+                <div class="contact-form reveal">
+                    <form class="form" id="contact-form">
+                        <div class="form-group">
+                            <input type="text" placeholder="" data-i18n-placeholder="contact.form.name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="" data-i18n-placeholder="contact.form.email" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea placeholder="" data-i18n-placeholder="contact.form.message" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" data-i18n="contact.form.submit">
                             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                                <path d="M5 12h14M12 5l7 7-7 7" />
                             </svg>
                         </button>
-                        <button class="btn btn-outline btn-glass" data-i18n="hero.learnMore"></button>
-                    </div>
-                </div>
-                <div class="hero-features" id="hero-features"></div>
-            </div>
-        </section>
-
-        <!-- About Section -->
-        <section class="about" id="about">
-            <div class="container">
-                <div class="about-content">
-                    <div class="about-text reveal">
-                        <h2 data-i18n="about.title"></h2>
-                        <h3 data-i18n="about.subtitle"></h3>
-                        <p data-i18n="about.description"></p>
-                        <div class="stats-grid" id="stats"></div>
-                    </div>
-                    <div class="about-image reveal">
-                        <img data-template-image="about" alt="" />
-                    </div>
+                    </form>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Services Section -->
-        <section class="services" id="services">
-            <div class="container">
-                <div class="section-header reveal">
-                    <h2 data-i18n="servicesTitle"></h2>
-                    <p data-i18n="servicesSubtitle"></p>
-                </div>
-                <div class="services-grid" id="services-grid"></div>
-            </div>
-        </section>
-
-        <!-- Gallery Section -->
-        <section class="gallery">
-            <div class="container">
-                <div class="gallery-carousel" data-template-image="gallery"></div>
-            </div>
-        </section>
-
-        <!-- Testimonials Section -->
-        <section class="testimonials" id="testimonials">
-            <div class="container">
-                <div class="section-header reveal">
-                    <h2 data-i18n="testimonialsTitle"></h2>
-                    <p data-i18n="testimonialsSubtitle"></p>
-                </div>
-                <div class="testimonials-carousel" data-template-image="testimonials"></div>
-            </div>
-        </section>
-
-        <!-- Contact Section -->
-        <section class="contact" id="contact">
-            <div class="container">
-                <div class="contact-content">
-                    <div class="contact-info reveal">
-                        <h2 data-i18n="contact.title"></h2>
-                        <p data-i18n="contact.subtitle"></p>
-                        <div class="contact-details">
-                            <p data-i18n="contact.info.phone"></p>
-                            <p data-i18n="contact.info.email"></p>
-                            <p data-i18n="contact.info.address"></p>
-                        </div>
-                    </div>
-                    <div class="contact-form reveal">
-                        <form class="form" id="contact-form">
-                            <div class="form-group">
-                                <input type="text" placeholder="" data-i18n-placeholder="contact.form.name" required>
-                            </div>
-                            <div class="form-group">
-                                <input type="email" placeholder="" data-i18n-placeholder="contact.form.email" required>
-                            </div>
-                            <div class="form-group">
-                                <textarea placeholder="" data-i18n-placeholder="contact.form.message" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary" data-i18n="contact.form.submit">
-                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                                </svg>
-                            </button>
-                        </form>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-main">
+                    <h3 data-i18n="name"></h3>
+                    <p data-i18n="footer.description"></p>
+                    <div class="footer-links">
+                        <a href="#services" data-i18n="footer.links.services"></a>
+                        <a href="#about" data-i18n="footer.links.about"></a>
+                        <a href="#contact" data-i18n="footer.links.contact"></a>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="container">
-                <div class="footer-content">
-                    <div class="footer-main">
-                        <h3 data-i18n="name"></h3>
-                        <p data-i18n="footer.description"></p>
-                        <div class="footer-links">
-                            <a href="#services" data-i18n="footer.links.services"></a>
-                            <a href="#about" data-i18n="footer.links.about"></a>
-                            <a href="#contact" data-i18n="footer.links.contact"></a>
-                        </div>
-                    </div>
-                    <div class="footer-bottom">
-                        <p data-i18n="footer.rights"></p>
-                    </div>
+                <div class="footer-bottom">
+                    <p data-i18n="footer.rights"></p>
                 </div>
             </div>
-        </footer>
-    </body>
+        </div>
+    </footer>
+</body>
+
 </html>

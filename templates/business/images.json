@@ -1,13 +1,13 @@
 {
   "hero": {
     "type": "single",
-    "src": "./templates/business/hero-image.svg",
+    "src": "./templates/business/images/hero-image.svg",
     "alt": "Business professional hero image",
     "fallback": "./assets/placeholder-hero.svg"
   },
   "about": {
     "type": "single",
-    "src": "./templates/business/about-image.svg",
+    "src": "./templates/business/images/about-image.svg",
     "alt": "About our company",
     "fallback": "./assets/placeholder-about.svg"
   },
@@ -21,7 +21,7 @@
     "type": "carousel",
     "images": [
       {
-        "src": "./templates/business/gallery1.svg",
+        "src": "./templates/business/images/gallery1.svg",
         "alt": "Business meeting",
         "fallback": "./assets/placeholder-gallery.svg"
       },
