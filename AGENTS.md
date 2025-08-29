@@ -4,6 +4,7 @@
 - **Dev server**: `npm run dev` (Vite)
 - **Build**: `npm run build` (supports PROJECT/TEMPLATE env vars)
 - **Preview**: `npm run preview`
+- **Test infra**: `cd infra && npm test` (Jest)
 - **Infra build**: `cd infra && npm run build` (TypeScript strict mode)
 - **CDK deploy**: `cd infra && npm run deploy --context projects="project1,project2"`
 - **CDK bootstrap**: `cd infra && npm run bootstrap` (or `bootstrap-all` for multi-region)
