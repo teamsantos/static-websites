@@ -7,9 +7,10 @@
 - **Build all**: `npm run build` (builds main site)
 - **Preview**: `npm run preview` (preview built site)
 - **Infra build**: `cd infra && npm run build` (TypeScript compilation)
-- **Infra test**: `cd infra && npm test` (Jest test runner)
-- **Test single file**: `cd infra && npx jest path/to/test.js`
-- **Test watch mode**: `cd infra && npx jest --watch`
+- **Infra watch**: `cd infra && npm run watch` (TypeScript watch mode)
+- **Infra test**: `cd infra && npm test` (Jest test runner - no tests currently configured)
+- **Test single file**: `cd infra && npx jest path/to/test.js` (when test files exist)
+- **Test watch mode**: `cd infra && npx jest --watch` (when test files exist)
 - **CDK deploy**: `cd infra && npm run deploy --context projects="project1,project2"`
 - **CDK bootstrap**: `cd infra && npm run bootstrap` (single region)
 - **CDK bootstrap all**: `cd infra && npm run bootstrap-all` (multi-region)
@@ -29,4 +30,6 @@
 - **Async patterns**: Use async/await over Promises, proper error boundaries, avoid callback hell
 - **DOM manipulation**: Prefer createElement/textContent over innerHTML, use DocumentFragment for bulk operations
 - **CDK patterns**: Use CDK v2, explicit environment config, consistent tagging, DNS-safe project names
-- **Testing**: Jest for infra tests, focus on integration tests, mock AWS services when needed
+- **Testing**: Jest for infra tests (currently not configured), focus on integration tests, mock AWS services when needed
+- **File organization**: Separate concerns (app/, infra/, templates/), consistent naming conventions
+- **Performance**: Minimize bundle size, use lazy loading, optimize images, efficient DOM manipulation
