@@ -1,22 +1,32 @@
 # Static Websites Project - Agent Guidelines
 
 ## Build/Test Commands
-- **Dev server**: `npm run dev` (Vite)
-- **Build**: `npm run build` (supports PROJECT/TEMPLATE env vars)
-- **Preview**: `npm run preview`
-- **Test infra**: `cd infra && npm test` (Jest)
-- **Infra build**: `cd infra && npm run build` (TypeScript strict mode)
+- **Dev server**: `npm run dev` (Vite with hot reload)
+- **Build project**: `PROJECT=name npm run build` (builds specific project)
+- **Build template**: `TEMPLATE=name npm run build` (builds specific template)
+- **Build all**: `npm run build` (builds main site)
+- **Preview**: `npm run preview` (preview built site)
+- **Infra build**: `cd infra && npm run build` (TypeScript compilation)
+- **Infra test**: `cd infra && npm test` (Jest test runner)
+- **Test single file**: `cd infra && npx jest path/to/test.js`
+- **Test watch mode**: `cd infra && npx jest --watch`
 - **CDK deploy**: `cd infra && npm run deploy --context projects="project1,project2"`
-- **CDK bootstrap**: `cd infra && npm run bootstrap` (or `bootstrap-all` for multi-region)
+- **CDK bootstrap**: `cd infra && npm run bootstrap` (single region)
+- **CDK bootstrap all**: `cd infra && npm run bootstrap-all` (multi-region)
 - **CDK diff**: `cd infra && npm run diff --context projects="project1,project2"`
-- **CDK synth**: `cd infra && npm run synth` (generate CloudFormation templates)
+- **CDK synth**: `cd infra && npm run synth` (generate CloudFormation)
+- **CDK list**: `cd infra && npm run list` (list stacks)
 
 ## Code Style Guidelines
 - **JavaScript/TypeScript**: camelCase functions/vars, PascalCase classes/interfaces, SCREAMING_SNAKE_CASE constants
-- **Indentation**: 4 spaces, semicolons required, single quotes for strings
-- **Imports**: ES6 modules, external libs first, relative paths with `./`, JSON with `{ type: 'json' }`
-- **TypeScript**: Strict mode enabled, required type annotations, optional props with `?`
-- **Error handling**: try-catch for async, console.error/warn for logging, graceful degradation
-- **HTML/CSS**: Semantic HTML, kebab-case classes, data-i18n for i18n, mobile-first responsive
-- **Security**: Avoid innerHTML, use textContent/createElement, efficient DOM manipulation
-- **Build**: Vite with single-file plugin, Terser minification, CDK v2 with TypeScript
+- **Indentation**: 4 spaces (no tabs), semicolons required, single quotes for strings
+- **Imports**: ES6 modules, external libs first, relative paths with `./`, JSON imports with `{ type: 'json' }`
+- **TypeScript**: Strict mode enabled, explicit type annotations, optional props with `?`, target ES2020
+- **Error handling**: try-catch for async operations, console.error/warn for logging, graceful degradation
+- **HTML/CSS**: Semantic HTML5, kebab-case CSS classes, data-i18n attributes for i18n, mobile-first responsive design
+- **Security**: Never use innerHTML, prefer textContent/createElement, validate user inputs, avoid eval()
+- **Build system**: Vite with single-file plugin, Terser minification, assets inlined, emptyOutDir enabled
+- **Async patterns**: Use async/await over Promises, proper error boundaries, avoid callback hell
+- **DOM manipulation**: Prefer createElement/textContent over innerHTML, use DocumentFragment for bulk operations
+- **CDK patterns**: Use CDK v2, explicit environment config, consistent tagging, DNS-safe project names
+- **Testing**: Jest for infra tests, focus on integration tests, mock AWS services when needed

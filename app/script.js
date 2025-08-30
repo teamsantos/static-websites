@@ -113,7 +113,7 @@ const injectBenifits = (benifits) => {
 };
 
 // Dynamic template loading system
-const loadTemplatesFromFolders = async (mainLang) => {
+const loadTemplatesFromFolders = async () => {
     try {
         // Load the templates registry
         const registryResponse = await fetch('./templates/templates-registry.json');
@@ -311,7 +311,7 @@ async function loadTranslations() {
         }
 
         // Load templates dynamically from template folders
-        loadTemplatesFromFolders(lang).then(templates => {
+        loadTemplatesFromFolders().then(templates => {
             if (templates && templates.length > 0) {
                 injectTemplates(templates, lang["template.select"] ?? "Use this template");
             }
