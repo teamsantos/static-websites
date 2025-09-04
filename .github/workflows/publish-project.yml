@@ -67,7 +67,7 @@ jobs:
           fi
           
           # Convert to space-separated string for output
-          CHANGED_STR=$(echo "$CHANGED" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+          CHANGED_STR=$(echo "$CHANGED" | tr '[:upper:]' '[:lower:]' | tr '\n' ' ' | sed 's/[[:space:]]*$//')
           echo "Changed projects: $CHANGED_STR"
           echo "projects=$CHANGED_STR" >> $GITHUB_OUTPUT
 
