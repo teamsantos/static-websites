@@ -267,15 +267,18 @@ jobs:
               
               if [ -d "$BUILD_DIR/$project" ]; then
                 # Sync to the fixed bucket with project path
-                aws s3 sync "$BUILD_DIR/$project" "s3://$S3_BUCKET/$project" \
-                  --delete \
-                  --region eu-south-2 \
-                  --exclude ".*"
-                
-                echo "✅ Synced $project to s3://$S3_BUCKET/$project"
-              else
-                echo "⚠️ Build directory $BUILD_DIR/$project not found for $project"
-              fi
+                _project=$(echo "$project" | tr '[:upper:]' '[:lower:]')
+
+                if [ -d "$BUILD_DIR/$project" ]; then
+                    aws s3 sync "$BUILD_DIR/$project" "s3://$S3_BUCKET/$_project" \
+                      --delete \
+                      --region eu-south-2 \
+                      --exclude ".*"
+                    
+                    echo "✅ Synced $project to s3://$S3_BUCKET/$_project"
+                else
+                    echo "⚠️ Build directory $BUILD_DIR/$project not found for $project"
+                fi
             fi
           done
 
@@ -287,6 +290,9 @@ jobs:
           
           for project in "${PROJ_ARR[@]}"; do
             if [ -n "$project" ]; then
+              # Lowercase version for AWS resources
+              _project=$(echo "$project" | tr '[:upper:]' '[:lower:]')
+
               echo "Invalidating cache for: $project"
               
 
@@ -304,8 +310,8 @@ jobs:
               # Get distribution ID from stack outputs
               DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
                 --region us-east-1 \
-                --stack-name "Site-$project" \
-                --query 'Stacks[0].Outputs[?OutputKey==`'$project'DistributionId`].OutputValue' \
+                --stack-name "Site-$_project" \
+                --query 'Stacks[0].Outputs[?OutputKey==`'$_project'DistributionId`].OutputValue' \
                 --output text 2>/dev/null)
               
               if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
