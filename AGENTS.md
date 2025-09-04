@@ -1,25 +1,23 @@
 # Static Websites Project - Agent Guidelines
 
 ## Build/Test Commands
-- **Dev server**: `npm run dev` (Vite hot reload)
+- **Dev**: `npm run dev` (Vite hot reload)
 - **Build**: `npm run build`, `PROJECT=name npm run build`, `TEMPLATE=name npm run build`
 - **Preview**: `npm run preview`
 - **Infra**: `cd infra && npm run build` (TS compile), `npm run watch` (TS watch), `npm run test` (Jest)
 - **Test single**: `cd infra && npx jest path/to/test.js`
-- **CDK**: `cd infra && npm run deploy` (deploy all), `npm run deploy-project` (single project), `npm run deploy-with-projects` (with context)
-- **CDK bootstrap**: `cd infra && npm run bootstrap` (single region), `npm run bootstrap-all` (multi-region), `npm run bootstrap-check` (verify)
-- **CDK utils**: `cd infra && npm run diff/synth/list` (diff/synth/list stacks), `npm run destroy/destroy-project` (cleanup)
+- **CDK**: `cd infra && npm run deploy/deploy-project/deploy-with-projects`
+- **CDK utils**: `cd infra && npm run diff/synth/list/destroy`
 
 ## Code Style Guidelines
-- **JavaScript**: camelCase functions/vars, 4 spaces indent, semicolons required, single quotes, ES6+ features
-- **TypeScript**: Strict mode, explicit types, optional props with `?`, target ES2020, commonjs modules
-- **Imports**: ES6 modules, external first, relative with `./`, JSON with `{ type: 'json' }`, no default exports in TS
-- **Error handling**: try-catch for async, console.error/warn logging, graceful degradation, validate inputs
-- **HTML/CSS**: Semantic HTML5, kebab-case classes, data-i18n attrs, mobile-first design, BEM-like naming
-- **Security**: Never innerHTML, prefer textContent/createElement, validate/sanitize inputs, avoid eval()
-- **DOM**: Prefer createElement over innerHTML, use DocumentFragment for bulk ops, efficient selectors
-- **Async**: async/await over Promises, proper error boundaries, avoid callback hell, Promise.all for concurrency
-- **Build**: Vite single-file, Terser minification, assets inlined, emptyOutDir enabled, source maps in dev
-- **CDK**: CDK v2, explicit env config, consistent tagging, DNS-safe names, context for project selection
-- **Testing**: Jest for infra (not configured), focus integration tests, mock AWS services, descriptive test names
-- **Performance**: Minimize bundle, lazy loading, optimize images, efficient DOM manipulation, requestAnimationFrame for animations
+- **JavaScript**: camelCase, 4 spaces, semicolons, single quotes, ES6+, arrow functions, async/await
+- **TypeScript**: Strict mode, explicit types, optional `?`, ES2020 target, commonjs modules, no default exports
+- **Imports**: ES6 modules, external first, relative `./`, JSON `{ type: 'json' }`, destructure
+- **Error handling**: try-catch async, console.error/warn, graceful degradation, validate inputs
+- **HTML/CSS**: Semantic HTML5, kebab-case classes, data-i18n attrs, mobile-first, BEM naming
+- **Security**: Never innerHTML, prefer textContent/createElement, validate inputs, no eval/secrets
+- **DOM**: createElement over innerHTML, DocumentFragment for bulk, efficient selectors, event delegation
+- **Build**: Vite single-file, Terser minify, assets inline, emptyOutDir, dev source maps
+- **CDK**: CDK v2, explicit env, consistent tagging, DNS-safe names, context for projects
+- **Testing**: Jest infra (unconfigured), integration focus, mock AWS, descriptive names
+- **Performance**: Minimize bundle, lazy load, optimize images, efficient DOM, requestAnimationFrame

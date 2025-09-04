@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .editor-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .toolbar {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .toolbar h1 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .toolbar select, .toolbar button {
+            padding: 8px 12px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+        }
+        .toolbar button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .toolbar button:hover {
+            background: #0056b3;
+        }
+        .template-view {
+            position: relative;
+            min-height: 600px;
+        }
+        .editable {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .editable:hover {
+            outline: 2px solid #007bff;
+            outline-offset: 2px;
+        }
+        .editable.editing {
+            outline: 2px solid #28a745;
+        }
+        .edit-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            font-size: inherit;
+            font-family: inherit;
+        }
+        .edit-file {
+            display: block;
+            margin-top: 10px;
+        }
+        .json-output {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .json-output h3 {
+            margin-top: 0;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .toolbar {
+                padding: 15px;
+            }
+            .toolbar h1 {
+                font-size: 1.5rem;
+            }
+            .toolbar select, .toolbar button {
+                display: block;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .template-view {
+                min-height: 400px;
+            }
+            .json-output {
+                padding: 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="toolbar">
+            <h1>Template Editor</h1>
+            <select id="templateSelect">
+                <option value="">Select Template</option>
+                <option value="templates/bussinessCard/index.html">Business Card</option>
+                <option value="templates/modern-header/index.html">Modern Header</option>
+            </select>
+            <button id="loadBtn">Load Template</button>
+            <button id="exportBtn">Export JSON</button>
+        </div>
+        <div class="template-view" id="templateView"></div>
+        <div class="json-output">
+            <h3>Generated JSON</h3>
+            <div id="jsonDisplay">Load a template to see changes here.</div>
+        </div>
+    </div>
+
+    <script>
+        let currentTemplate = '';
+        let textChanges = {};
+        let imageChanges = {};
+        let altTextChanges = {};
+
+        const templateSelect = document.getElementById('templateSelect');
+        const loadBtn = document.getElementById('loadBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const templateView = document.getElementById('templateView');
+        const jsonDisplay = document.getElementById('jsonDisplay');
+
+        loadBtn.addEventListener('click', loadTemplate);
+        exportBtn.addEventListener('click', exportJSON);
+
+        function loadTemplate() {
+            const templatePath = templateSelect.value;
+            if (!templatePath) {
+                alert('Please select a template');
+                return;
+            }
+
+            fetch(templatePath)
+                .then(response => response.text())
+                .then(html => {
+                    currentTemplate = templatePath;
+                    templateView.innerHTML = html;
+                    addEditFunctionality();
+                    updateJSONDisplay();
+                })
+                .catch(error => {
+                    console.error('Error loading template:', error);
+                    alert('Error loading template');
+                });
+        }
+
+        function addEditFunctionality() {
+            // Add editable class to elements with data attributes
+            const textElements = templateView.querySelectorAll('[data-text-id]');
+            const imageElements = templateView.querySelectorAll('[data-image-src]');
+
+            textElements.forEach(el => {
+                el.classList.add('editable');
+                el.addEventListener('click', () => editText(el));
+            });
+
+            imageElements.forEach(el => {
+                el.classList.add('editable');
+                el.addEventListener('click', () => editImage(el));
+            });
+        }
+
+        function editText(element) {
+            const textId = element.getAttribute('data-text-id');
+            const currentText = element.textContent || element.innerText;
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentText;
+            input.className = 'edit-input';
+
+            element.classList.add('editing');
+            element.innerHTML = '';
+            element.appendChild(input);
+            input.focus();
+
+            input.addEventListener('blur', () => {
+                const newText = input.value;
+                element.innerHTML = newText;
+                element.classList.remove('editing');
+
+                if (newText !== currentText) {
+                    textChanges[textId] = newText;
+                    updateJSONDisplay();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            });
+        }
+
+        function editImage(element) {
+            const imageId = element.getAttribute('data-image-src');
+            const altId = element.getAttribute('data-alt-text-id');
+
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.className = 'edit-file';
+
+            const altInput = document.createElement('input');
+            altInput.type = 'text';
+            altInput.placeholder = 'Alt text';
+            altInput.value = element.alt || '';
+            altInput.className = 'edit-input';
+
+            element.classList.add('editing');
+            element.style.display = 'none';
+
+            const container = document.createElement('div');
+            container.appendChild(fileInput);
+            container.appendChild(altInput);
+            element.parentNode.insertBefore(container, element.nextSibling);
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        element.src = e.target.result;
+                        element.style.display = '';
+                        container.remove();
+                        element.classList.remove('editing');
+
+                        imageChanges[imageId] = file.name; // In real app, upload and get URL
+                        updateJSONDisplay();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            altInput.addEventListener('blur', () => {
+                const newAlt = altInput.value;
+                element.alt = newAlt;
+                if (altId && newAlt !== element.alt) {
+                    altTextChanges[altId] = newAlt;
+                    updateJSONDisplay();
+                }
+            });
+        }
+
+        function updateJSONDisplay() {
+            const langJson = { ...textChanges, ...altTextChanges };
+            const imagesJson = { ...imageChanges };
+
+            jsonDisplay.innerHTML = `
+<b>en.json:</b>\n${JSON.stringify(langJson, null, 2)}\n\n
+<b>images.json:</b>\n${JSON.stringify(imagesJson, null, 2)}
+            `;
+        }
+
+        function exportJSON() {
+            const langJson = { ...textChanges, ...altTextChanges };
+            const imagesJson = { ...imageChanges };
+
+            const data = {
+                lang: langJson,
+                images: imagesJson
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'template_changes.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
