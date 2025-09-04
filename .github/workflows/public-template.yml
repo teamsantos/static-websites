@@ -207,7 +207,7 @@ jobs:
         shell: bash
         run: |
           # Convert space-separated projects to comma-separated
-          TEMPLATES_SPACE="${{ needs.detect-changes.outputs.templates }"
+          TEMPLATES_SPACE="${{ needs.detect-changes.outputs.templates }}"
           TEMPLATES_COMMA=$(echo "$TEMPLATES_SPACE" | tr ' ' ',' | sed 's/,*$//' | sed 's/^,*//')
           echo "templates-comma=$TEMPLATES_COMMA" >> $GITHUB_OUTPUT
           echo "📦 Templates to deploy (comma-separated): $TEMPLATES_COMMA"
