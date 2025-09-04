@@ -279,8 +279,8 @@ jobs:
             fi
           done
 
-      - name: Invalidate CloudFront caches
         shell: bash
+      - name: Invalidate CloudFront caches
         run: |
           echo "🔄 Invalidating CloudFront caches for updated projects..."
           IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
@@ -289,6 +289,18 @@ jobs:
             if [ -n "$project" ]; then
               echo "Invalidating cache for: $project"
               
+
+              STACK_EXISTS=$(aws cloudformation describe-stacks \
+                --region us-east-1 \
+                --stack-name "Site-$template" \
+                --query "Stacks[0].StackName" \
+                --output text 2>/dev/null || echo "")
+
+              if [ -z "$STACK_EXISTS" ]; then
+                echo "⚠️ Stack Site-$template not found, skipping cache invalidation"
+                continue
+              fi
+
               # Get distribution ID from stack outputs
               DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
                 --region us-east-1 \
