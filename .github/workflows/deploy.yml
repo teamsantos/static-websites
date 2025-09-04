@@ -60,22 +60,6 @@ jobs:
         run: |
           echo "No changes detected in index.html. Skipping deploy."
           exit 0
-      - name: Bump package version
-        run: npm version patch --no-git-tag-version
-      - name: Get new version
-        id: get_version
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-      - name: Upload versioned build to S3
-        run: |
-          aws s3 sync $BUILD_DIR s3://$S3_BUCKET/v.${{ steps.get_version.outputs.version }}/ \
-            --delete \
-            --cache-control "public, max-age=31536000" \
-            --exclude "*.html"
-          aws s3 sync $BUILD_DIR s3://$S3_BUCKET/v.${{ steps.get_version.outputs.version }}/ \
-            --delete \
-            --cache-control "no-cache, no-store, must-revalidate" \
-            --content-type "text/html" \
-            --include "*.html"
       - name: Upload to 'default' (latest)
         run: |
           aws s3 sync $BUILD_DIR s3://$S3_BUCKET/default/ \
@@ -87,17 +71,3 @@ jobs:
             --cache-control "no-cache, no-store, must-revalidate" \
             --content-type "text/html" \
             --include "*.html"
-      - name: Setup git in container
-        run: |
-          # Fix git ownership issue
-          git config --global --add safe.directory /__w/static-websites/static-websites
-          # Set git config
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-      - name: Commit and push version bump
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git add package.json package-lock.json
-          git commit -m "chore: bump version to $(node -p "require('./package.json').version") [skip ci]" || echo "No changes to commit"
-          git push origin master
