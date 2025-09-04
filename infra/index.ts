@@ -43,7 +43,8 @@ if (!projectsParam) {
     } else {
         console.log(`Deploying ${projects.length} project(s): ${projects.join(", ")}`);
 
-        projects.forEach((project) => {
+        projects.forEach((_project) => {
+            let project = _project.toLowerCase()
             if (!/^[a-z0-9-]+$/.test(project)) {
                 console.warn(`Warning: Project name '${project}' may not be DNS-safe. Use lowercase letters, numbers, and hyphens only.`);
             }
