@@ -282,8 +282,8 @@ jobs:
             fi
           done
 
-        shell: bash
       - name: Invalidate CloudFront caches
+        shell: bash
         run: |
           echo "🔄 Invalidating CloudFront caches for updated projects..."
           IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
