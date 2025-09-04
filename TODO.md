@@ -36,3 +36,17 @@
 ## Fix texts/prices
 
 ## Fix links/contact us
+
+## TODO
+
+- [ ] Create usable template edit and creation
+- [ ] Create way to update projecto already deployed
+- [ ] Update projects/templates on index.html update
+- [ ] Delete entries in route 53 and Distribution on folder deletion
+- [ ] Add way for people to pay for the service on template create
+- [ ] Test
+- [ ] Create usefull templates
+- [ ] Become salesman & Sell
+- [ ] Allow free creation 
+- [ ] Send email when free trial is close to an end
+- [ ] Move file to .bak on trial end so people can recover it

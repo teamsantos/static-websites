@@ -1,8 +1,8 @@
 # Static Websites Project - Agent Guidelines
 
 ## Build/Test Commands
-- **Dev server**: `npm run dev` (Vite with hot reload)
-- **Build**: `npm run build` (main), `PROJECT=name npm run build` (project), `TEMPLATE=name npm run build` (template)
+- **Dev server**: `npm run dev` (Vite hot reload)
+- **Build**: `npm run build`, `PROJECT=name npm run build`, `TEMPLATE=name npm run build`
 - **Preview**: `npm run preview`
 - **Infra**: `cd infra && npm run build` (TS compile), `npm run watch` (TS watch), `npm run test` (Jest)
 - **Test single**: `cd infra && npx jest path/to/test.js`
