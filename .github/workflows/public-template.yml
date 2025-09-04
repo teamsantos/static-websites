@@ -18,7 +18,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      projects: ${{ steps.changed.outputs.templates }}
+      templates: ${{ steps.changed.outputs.templates }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -35,7 +35,7 @@ jobs:
             echo "Force deploy all templates requested"
             CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
           elif [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
-            # First push or new branch - check all project folders
+            # First push or new branch - check all template folders
             echo "First push detected, checking all templates"
             CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
           else
@@ -52,7 +52,7 @@ jobs:
                 CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
                   | grep '^templates/' | cut -d/ -f2 | sort -u || echo "")
               else
-                # Last resort - deploy all projects
+                # Last resort - deploy all templates
                 echo "Cannot determine changes, deploying all templates"
                 CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
               fi
@@ -179,7 +179,7 @@ jobs:
             npx cdk bootstrap "aws://$ACCOUNT_ID/$region" \
               --require-approval never \
               --verbose \
-              -c "projects=dummy"
+              -c "templates=dummy"
             
             # Verify bootstrap was successful
             if aws cloudformation describe-stacks \
@@ -232,7 +232,7 @@ jobs:
           # Deploy all stacks at once with comma-separated projects
           CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
           npx cdk deploy --all \
-            --context "projects=${{ steps.format-templates.outputs.templates-comma }}" \
+            --context "templates=${{ steps.format-templates.outputs.templates-comma }}" \
             --require-approval never \
             --verbose
           
@@ -243,11 +243,11 @@ jobs:
         run: |
           echo "🔨 Building projects..."
           IFS=' ' read -ra TMPL_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
-          for project in "${TMPL_ARR[@]}"; do
+          for template in "${TMPL_ARR[@]}"; do
             if [ -n "$template" ]; then
-              echo "Building project: $template"
-              if [ -d "projects/$template" ]; then
-                PROJECT=$template npx vite build
+              echo "Building template: $template"
+              if [ -d "templates/$template" ]; then
+                TEMPLATE=$template npx vite build
                 echo "✅ Built $template"
               else
                 echo "⚠️ Project directory templates/$template not found"
@@ -260,7 +260,7 @@ jobs:
         run: |
           echo "📤 Syncing built sites to S3..."
           IFS=' ' read -ra TMPL_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
-          for project in "${TMPL_ARR[@]}"; do
+          for template in "${TMPL_ARR[@]}"; do
             if [ -n "$template" ]; then
               echo "Syncing $template to S3..."
               
@@ -284,7 +284,7 @@ jobs:
           echo "🔄 Invalidating CloudFront caches for updated projects..."
           IFS=' ' read -ra TMPL_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
           
-          for project in "${TMPL_ARR[@]}"; do
+          for template in "${TMPL_ARR[@]}"; do
             if [ -n "$template" ]; then
               echo "Invalidating cache for: $template"
               
@@ -314,11 +314,11 @@ jobs:
           echo "🎉 Deployment Summary"
           echo "===================="
           echo "Deployed templates: ${{ needs.detect-changes.outputs.templates }}"
-          echo "Total projects: $(echo '${{ needs.detect-changes.outputs.templates }}' | wc -w)"
+          echo "Total templates: $(echo '${{ needs.detect-changes.outputs.templates }}' | wc -w)"
           echo ""
           echo "🌐 Access your sites at:"
           IFS=' ' read -ra TMPL_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
-          for project in "${TMPL_ARR[@]}"; do
+          for template in "${TMPL_ARR[@]}"; do
             if [ -n "$template" ]; then
               echo "  • https://$template.e-info.click"
             fi
