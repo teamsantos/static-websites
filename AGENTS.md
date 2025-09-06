@@ -16,5 +16,5 @@
 - **HTML/CSS**: Semantic HTML5, kebab-case classes, data-i18n attrs, mobile-first, BEM naming, no inline styles
 - **Security/DOM**: Never innerHTML, prefer textContent/createElement, validate inputs, no eval/secrets, sanitize data, DocumentFragment for bulk, efficient selectors, event delegation, passive listeners
 - **Build**: Vite single-file, Terser minify, assets inline, emptyOutDir, dev source maps, single-file output
-- **CDK/Testing**: CDK v2, explicit env, consistent tagging, DNS-safe names, context for projects, warn on invalid names. Jest infra (unconfigured), integration focus, mock AWS, descriptive names, error case coverage
+- **CDK/Testing**: CDK v2, explicit env, consistent tagging, DNS-safe names, context for projects, warn on invalid names. Jest infra (default config), integration focus, mock AWS, descriptive names, error case coverage
 - **Performance**: Minimize bundle, lazy load, optimize images, efficient DOM, requestAnimationFrame, ResizeObserver
