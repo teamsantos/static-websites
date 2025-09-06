@@ -43,8 +43,6 @@ class TemplateEditor {
         const urlParams = new URLSearchParams(window.location.search);
         const templateName = urlParams.get('template');
 
-
-
         if (!templateName) {
             this.showStatus(`No template specified. Please check your URL and try again, or contact us at ${this.supportEmail}`, 'info');
             return;

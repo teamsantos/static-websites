@@ -2,14 +2,6 @@ import translationsEN from '../assets/langs/en.json' with { type: 'json' };
 
 const lang = translationsEN;
 
-
-
-
-
-
-
-
-
 const injectPlans = (plans) => {
     const container = document.getElementById("plans");
     container.innerHTML = plans.map((plan) => `
@@ -42,8 +34,6 @@ const injectBenifits = (benifits) => {
         </div>
     `).join("");
 };
-
-
 
 const injectTemplates = (templates, selectText) => {
     const container = document.getElementById("templates");
@@ -276,5 +266,3 @@ function setupScrollCueAutoHide() {
     requestAnimationFrame(update);
     setTimeout(update, 300);
 }
-
-
