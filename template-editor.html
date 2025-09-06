@@ -463,7 +463,7 @@ body {
                 <div style="display: flex; align-items: center; justify-content: center; min-height: 50vh; color: #6b7280;">
                     <div style="text-align: center;">
                         <h3>Welcome to Template Editor</h3>
-                        <p>Add ?template=<name> to the URL to load a template</p>
+                        <p>Please check your URL and try again, or contact us at <span id="support-email-placeholder"></span></p>
                     </div>
                 </div>
             </div>
@@ -484,12 +484,23 @@ body {
                 this.currentLanguage = 'en';
                 this.currentEditingElement = null;
 
+                // Support email - change this in one place
+                this.supportEmail = 'teamsantos.software+support@gmail.com';
+
                 this.init();
             }
 
             init() {
                 this.bindEvents();
+                this.updateSupportEmail();
                 this.autoLoadTemplate();
+            }
+
+            updateSupportEmail() {
+                const emailPlaceholder = document.getElementById('support-email-placeholder');
+                if (emailPlaceholder) {
+                    emailPlaceholder.textContent = this.supportEmail;
+                }
             }
 
             bindEvents() {
@@ -513,31 +524,22 @@ body {
 
 
                 if (!templateName) {
-                    this.showStatus('No template specified in URL. Use ?template=<name>', 'info');
+                    this.showStatus(`No template specified. Please check your URL and try again, or contact us at ${this.supportEmail}`, 'info');
                     return;
                 }
 
                 if (templateName.trim() === '') {
-                    this.showStatus('Template name is empty. Use ?template=<name>', 'error');
+                        this.showStatus(`Something went wrong. Please try again later or contact us at ${this.supportEmail}`, 'error');
                     return;
                 }
 
-                // S3 bucket URL - replace with your actual bucket URL
-                const s3BucketUrl = 'https://teamsantos-static-websites.s3.eu-south-2.amazonaws.com';
+                // Template URL using custom domain format
+                const templateUrl = `https://${templateName}.template.e-info.click`;
 
-                // Alternative: Use a proxy if CORS is an issue
-                // const s3BucketUrl = 'http://ssh.e-info.click:3000';
-                // const templateUrl = `${s3BucketUrl}/proxy/templates/${templateName}/index.html`;
+                this.showStatus('Loading template...', 'info');
 
-
-                const templateUrl = `${s3BucketUrl}/templates/${templateName}/index.html`;
-
-                this.showStatus('Loading template from S3...', 'info');
-
-                // Fetch template from S3 with CORS mode
-                fetch(templateUrl, {
-                    mode: 'cors'
-                })
+                // Fetch template from custom domain
+                fetch(templateUrl)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -547,15 +549,11 @@ body {
                     .then(html => {
                         this.templateContent = html;
                         this.processTemplate();
-                        this.showStatus(`Template "${templateName}" loaded successfully`, 'success');
+                        this.showStatus('Template loaded successfully!', 'success');
                     })
                     .catch(error => {
                         console.error('Error loading template:', error);
-                        if (error.message.includes('CORS')) {
-                            this.showStatus('CORS error: Configure S3 bucket CORS policy', 'error');
-                        } else {
-                            this.showStatus(`Failed to load template: ${error.message}`, 'error');
-                        }
+                    this.showStatus(`Something went wrong. Please try again later or contact us at ${this.supportEmail}`, 'error');
                     });
             }
 
@@ -589,7 +587,7 @@ body {
                 templateContainer.innerHTML = '';
                 templateContainer.appendChild(doc.body);
 
-                this.showStatus('Template loaded and ready for editing', 'success');
+                this.showStatus('Template ready for editing!', 'success');
             }
 
             extractAndApplyStyles(doc) {
@@ -850,7 +848,7 @@ body {
             saveChanges() {
                 // In a real implementation, this would save to files
                 // For now, we'll just show a success message
-                this.showStatus('Changes saved successfully', 'success');
+                this.showStatus('Changes saved successfully!', 'success');
             }
 
             exportTemplate() {
@@ -873,7 +871,7 @@ body {
                 a.click();
                 URL.revokeObjectURL(url);
 
-                this.showStatus('Template exported successfully', 'success');
+                this.showStatus('Template exported successfully!', 'success');
             }
 
             showStatus(message, type = 'info') {
