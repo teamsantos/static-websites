@@ -4,7 +4,7 @@
 - **Dev**: `npm run dev` (Vite), `npm run editor` (serve), `cd infra && npm run watch` (TS watch)
 - **Build**: `npm run build`, `PROJECT=name npm run build`, `TEMPLATE=name npm run build`
 - **Preview**: `npm run preview`
-- **Infra**: `cd infra && npm run build` (TS compile), `npm run test` (Jest), `npx jest path/to/test.js` (single test)
+- **Infra**: `cd infra && npm run build` (TS compile), `npm run test` (Jest all), `npx jest path/to/test.js` (single test)
 - **CDK**: `cd infra && npm run deploy/deploy-project/deploy-with-projects`
 - **CDK utils**: `cd infra && npm run diff/synth/list/destroy/bootstrap/bootstrap-check`
 
@@ -14,9 +14,7 @@
 - **Imports**: ES6 modules, external first, relative `./`, JSON `{ type: 'json' }`, destructure, no unused imports
 - **Error handling**: try-catch async, console.error/warn, graceful degradation, validate inputs, descriptive messages
 - **HTML/CSS**: Semantic HTML5, kebab-case classes, data-i18n attrs, mobile-first, BEM naming, no inline styles
-- **Security**: Never innerHTML, prefer textContent/createElement, validate inputs, no eval/secrets, sanitize data
-- **DOM**: createElement over innerHTML, DocumentFragment for bulk, efficient selectors, event delegation, passive listeners
+- **Security/DOM**: Never innerHTML, prefer textContent/createElement, validate inputs, no eval/secrets, sanitize data, DocumentFragment for bulk, efficient selectors, event delegation, passive listeners
 - **Build**: Vite single-file, Terser minify, assets inline, emptyOutDir, dev source maps, single-file output
-- **CDK**: CDK v2, explicit env, consistent tagging, DNS-safe names, context for projects, warn on invalid names
-- **Testing**: Jest infra (unconfigured), integration focus, mock AWS, descriptive names, error case coverage
+- **CDK/Testing**: CDK v2, explicit env, consistent tagging, DNS-safe names, context for projects, warn on invalid names. Jest infra (unconfigured), integration focus, mock AWS, descriptive names, error case coverage
 - **Performance**: Minimize bundle, lazy load, optimize images, efficient DOM, requestAnimationFrame, ResizeObserver
