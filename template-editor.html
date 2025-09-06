@@ -884,6 +884,17 @@ body {
                 const templateContainer = document.getElementById('template-content');
                 originalDoc.body.innerHTML = templateContainer.innerHTML;
 
+                // Clean up editor-specific styles
+                const styleElements = originalDoc.querySelectorAll('style');
+                styleElements.forEach(styleElement => {
+                    let cssContent = styleElement.textContent;
+                    // Remove editor-specific CSS rules
+                    cssContent = cssContent.replace(/#template-content header\s*\{[^}]*\}/g, '');
+                    // Revert top positioning back to original
+                    cssContent = cssContent.replace(/top:\s*56px/g, 'top: 0');
+                    styleElement.textContent = cssContent;
+                });
+
                 // Serialize the complete document
                 const html = originalDoc.documentElement.outerHTML;
 
