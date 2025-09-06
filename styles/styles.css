@@ -834,12 +834,10 @@ p {
 }
 
 .template-iframe {
-    width: 100%;
-    height: 100%;
-    transform: scale(0.5); /* Scale down to show more of the site */
+    width: 400%; /* Render for larger viewport */
+    height: 400%;
+    transform: scale(0.25); /* Scale down to show more of the site */
     transform-origin: 0 0;
-    width: 200%; /* Compensate for scaling */
-    height: 200%;
 }
 
 .frame-placeholder {
