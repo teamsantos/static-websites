@@ -1,0 +1,20 @@
+[
+  {
+    "name": "businessCard",
+    "commingSoon": false,
+    "title": "Establishment Template",
+    "description": "A front-page template for your business."
+  },
+  {
+    "name": "bussinessCardTest",
+    "commingSoon": false,
+    "title": "Establishment Template",
+    "description": "A front-page template for your business."
+  },
+  {
+    "name": "modern-header",
+    "commingSoon": false,
+    "title": "Modern navbar Template",
+    "description": "A modern navbar template for your business."
+  }
+]

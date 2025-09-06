@@ -1,3 +1,4 @@
+const baseURL = "e-info.click"
 class TemplateEditor {
     constructor() {
         this.templateContent = null;
@@ -27,6 +28,9 @@ class TemplateEditor {
 
     bindEvents() {
         // Editor controls
+        document.getElementById('change-template-btn').addEventListener('click', () => {
+            window.location.href = `https://${baseURL}/#templates`;
+        });
         document.getElementById('save-changes-btn').addEventListener('click', () => this.saveChanges());
         document.getElementById('export-template-btn').addEventListener('click', () => this.exportTemplate());
 
@@ -49,7 +53,7 @@ class TemplateEditor {
         }
 
         if (templateName.trim() === '') {
-                this.showStatus(`Something went wrong. Please try again later or contact us at ${this.supportEmail}`, 'error');
+            this.showStatus(`Something went wrong. Please try again later or contact us at ${this.supportEmail}`, 'error');
             return;
         }
 

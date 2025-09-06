@@ -1,92 +1,99 @@
 import translationsEN from '../assets/langs/en.json' with { type: 'json' };
+import templateList from '../assets/templates.json' with { type: 'json' };
 
 const lang = translationsEN;
+const baseURL = "e-info.click";
+const editorURL = `https://editor.${baseURL}?template=`;
+const templatesURL = `templates.${baseURL}`;
 
 const injectPlans = (plans) => {
     const container = document.getElementById("plans");
     container.innerHTML = plans.map((plan) => `
-        <div class="plan-item" redirect-to="${plan["redirect-to"]}" >
-            <div class="plan-item-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    ${plan.svg}
-                </svg>
-            </div>
-            <h3>${plan.name}</h3>
-            <h5 style="padding-bottom: 10px;">${plan.price}</h5>
-            <ul>
-                ${plan.description.map(point => `
-                    <li><p>${point}</p></li>
-                `).join("")}
-            </ul>
-        </div>
-    `).join("");
+<div class="plan-item" redirect-to="${plan["redirect-to"]}" >
+<div class="plan-item-icon">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+${plan.svg}
+</svg>
+</div>
+<h3>${plan.name}</h3>
+<h5 style="padding-bottom: 10px;">${plan.price}</h5>
+<ul>
+${plan.description.map(point => `
+<li><p>${point}</p></li>
+`).join("")}
+</ul>
+</div>
+`).join("");
 };
 
 const injectBenifits = (benifits) => {
     const container = document.getElementById("benifits");
     container.innerHTML = benifits.map((benifit) => `
-        <div class="benefit-item">
-            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M9 12l2 2 4-4"/>
-                <circle cx="12" cy="12" r="10"/>
-            </svg>
-            <span>${benifit.title}</span>
-        </div>
-    `).join("");
+<div class="benefit-item">
+<svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+<path d="M9 12l2 2 4-4"/>
+<circle cx="12" cy="12" r="10"/>
+</svg>
+<span>${benifit.title}</span>
+</div>
+`).join("");
 };
 
 const injectTemplates = (templates, selectText) => {
     const container = document.getElementById("templates");
     const fragment = document.createDocumentFragment();
-
     templates.forEach((template) => {
         const card = document.createElement("div");
         card.className = `template-card ${template.comingSoon ? 'coming-soon' : ''}`;
-
         const buttonText = template.comingSoon ? 'Coming Soon' : selectText;
         const buttonClass = template.comingSoon ? 'btn btn-secondary btn-full' : 'btn btn-primary btn-full';
 
+        const frameURL = `https://${template.name}.${templatesURL}`;
+        console.log(frameURL);
         card.innerHTML = `
-            <div class="template-image">
-                <img src="${template.imageURL}" alt="${template.title}">
-                ${template.comingSoon ? '<div class="coming-soon-badge">Coming Soon</div>' : ''}
-            </div>
-            <div class="template-content">
-                <div class="template-header">
-                    <h3>${template.title}</h3>
-                    <span class="template-category">${template.subTitle}</span>
-                </div>
-                <p>${template.description}</p>
-                <button class="${buttonClass}" ${template.comingSoon ? 'disabled' : ''}>
-                    ${buttonText}
-                </button>
-            </div>
-        `;
-
+<div class="template-frame">
+    ${template.comingSoon
+                ? `<div class="frame-placeholder">
+               <div class="placeholder-content">
+                   <span>Preview Coming Soon</span>
+               </div>
+               <div class="coming-soon-badge">Coming Soon</div>
+           </div>`
+                : `<iframe src="${frameURL}" 
+                   title="${template.title} Preview"
+                   frameborder="0"
+                   scrolling="no"
+                   loading="lazy"
+                   sandbox="allow-scripts allow-same-origin allow-forms"
+                   class="template-iframe">
+           </iframe>`
+            }
+</div>
+<div class="template-content">
+    <div class="template-header">
+        <h3>${template.title}</h3>
+    </div>
+    <p>${template.description}</p>
+    <button class="${buttonClass}" ${template.comingSoon ? 'disabled' : ''}>
+        ${buttonText}
+    </button>
+</div>
+`;
         // Handle click events
-        if (!template.comingSoon && template.url && template.url !== '#') {
+        if (!template.comingSoon) {
             card.style.cursor = "pointer";
             card.onclick = () => {
-                // Check if it's a template URL (contains templates/)
-                if (template.url.includes('templates/')) {
-                    window.location.href = template.url;
-                } else {
-                    // Handle other types of URLs (external links, etc.)
-                    window.open(template.url, '_blank');
-                }
+                window.location.href = `${editorURL}${template.name}`;
             };
         } else if (template.comingSoon) {
             card.style.cursor = "default";
             card.onclick = (e) => {
                 e.stopPropagation();
-                // Optional: Show a notification or modal about coming soon
                 showComingSoonNotification(template.title);
             };
         }
-
         fragment.appendChild(card);
     });
-
     container.appendChild(fragment);
 };
 
@@ -95,12 +102,12 @@ const showComingSoonNotification = (templateName) => {
     const notification = document.createElement('div');
     notification.className = 'notification coming-soon-notification';
     notification.innerHTML = `
-        <div class="notification-content">
-            <h4>Coming Soon!</h4>
-            <p>The ${templateName} template is currently in development. Check back soon!</p>
-            <button class="btn btn-primary notification-close">Got it</button>
-        </div>
-    `;
+<div class="notification-content">
+    <h4>Coming Soon!</h4>
+    <p>The ${templateName} template is currently in development. Check back soon!</p>
+    <button class="btn btn-primary notification-close">Got it</button>
+</div>
+`;
 
     document.body.appendChild(notification);
 
@@ -118,16 +125,16 @@ const showComingSoonNotification = (templateName) => {
 const injectFeatures = (features) => {
     const container = document.getElementById("features");
     container.innerHTML = features.map((feature) => `
-        <div class="feature-item">
-            <div class="feature-item-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    ${feature.icon.svg}
-                </svg>
-            </div>
-            <h3>${feature.title}</h3>
-            <p>${feature.description}</p>
-        </div>
-    `).join("");
+<div class="feature-item">
+<div class="feature-item-icon">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+${feature.icon.svg}
+</svg>
+</div>
+<h3>${feature.title}</h3>
+<p>${feature.description}</p>
+</div>
+`).join("");
 };
 
 const injectHeroFeatures = (heroFeatures) => {
@@ -138,14 +145,14 @@ const injectHeroFeatures = (heroFeatures) => {
         const featureCard = document.createElement('div');
         featureCard.className = 'feature-card';
         featureCard.innerHTML = `
-            <div class="feature-icon ${heroFeature.icon.color}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    ${heroFeature.icon.svg}
-                </svg>
-            </div>
-            <h3>${heroFeature.title}</h3>
-            <p>${heroFeature.description}</p>
-        `;
+<div class="feature-icon ${heroFeature.icon.color}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        ${heroFeature.icon.svg}
+    </svg>
+</div>
+<h3>${heroFeature.title}</h3>
+<p>${heroFeature.description}</p>
+`;
         fragment.appendChild(featureCard);
     });
 
@@ -174,9 +181,9 @@ async function loadTranslations() {
         }
 
         // Load templates from static data
-        let templates = lang["templates"];
-        if (templates) {
-            injectTemplates(templates, lang["template.select"] ?? "Use this template");
+        // let templates = lang["templates"];
+        if (templateList) {
+            injectTemplates(templateList, lang["template.select"] ?? "Use this template");
         }
 
         let benifits = lang["getStarted.benifits"];
