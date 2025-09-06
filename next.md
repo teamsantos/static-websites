@@ -15,37 +15,6 @@ Or if an image is clicked it should let the user change the image to the one he 
                 "title": "This is the title"
              }
 
-# Implementation Status
-
-## What is Implemented
-
-- **Editor Page**: Created `editor.html` that loads templates via dropdown selection
-- **Hover Highlighting**: Elements with `data-text-id` or `data-image-src` get blue outlines on hover
-- **Click-to-Edit**:
-  - Text elements show input fields for editing
-  - Images show file pickers for replacement
-- **JSON Generation**: Real-time updates to display `en.json` (for texts/alts) and `images.json` (for image paths)
-- **Export**: Button to download changes as JSON file
-- **Responsive Design**: Added mobile-friendly CSS
-
-## What Needs to Be Implemented
-
-- **Backend Integration**: Server-side code to actually create/update JSON files
-- **Multiple Language Support**: Handle multiple languages, not just `en.json`
-- **Real File Uploads**: Upload images to server and store paths
-- **Input Validation/Security**: Sanitize user inputs and file types
-- **Persistence**: Save changes across sessions
-- **Advanced Features**: Undo/redo, bulk editing, template saving
-
-## How to Test
-
-1. Open `editor.html` in a web browser (e.g., via `npm run dev` or directly)
-2. Select a template from the dropdown (Business Card or Modern Header)
-3. Click "Load Template" to display it
-4. Hover over text/images to see highlights
-5. Click elements to edit: texts get input fields, images get file pickers
-6. Watch the JSON update in real-time at the bottom
-7. Click "Export JSON" to download the changes file
-
-The editor works entirely client-side with vanilla JavaScript, no libraries as requested. For full functionality, a backend would be needed to persist changes.
-
+# Guidelines
+- The template should be the main page, meaning that the editor should feel like an extension to the template and not the other way arround.
+- Tthe editor and template should integrate together into a single html file so that I can host it and test it with serving only one html file
