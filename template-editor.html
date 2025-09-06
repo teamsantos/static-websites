@@ -596,6 +596,12 @@ body {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(this.templateContent, 'text/html');
 
+                // Remove the e-info footer if present
+                const footerToRemove = doc.getElementById('modernFooter');
+                if (footerToRemove) {
+                    footerToRemove.remove();
+                }
+
                 // Extract and apply CSS styles from the template
                 this.extractAndApplyStyles(doc);
 
