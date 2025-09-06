@@ -437,7 +437,7 @@ function setupScrollCueAutoHide() {
     }
 
     function initStars() {
-        const count = Math.floor((width * height) / 18000); // density
+        const count = Math.max(5, Math.floor((width * height) / 18000)); // density
         stars = Array.from({ length: count }, () => ({
             x: Math.random() * width,
             y: Math.random() * height,
@@ -519,7 +519,7 @@ function setupScrollCueAutoHide() {
     }
 
     const ro = new ResizeObserver(() => { resize(); initStars(); });
-    ro.observe(document.querySelector('.hero'));
+    ro.observe(canvas);
     resize();
     initStars();
     requestAnimationFrame(tick);

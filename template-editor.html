@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Template Editor</title>
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Template Editor</title>
+        <style>
         /* Reset and base styles */
         * {
             margin: 0;
@@ -38,7 +38,7 @@
             left: 0;
             right: 0;
             z-index: 1000;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(203, 213, 225, 0.95) 100%);
+            background: linear-gradient(180deg, #0b1220 0%, #0d1b2a 50%, #0b1220 100%);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(14, 165, 233, 0.15);
             padding: 0.5rem 1rem;
@@ -48,6 +48,18 @@
             box-shadow: 0 2px 20px rgba(14, 165, 233, 0.08);
             height: 56px;
         }
+
+        /* Aurora animated gradient */
+        .stars {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 0;
+            pointer-events: none;
+        }
+
 
         .editor-controls {
             display: flex;
@@ -306,8 +318,8 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
         }
 
         /* Responsive design */
@@ -331,42 +343,43 @@
                 border-radius: 0.5rem;
             }
         }
-    </style>
-</head>
-<body>
-    <!-- Editor Overlay -->
-    <div class="editor-overlay">
-        <div class="editor-info">
-            <h2 style="margin: 0; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1rem; font-weight: 700;">Template Editor</h2>
-            <span id="template-name" style="color: #475569; font-size: 0.75rem; font-weight: 500;">No template loaded</span>
+        </style>
+    </head>
+    <body>
+        <!-- Editor Overlay -->
+        <div class="editor-overlay">
+            <canvas class="stars" aria-hidden="true"></canvas>
+            <div class="editor-info">
+                <h2 style="margin: 0; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1rem; font-weight: 700;">Template Editor</h2>
+                <span id="template-name" style="color: #475569; font-size: 0.75rem; font-weight: 500;">No template loaded</span>
+            </div>
+            <div class="editor-controls">
+                <button id="load-template-btn" class="editor-btn">Load Template</button>
+                <button id="save-changes-btn" class="editor-btn">Save Changes</button>
+                <button id="export-template-btn" class="btn btn-primary editor-btn">Export</button>
+            </div>
         </div>
-        <div class="editor-controls">
-            <button id="load-template-btn" class="editor-btn">Load Template</button>
-            <button id="save-changes-btn" class="editor-btn">Save Changes</button>
-            <button id="export-template-btn" class="btn btn-primary editor-btn">Export</button>
-        </div>
-    </div>
 
-    <!-- Template Content Container -->
-    <div class="editor-container">
-        <div id="template-content">
-            <div style="display: flex; align-items: center; justify-content: center; min-height: 50vh; color: #6b7280;">
-                <div style="text-align: center;">
-                    <h3>Welcome to Template Editor</h3>
-                    <p>Click "Load Template" to get started</p>
+        <!-- Template Content Container -->
+        <div class="editor-container">
+            <div id="template-content">
+                <div style="display: flex; align-items: center; justify-content: center; min-height: 50vh; color: #6b7280;">
+                    <div style="text-align: center;">
+                        <h3>Welcome to Template Editor</h3>
+                        <p>Click "Load Template" to get started</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Status Messages -->
-    <div id="status-message" class="status-message"></div>
+        <!-- Status Messages -->
+        <div id="status-message" class="status-message"></div>
 
-    <!-- Hidden file inputs -->
-    <input type="file" id="template-file-input" accept=".html" style="display: none;">
-    <input type="file" id="image-file-input" accept="image/*" style="display: none;">
+        <!-- Hidden file inputs -->
+        <input type="file" id="template-file-input" accept=".html" style="display: none;">
+        <input type="file" id="image-file-input" accept="image/*" style="display: none;">
 
-    <script>
+        <script>
         class TemplateEditor {
             constructor() {
                 this.templateContent = null;
@@ -603,25 +616,25 @@
                 const modal = document.createElement('div');
                 modal.className = 'modal';
                 modal.innerHTML = `
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3>Change Image</h3>
-                            <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-                        </div>
-                        <div class="image-editor-content">
-                            ${currentSrc ? `<img src="${currentSrc}" alt="Current image" class="current-image">` : ''}
-                            <div class="image-upload-area" onclick="document.getElementById('image-file-input').click()">
-                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📁</div>
-                                <div>Click to upload new image</div>
-                                <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">or drag and drop</div>
-                            </div>
-                            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
-                                <button class="editor-btn" onclick="this.closest('.modal').remove()">Cancel</button>
-                                <button class="editor-btn primary" onclick="templateEditor.saveImageEdit('${imageId}', this)">Save</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
+<div class="modal-content">
+    <div class="modal-header">
+        <h3>Change Image</h3>
+        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+    </div>
+    <div class="image-editor-content">
+        ${currentSrc ? `<img src="${currentSrc}" alt="Current image" class="current-image">` : ''}
+        <div class="image-upload-area" onclick="document.getElementById('image-file-input').click()">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📁</div>
+            <div>Click to upload new image</div>
+            <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">or drag and drop</div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+            <button class="editor-btn" onclick="this.closest('.modal').remove()">Cancel</button>
+            <button class="editor-btn primary" onclick="templateEditor.saveImageEdit('${imageId}', this)">Save</button>
+        </div>
+    </div>
+</div>
+`;
 
                 document.body.appendChild(modal);
 
@@ -748,10 +761,118 @@
             }
         }
 
+        // Stars background animation for hero
+        (() => {
+            const canvas = document.querySelector('.stars');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width, height, dpr;
+            let stars = [];
+            let shooting = [];
+
+            function resize() {
+                dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+                const rect = canvas.getBoundingClientRect();
+                width = rect.width;
+                height = rect.height;
+                canvas.width = Math.floor(width * dpr);
+                canvas.height = Math.floor(height * dpr);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            function initStars() {
+                const count = Math.max(5, Math.floor((width * height) / 18000)); // density
+                stars = Array.from({ length: count }, () => ({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 1.1 + 0.2,
+                    a: Math.random() * 0.6 + 0.3,
+                    tw: Math.random() * 0.02 + 0.005,
+                    t: Math.random() * Math.PI * 2
+                }));
+            }
+
+            function spawnShootingStar() {
+                if (shooting.length > 2) return;
+                const fromTop = Math.random() < 0.5;
+                const startX = fromTop ? Math.random() * width * 0.6 : width * (0.4 + Math.random() * 0.6);
+                const startY = fromTop ? -20 : Math.random() * height * 0.5;
+                const speed = 600 + Math.random() * 600; // px/s
+                const angle = (Math.PI / 4) + Math.random() * (Math.PI / 8); // down-right
+                shooting.push({
+                    x: startX,
+                    y: startY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 0.6 + Math.random() * 0.6,
+                    age: 0
+                });
+            }
+
+            let last = performance.now();
+            function tick(now) {
+                const dt = Math.min(0.033, (now - last) / 1000);
+                last = now;
+                ctx.clearRect(0, 0, width, height);
+
+                // aurora-friendly dark sky gradient
+                const g = ctx.createLinearGradient(0, 0, 0, height);
+                g.addColorStop(0, 'rgba(12, 18, 32, 0.2)');
+                g.addColorStop(1, 'rgba(12, 18, 32, 0.6)');
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, width, height);
+
+                // twinkling stars
+                ctx.fillStyle = '#ffffff';
+                stars.forEach(s => {
+                    s.t += s.tw;
+                    const alpha = s.a + Math.sin(s.t) * 0.25;
+                    ctx.globalAlpha = Math.max(0.05, Math.min(1, alpha));
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1;
+
+                // shooting stars
+                for (let i = shooting.length - 1; i >= 0; i--) {
+                    const sh = shooting[i];
+                    sh.age += dt;
+                    if (sh.age > sh.life) { shooting.splice(i, 1); continue; }
+                    const px = sh.x, py = sh.y;
+                    sh.x += sh.vx * dt; sh.y += sh.vy * dt;
+                    const trail = 120; // px
+                    const ang = Math.atan2(sh.vy, sh.vx);
+                    const tx = Math.cos(ang) * -trail;
+                    const ty = Math.sin(ang) * -trail;
+                    const grad = ctx.createLinearGradient(px, py, px + tx, py + ty);
+                    grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+                    grad.addColorStop(1, 'rgba(255,255,255,0)');
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(px + tx, py + ty);
+                    ctx.lineTo(px, py);
+                    ctx.stroke();
+                }
+
+                // occasionally spawn a shooting star
+                if (Math.random() < 0.007) spawnShootingStar();
+
+                requestAnimationFrame(tick);
+            }
+
+            const ro = new ResizeObserver(() => { resize(); initStars(); });
+            ro.observe(canvas);
+            resize();
+            initStars();
+            requestAnimationFrame(tick);
+        })();
+
         // Initialize the editor when the page loads
         const templateEditor = new TemplateEditor();
-    </script>
-</body>
+        </script>
+    </body>
 </html></content>
 </xai:function_call"> 
 
