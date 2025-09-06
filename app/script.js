@@ -2,82 +2,13 @@ import translationsEN from '../assets/langs/en.json' with { type: 'json' };
 
 const lang = translationsEN;
 
-function addRippleEffect() {
-    document.querySelectorAll('.btn').forEach((button) => {
-        button.addEventListener('click', function (e) {
-            const existing = this.querySelector('.ripple');
-            if (existing) existing.remove();
-            const circle = document.createElement('span');
-            const diameter = Math.max(this.clientWidth, this.clientHeight);
-            const radius = diameter / 2;
-            circle.style.width = circle.style.height = `${diameter}px`;
-            circle.style.left = `${e.clientX - (this.getBoundingClientRect().left + radius)}px`;
-            circle.style.top = `${e.clientY - (this.getBoundingClientRect().top + radius)}px`;
-            circle.classList.add('ripple');
-            this.appendChild(circle);
-        });
-    });
-}
 
-function setupRevealOnScroll() {
-    const observer = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('reveal-visible');
-                    observer.unobserve(entry.target);
-                }
-            });
-        },
-        { threshold: 0.14 }
-    );
-    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
-}
 
-function setupTiltEffects() {
-    const tiltSelectors = ['.feature-card', '.feature-item', '.plan-item', '.template-card'];
-    const tiltElements = document.querySelectorAll(tiltSelectors.join(','));
-    tiltElements.forEach((el) => {
-        const tilt = 800;
-        const constrain = el.classList.contains("feature-card") ? 36 : 18;
-        el.addEventListener('mousemove', (e) => {
-            const rect = el.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            const dx = (e.clientX - cx) / rect.width;
-            const dy = (e.clientY - cy) / rect.height;
-            const rotateX = (+constrain * dy).toFixed(2);
-            const rotateY = (-constrain * dx).toFixed(2);
-            el.style.transform = `perspective(${tilt}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        });
-        el.addEventListener('mouseleave', () => {
-            el.style.transform = '';
-        });
-    });
-}
 
-function animateScrollTo(targetY, durationMs = 2200) {
-    const supportsRAF = 'requestAnimationFrame' in window;
-    if (!supportsRAF) {
-        window.scrollTo(0, targetY);
-        return;
-    }
-    const startY = window.pageYOffset;
-    const distance = targetY - startY;
-    const startTime = performance.now();
-    const duration = Math.max(0, durationMs);
-    // smoother ease with longer ease-out tail
-    const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-    function step(now) {
-        const elapsed = now - startTime;
-        const progress = Math.min(1, elapsed / duration);
-        const eased = easeInOutCubic(progress);
-        window.scrollTo(0, startY + distance * eased);
-        if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-}
+
+
+
 
 const injectPlans = (plans) => {
     const container = document.getElementById("plans");
@@ -353,13 +284,7 @@ async function loadTranslations() {
         });
 
         // IMPORTANT: Setup tilt effects AFTER all content is injected
-        setupTiltEffects();
-
-        // Enhance other UI interactions
-        addRippleEffect();
-
-        // Now observe all reveals (including newly added ones)
-        setupRevealOnScroll();
+        // Note: setupTiltEffects, addRippleEffect, and setupRevealOnScroll are now handled by base.js
 
         document.querySelectorAll("[redirect-to]").forEach(el => {
             let key = el.getAttribute("redirect-to");
@@ -417,110 +342,4 @@ function setupScrollCueAutoHide() {
     setTimeout(update, 300);
 }
 
-// Stars background animation for hero
-(() => {
-    const canvas = document.querySelector('.stars');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let width, height, dpr;
-    let stars = [];
-    let shooting = [];
 
-    function resize() {
-        dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-        const rect = canvas.getBoundingClientRect();
-        width = rect.width;
-        height = rect.height;
-        canvas.width = Math.floor(width * dpr);
-        canvas.height = Math.floor(height * dpr);
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-
-    function initStars() {
-        const count = Math.max(5, Math.floor((width * height) / 18000)); // density
-        stars = Array.from({ length: count }, () => ({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            r: Math.random() * 1.1 + 0.2,
-            a: Math.random() * 0.6 + 0.3,
-            tw: Math.random() * 0.02 + 0.005,
-            t: Math.random() * Math.PI * 2
-        }));
-    }
-
-    function spawnShootingStar() {
-        if (shooting.length > 2) return;
-        const fromTop = Math.random() < 0.5;
-        const startX = fromTop ? Math.random() * width * 0.6 : width * (0.4 + Math.random() * 0.6);
-        const startY = fromTop ? -20 : Math.random() * height * 0.5;
-        const speed = 600 + Math.random() * 600; // px/s
-        const angle = (Math.PI / 4) + Math.random() * (Math.PI / 8); // down-right
-        shooting.push({
-            x: startX,
-            y: startY,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            life: 0.6 + Math.random() * 0.6,
-            age: 0
-        });
-    }
-
-    let last = performance.now();
-    function tick(now) {
-        const dt = Math.min(0.033, (now - last) / 1000);
-        last = now;
-        ctx.clearRect(0, 0, width, height);
-
-        // aurora-friendly dark sky gradient
-        const g = ctx.createLinearGradient(0, 0, 0, height);
-        g.addColorStop(0, 'rgba(12, 18, 32, 0.2)');
-        g.addColorStop(1, 'rgba(12, 18, 32, 0.6)');
-        ctx.fillStyle = g;
-        ctx.fillRect(0, 0, width, height);
-
-        // twinkling stars
-        ctx.fillStyle = '#ffffff';
-        stars.forEach(s => {
-            s.t += s.tw;
-            const alpha = s.a + Math.sin(s.t) * 0.25;
-            ctx.globalAlpha = Math.max(0.05, Math.min(1, alpha));
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-            ctx.fill();
-        });
-        ctx.globalAlpha = 1;
-
-        // shooting stars
-        for (let i = shooting.length - 1; i >= 0; i--) {
-            const sh = shooting[i];
-            sh.age += dt;
-            if (sh.age > sh.life) { shooting.splice(i, 1); continue; }
-            const px = sh.x, py = sh.y;
-            sh.x += sh.vx * dt; sh.y += sh.vy * dt;
-            const trail = 120; // px
-            const ang = Math.atan2(sh.vy, sh.vx);
-            const tx = Math.cos(ang) * -trail;
-            const ty = Math.sin(ang) * -trail;
-            const grad = ctx.createLinearGradient(px, py, px + tx, py + ty);
-            grad.addColorStop(0, 'rgba(255,255,255,0.9)');
-            grad.addColorStop(1, 'rgba(255,255,255,0)');
-            ctx.strokeStyle = grad;
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(px + tx, py + ty);
-            ctx.lineTo(px, py);
-            ctx.stroke();
-        }
-
-        // occasionally spawn a shooting star
-        if (Math.random() < 0.007) spawnShootingStar();
-
-        requestAnimationFrame(tick);
-    }
-
-    const ro = new ResizeObserver(() => { resize(); initStars(); });
-    ro.observe(canvas);
-    resize();
-    initStars();
-    requestAnimationFrame(tick);
-})();

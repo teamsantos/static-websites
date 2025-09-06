@@ -12,6 +12,7 @@
 - **Template Editor**: `template-editor.html` (clean HTML), `app/editor.js` (logic), `styles/editor.css` (styles)
 - **Main Site**: `index.html`, `app/script.js`, `styles/styles.css`
 - **Shared Styles**: `styles/base.css` (common CSS variables, reset, buttons, animations)
+- **Shared Scripts**: `app/base.js` (common JS utilities, stars animation, language detection, UI effects)
 - **Templates**: `templates/` directory with individual template folders
 - **Projects**: `projects/` directory for built/deployed projects
 
