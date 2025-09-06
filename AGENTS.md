@@ -8,6 +8,13 @@
 - **CDK**: `cd infra && npm run deploy/deploy-project/deploy-with-projects`
 - **CDK utils**: `cd infra && npm run diff/synth/list/destroy/bootstrap/bootstrap-check`
 
+## File Organization
+- **Template Editor**: `template-editor.html` (clean HTML), `app/editor.js` (logic), `styles/editor.css` (styles)
+- **Main Site**: `index.html`, `app/script.js`, `styles/styles.css`
+- **Shared Styles**: `styles/base.css` (common CSS variables, reset, buttons, animations)
+- **Templates**: `templates/` directory with individual template folders
+- **Projects**: `projects/` directory for built/deployed projects
+
 ## Code Style Guidelines
 - **JavaScript**: camelCase, 4 spaces, semicolons, single quotes, ES6+, arrow functions, async/await, IIFE patterns
 - **TypeScript**: Strict mode, explicit types, optional `?`, ES2020 target, commonjs modules, no default exports
