@@ -143,5 +143,34 @@
       "svg": "<svg viewBox='0 0 24 24' fill='currentColor'>\n<path d='M12 2l2.92 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 7.08-1.01L12 2z'/>\n</svg>",
       "redirect-to": "_get-started"
     }
-  ]
+   ],
+   "templates": [
+     {
+       "id": "bussinessCard",
+       "name": "Business Card",
+       "description": "Professional business card template",
+       "imageURL": "./templates/bussinessCard/images/dentist-examining-female-patient-with-tools.jpg",
+       "subTitle": "Dental",
+       "order": 1,
+       "url": "./templates/bussinessCard/index.html"
+     },
+     {
+       "id": "bussinessCardTest",
+       "name": "Business Card Test",
+       "description": "Test version of business card template",
+       "imageURL": "./templates/bussinessCardTest/images/dentist-examining-female-patient-with-tools.jpg",
+       "subTitle": "Dental",
+       "order": 2,
+       "url": "./templates/bussinessCardTest/index.html"
+     },
+     {
+       "id": "modern-header",
+       "name": "Modern Header",
+       "description": "Modern header template",
+       "imageURL": "./templates/modern-header/images/placeholder.jpg",
+       "subTitle": "Header",
+       "order": 3,
+       "url": "./templates/modern-header/index.html"
+     }
+   ]
 }

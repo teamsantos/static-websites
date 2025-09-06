@@ -43,65 +43,7 @@ const injectBenifits = (benifits) => {
     `).join("");
 };
 
-// Dynamic template loading system
-const loadTemplatesFromFolders = async () => {
-    try {
-        // Load the templates registry
-        const registryResponse = await fetch('./templates/templates-registry.json');
-        if (!registryResponse.ok) {
-            throw new Error('Failed to load templates registry');
-        }
-        const registry = await registryResponse.json();
 
-        // Detect current language (similar to template loader logic)
-        let currentLang = 'en'; // default
-        const urlParams = new URLSearchParams(window.location.search);
-        const langParam = urlParams.get('lang');
-        if (langParam && ['en', 'pt'].includes(langParam)) {
-            currentLang = langParam;
-        } else if (navigator.language.startsWith('pt')) {
-            currentLang = 'pt';
-        }
-
-        // Load template data for each registered template
-        const templatesWithData = await Promise.all(
-            registry.templates.map(async (template) => {
-                try {
-                    // Load template-specific language data
-                    const templateLangPath = `./templates/${template.id}/lang_${currentLang}.json`;
-                    const templateLangResponse = await fetch(templateLangPath);
-
-                    if (!templateLangResponse.ok) {
-                        console.warn(`Language file not found for template ${template.id}, using registry data`);
-                        return template;
-                    }
-
-                    const templateLangData = await templateLangResponse.json();
-
-                    // Merge registry data with template language data
-                    return {
-                        ...template,
-                        // Use template-specific data where available, fallback to registry
-                        name: templateLangData.name || template.name,
-                        description: templateLangData.description || template.description,
-                        // Add any other template-specific data you want to expose
-                        templateData: templateLangData
-                    };
-                } catch (error) {
-                    console.warn(`Error loading data for template ${template.id}:`, error);
-                    return template;
-                }
-            })
-        );
-
-        // Sort templates by order
-        return templatesWithData.sort((a, b) => (a.order || 999) - (b.order || 999));
-
-    } catch (error) {
-        console.error('Error loading templates from folders:', error);
-        throw error;
-    }
-};
 
 const injectTemplates = (templates, selectText) => {
     const container = document.getElementById("templates");
@@ -241,19 +183,11 @@ async function loadTranslations() {
             injectFeatures(features);
         }
 
-        // Load templates dynamically from template folders
-        loadTemplatesFromFolders().then(templates => {
-            if (templates && templates.length > 0) {
-                injectTemplates(templates, lang["template.select"] ?? "Use this template");
-            }
-        }).catch(error => {
-            console.error('Error loading templates:', error);
-            // Fallback to language file templates if dynamic loading fails
-            let templates = lang["templates"];
-            if (templates) {
-                injectTemplates(templates, lang["template.select"] ?? "Use this template");
-            }
-        });
+        // Load templates from static data
+        let templates = lang["templates"];
+        if (templates) {
+            injectTemplates(templates, lang["template.select"] ?? "Use this template");
+        }
 
         let benifits = lang["getStarted.benifits"];
         if (benifits) {

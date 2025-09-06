@@ -5,7 +5,7 @@
   "description": "A static website generator.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && EDITOR_BUILD=true vite build && cp -r templates dist/",
+    "build": "vite build && EDITOR_BUILD=true vite build",
     "preview": "vite preview",
     "editor": "serve . -s -l 3000"
   },

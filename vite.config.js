@@ -47,7 +47,7 @@ export default defineConfig({
         },
         assetsInlineLimit: Infinity,
         outDir,
-        emptyOutDir: true,
+        emptyOutDir: !editorBuild,
         minify: 'terser',
         terserOptions: {
             compress: true,
