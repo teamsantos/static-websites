@@ -28,66 +28,66 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-  steps:
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0       # needed for pushing changes
           ref: master          # ensure we are on the branch we want to push to
           token: ${{ secrets.GITHUB_TOKEN }}
-       - name: Install Node deps
-         run: npm ci
-       - name: Build site
-         run: npm run build
-       - name: Configure AWS credentials
-         uses: aws-actions/configure-aws-credentials@v2
-         with:
-           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-           aws-region: ${{ secrets.AWS_REGION }}
-       - name: Download current S3 files
-         run: |
-            aws s3 cp s3://$S3_BUCKET/default/index.html current_index.html || echo "no_existing_file"
-            aws s3 cp s3://$S3_BUCKET/editor/template-editor.html current_template_editor.html || echo "no_existing_file"
-       - name: Check if files changed
-         id: check_diff
-         run: |
-           index_changed=false
-           editor_changed=false
+      - name: Install Node deps
+        run: npm ci
+      - name: Build site
+        run: npm run build
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Download current S3 files
+        run: |
+           aws s3 cp s3://$S3_BUCKET/default/index.html current_index.html || echo "no_existing_file"
+           aws s3 cp s3://$S3_BUCKET/editor/template-editor.html current_template_editor.html || echo "no_existing_file"
+      - name: Check if files changed
+        id: check_diff
+        run: |
+          index_changed=false
+          editor_changed=false
 
-           if [ -f current_index.html ] && ! diff -q current_index.html $BUILD_DIR/index.html > /dev/null; then
-             index_changed=true
-           elif [ ! -f current_index.html ]; then
-             index_changed=true
+          if [ -f current_index.html ] && ! diff -q current_index.html $BUILD_DIR/index.html > /dev/null; then
+            index_changed=true
+          elif [ ! -f current_index.html ]; then
+            index_changed=true
+          fi
+
+          if [ -f current_template_editor.html ] && ! diff -q current_template_editor.html $BUILD_DIR/template-editor.html > /dev/null; then
+            editor_changed=true
+          elif [ ! -f current_template_editor.html ]; then
+            editor_changed=true
+          fi
+
+          if [ "$index_changed" = "false" ] && [ "$editor_changed" = "false" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+           else
+             echo "changed=true" >> $GITHUB_OUTPUT
            fi
-
-           if [ -f current_template_editor.html ] && ! diff -q current_template_editor.html $BUILD_DIR/template-editor.html > /dev/null; then
-             editor_changed=true
-           elif [ ! -f current_template_editor.html ]; then
-             editor_changed=true
-           fi
-
-           if [ "$index_changed" = "false" ] && [ "$editor_changed" = "false" ]; then
-             echo "changed=false" >> $GITHUB_OUTPUT
-            else
-              echo "changed=true" >> $GITHUB_OUTPUT
-            fi
-       - name: Stop if no changes
-         if: steps.check_diff.outputs.changed == 'false'
-         run: |
-           echo "No changes detected in index.html or template-editor.html. Skipping deploy."
-           exit 0
-       - name: Upload to 'default' (latest)
-         run: |
-            aws s3 sync $BUILD_DIR s3://$S3_BUCKET/default/ \
-              --delete \
-              --cache-control "public, max-age=31536000" \
-              --exclude "*.html"
-            aws s3 sync $BUILD_DIR s3://$S3_BUCKET/default/ \
-              --delete \
-              --cache-control "no-cache, no-store, must-revalidate" \
-              --content-type "text/html" \
-              --include "*.html"
+      - name: Stop if no changes
+        if: steps.check_diff.outputs.changed == 'false'
+        run: |
+          echo "No changes detected in index.html or template-editor.html. Skipping deploy."
+          exit 0
+      - name: Upload to 'default' (latest)
+        run: |
+           aws s3 sync $BUILD_DIR s3://$S3_BUCKET/default/ \
+             --delete \
+             --cache-control "public, max-age=31536000" \
+             --exclude "*.html"
+           aws s3 sync $BUILD_DIR s3://$S3_BUCKET/default/ \
+             --delete \
+             --cache-control "no-cache, no-store, must-revalidate" \
+             --content-type "text/html" \
+             --include "*.html"
       - name: Upload template-editor to 'editor' path
          run: |
            aws s3 cp $BUILD_DIR/template-editor.html s3://$S3_BUCKET/editor/template-editor.html \
