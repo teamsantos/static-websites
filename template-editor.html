@@ -5,439 +5,455 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Template Editor</title>
         <style>
-        /* Reset and base styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+:root {
+    --color-soft-white: #cbd5e1;
+    --color-bg: #ffffff;
+    --color-text: #0f172a;
+    --color-muted: #475569;
+    /* Theme seed (change these two to re-theme) */
+    --primary-rgb: 14 165 233; /* cyan-500 */
+    --primary-strong-rgb: 2 132 199; /* sky-600 */
+    /* Derived */
+    --color-primary: rgb(var(--primary-rgb));
+    --color-primary-strong: rgb(var(--primary-strong-rgb));
+    --color-primary-dark: rgb(var(--primary-strong-rgb));
+    --color-ring: rgb(var(--primary-rgb) / 0.35);
+    --card-border: rgb(var(--primary-strong-rgb) / 0.15);
+    --card-bg: rgba(255, 255, 255, 0.75);
+    /* Global border color for the theme */
+    --color-border: var(--color-primary-strong);
+}
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.6;
-            color: #1f2937;
-            background: #f8fafc;
-        }
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    color: #1f2937;
+    background: #f8fafc;
+}
 
-        /* Editor container */
-        .editor-container {
-            position: relative;
-            min-height: 100vh;
-        }
+/* Editor container */
+.editor-container {
+    position: relative;
+    min-height: 100vh;
+}
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            position: relative;
-            overflow: hidden;
-        }
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--color-border), var(--color-primary));
-            color: white;
-        }
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-border), var(--color-primary));
+    color: white;
+}
 
-        .btn-primary:hover {
-            filter: brightness(1.05);
-            transform: translateY(-1px);
-            box-shadow: 0 10px 24px -12px var(--color-ring);
-        }
+.btn-primary:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px -12px var(--color-ring);
+}
 
-        .btn-outline {
-            background: transparent;
-            color: var(--color-border);
-            border: 2px solid var(--color-border);
-        }
+.btn-outline {
+    background: transparent;
+    color: var(--color-border);
+    border: 2px solid var(--color-border);
+}
 
-        .btn-outline:hover {
-            background: linear-gradient(135deg, var(--color-border), var(--color-primary));
-            color: white;
-            box-shadow: 0 10px 24px -12px var(--color-ring);
-        }
+.btn-outline:hover {
+    background: linear-gradient(135deg, var(--color-border), var(--color-primary));
+    color: white;
+    box-shadow: 0 10px 24px -12px var(--color-ring);
+}
 
-        /* Glassy outline button variant for hero */
-        .btn-glass {
-            backdrop-filter: blur(8px) saturate(120%);
-            -webkit-backdrop-filter: blur(8px) saturate(120%);
-            background: rgba(255, 255, 255, 0.06);
-            border-color: var(--color-border);
-        }
-        .btn-glass:hover {
-            background: rgba(255, 255, 255, 0.12);
-        }
+/* Glassy outline button variant for hero */
+.btn-glass {
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--color-border);
+}
+.btn-glass:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
 
-        /* .btn-large was unused; removed */
+/* .btn-large was unused; removed */
 
-        .btn-full {
-            width: 100%;
-            justify-content: center;
-        }
+.btn-full {
+    width: 100%;
+    justify-content: center;
+}
 
-        .icon {
-            width: 1rem;
-            height: 1rem;
-            stroke-width: 2;
-        }
+.icon {
+    width: 1rem;
+    height: 1rem;
+    stroke-width: 2;
+}
 
-        /* Button ripple */
-        .btn .ripple {
-            position: absolute;
-            border-radius: 9999px;
-            transform: scale(0);
-            animation: ripple 600ms linear;
-            pointer-events: none;
-        }
+/* Button ripple */
+.btn .ripple {
+    position: absolute;
+    border-radius: 9999px;
+    transform: scale(0);
+    animation: ripple 600ms linear;
+    pointer-events: none;
+}
 
-        .btn-primary .ripple {
-            background: rgba(255, 255, 255, 0.45);
-        }
+.btn-primary .ripple {
+    background: rgba(255, 255, 255, 0.45);
+}
 
-        .btn-outline .ripple,
-        .btn:not(.btn-primary) .ripple {
-            background: rgb(var(--primary-strong-rgb) / 0.2);
-        }
+.btn-outline .ripple,
+.btn:not(.btn-primary) .ripple {
+    background: rgb(var(--primary-strong-rgb) / 0.2);
+}
 
-        /* Template content area */
-        #template-content {
-            position: relative;
-            z-index: 1;
-        }
+/* Template content area */
+#template-content {
+    position: relative;
+    z-index: 1;
+}
 
-        /* Editor overlay */
-        .editor-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            background: linear-gradient(180deg, #0b1220 0%, #0d1b2a 50%, #0b1220 100%);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(14, 165, 233, 0.15);
-            padding: 0.5rem 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 20px rgba(14, 165, 233, 0.08);
-            height: 56px;
-        }
+/* Editor overlay */
+.editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: linear-gradient(180deg, #0b1220 0%, #0d1b2a 50%, #0b1220 100%);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(14, 165, 233, 0.15);
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 20px rgba(14, 165, 233, 0.08);
+    height: 56px;
+}
 
-        /* Aurora animated gradient */
-        .stars {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            display: block;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-
-        .editor-controls {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .editor-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 0.5rem;
-            background: rgba(255, 255, 255, 0.8);
-            color: #0f172a;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .editor-btn:hover {
-            background: rgba(255, 255, 255, 0.9);
-            filter: brightness(1.05);
-            transform: translateY(-1px);
-            box-shadow: 0 10px 24px -12px rgba(14, 165, 233, 0.35);
-        }
-
-        .editor-btn.primary {
-            background: linear-gradient(135deg, #0284c7, #0ea5e9);
-            color: white;
-            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
-        }
-
-        .editor-btn.primary:hover {
-            filter: brightness(1.05);
-            transform: translateY(-1px);
-            box-shadow: 0 10px 24px -12px rgba(14, 165, 233, 0.35);
-        }
-
-        /* Editable element highlighting */
-        .editable-element {
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .editable-element:hover {
-            outline: 2px solid #0ea5e9;
-            outline-offset: 2px;
-        }
-
-        .editable-element.editing {
-            outline: 2px solid #0284c7;
-            outline-offset: 2px;
-        }
-
-        .editable-element[data-text-id]:hover::after {
-            content: "✏️ Click to edit text";
-            position: absolute;
-            top: -30px;
-            left: 0;
-            background: #0ea5e9;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            white-space: nowrap;
-            z-index: 1001;
-        }
-
-        .editable-element[data-image-src]:hover::after {
-            content: "🖼️ Click to change image";
-            position: absolute;
-            top: -30px;
-            left: 0;
-            background: #0ea5e9;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            white-space: nowrap;
-            z-index: 1001;
-        }
+/* Aurora animated gradient */
+.stars {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 0;
+    pointer-events: none;
+}
 
 
+.editor-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
 
-        /* Text editing */
-        .text-editor {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            min-height: 60px;
-            max-height: 200px;
-            background: white;
-            border: 2px solid #0284c7;
-            border-radius: 4px;
-            padding: 8px;
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-            z-index: 1002;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            resize: vertical;
-            overflow-y: auto;
-        }
+.editor-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.8);
+    color: #0f172a;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
 
-        .text-editor:focus {
-            outline: none;
-        }
+.editor-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px -12px rgba(14, 165, 233, 0.35);
+}
 
-        /* Image editing */
-        .image-editor {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1002;
-            border-radius: 4px;
-        }
+.editor-btn.primary {
+    background: linear-gradient(135deg, #0284c7, #0ea5e9);
+    color: white;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+}
 
-        .image-editor-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
+.editor-btn.primary:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px -12px rgba(14, 165, 233, 0.35);
+}
 
-        .image-upload-area {
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
-            padding: 2rem;
-            margin: 1rem 0;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+/* Editable element highlighting */
+.editable-element {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+}
 
-        .image-upload-area:hover {
-            border-color: #3b82f6;
-            background: #f0f9ff;
-        }
+.editable-element:hover {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
+}
 
-        .image-upload-area.dragover {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
+.editable-element.editing {
+    outline: 2px solid #0284c7;
+    outline-offset: 2px;
+}
 
-        .file-input {
-            display: none;
-        }
+.editable-element[data-text-id]:hover::after {
+    content: "✏️ Click to edit text";
+    position: absolute;
+    top: -30px;
+    left: 0;
+    background: #0ea5e9;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1001;
+}
 
-        .current-image {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 4px;
-            margin: 1rem 0;
-        }
+.editable-element[data-image-src]:hover::after {
+    content: "🖼️ Click to change image";
+    position: absolute;
+    top: -30px;
+    left: 0;
+    background: #0ea5e9;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1001;
+}
 
-        /* Modal styles */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
 
-        .modal.hidden {
-            display: none;
-        }
 
-        .modal-content {
-            background: white;
-            border-radius: 8px;
-            padding: 2rem;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
+/* Text editing */
+.text-editor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 60px;
+    max-height: 200px;
+    background: white;
+    border: 2px solid #0284c7;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    z-index: 1002;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    resize: vertical;
+    overflow-y: auto;
+}
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
+.text-editor:focus {
+    outline: none;
+}
 
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #6b7280;
-        }
+/* Image editing */
+.image-editor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1002;
+    border-radius: 4px;
+}
 
-        /* Status messages */
-        .status-message {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            padding: 1rem;
-            border-radius: 6px;
-            color: white;
-            font-weight: 500;
-            z-index: 1003;
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.3s;
-        }
+.image-editor-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
 
-        .status-message.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
+.image-upload-area {
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 1rem 0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
 
-        .status-success {
-            background: #10b981;
-        }
+.image-upload-area:hover {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+}
 
-        .status-error {
-            background: #ef4444;
-        }
+.image-upload-area.dragover {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
 
-        .status-info {
-            background: #0ea5e9;
-        }
+.file-input {
+    display: none;
+}
 
-        /* Loading spinner */
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #f3f4f6;
-            border-top: 2px solid #0ea5e9;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+.current-image {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 4px;
+    margin: 1rem 0;
+}
 
-        @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-        }
+/* Modal styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
 
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .editor-overlay {
-                flex-direction: column;
-                gap: 0.25rem;
-                padding: 0.375rem 0.75rem;
-                height: auto;
-                min-height: 56px;
-            }
+.modal.hidden {
+    display: none;
+}
 
-            .editor-controls {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
 
-            .editor-btn {
-                padding: 0.5rem 1rem;
-                font-size: 0.875rem;
-                border-radius: 0.5rem;
-            }
-        }
-        </style>
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+/* Status messages */
+.status-message {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    padding: 1rem;
+    border-radius: 6px;
+    color: white;
+    font-weight: 500;
+    z-index: 1003;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s;
+}
+
+.status-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.status-success {
+    background: #10b981;
+}
+
+.status-error {
+    background: #ef4444;
+}
+
+.status-info {
+    background: #0ea5e9;
+}
+
+/* Loading spinner */
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f4f6;
+    border-top: 2px solid #0ea5e9;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .editor-overlay {
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.375rem 0.75rem;
+        height: auto;
+        min-height: 56px;
+    }
+
+    .editor-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .editor-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        border-radius: 0.5rem;
+    }
+}
+</style>
     </head>
     <body>
         <!-- Editor Overlay -->
         <div class="editor-overlay">
             <canvas class="stars" aria-hidden="true"></canvas>
             <div class="editor-info">
-                <h2 style="margin: 0; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1rem; font-weight: 700;">Template Editor</h2>
-                <span id="template-name" style="color: #475569; font-size: 0.75rem; font-weight: 500;">No template loaded</span>
+                <h2 style="color: #f8fafc;">Template Editor</h2>
             </div>
             <div class="editor-controls">
-                <button id="load-template-btn" class="editor-btn">Load Template</button>
-                <button id="save-changes-btn" class="editor-btn">Save Changes</button>
-                <button id="export-template-btn" class="btn btn-primary editor-btn">Export</button>
+                <button id="save-changes-btn" class="btn btn-outline btn-glass">Save Changes</button>
+                <button id="export-template-btn" class="btn btn-primary">Export</button>
             </div>
         </div>
 
@@ -447,7 +463,7 @@
                 <div style="display: flex; align-items: center; justify-content: center; min-height: 50vh; color: #6b7280;">
                     <div style="text-align: center;">
                         <h3>Welcome to Template Editor</h3>
-                        <p>Click "Load Template" to get started</p>
+                        <p>Add ?template=<name> to the URL to load a template</p>
                     </div>
                 </div>
             </div>
@@ -456,8 +472,7 @@
         <!-- Status Messages -->
         <div id="status-message" class="status-message"></div>
 
-        <!-- Hidden file inputs -->
-        <input type="file" id="template-file-input" accept=".html" style="display: none;">
+        <!-- Hidden file input for images -->
         <input type="file" id="image-file-input" accept="image/*" style="display: none;">
 
         <script>
@@ -474,17 +489,15 @@
 
             init() {
                 this.bindEvents();
-                this.showStatus('Ready to load template for editing', 'info');
+                this.autoLoadTemplate();
             }
 
             bindEvents() {
                 // Editor controls
-                document.getElementById('load-template-btn').addEventListener('click', () => this.loadTemplate());
                 document.getElementById('save-changes-btn').addEventListener('click', () => this.saveChanges());
                 document.getElementById('export-template-btn').addEventListener('click', () => this.exportTemplate());
 
                 // File inputs
-                document.getElementById('template-file-input').addEventListener('change', (e) => this.handleTemplateFile(e));
                 document.getElementById('image-file-input').addEventListener('change', (e) => this.handleImageFile(e));
 
                 // Global events
@@ -492,25 +505,61 @@
                 document.addEventListener('keydown', (e) => this.handleKeydown(e));
             }
 
-            loadTemplate() {
-                document.getElementById('template-file-input').click();
+            autoLoadTemplate() {
+                // Get template name from URL parameter
+                const urlParams = new URLSearchParams(window.location.search);
+                const templateName = urlParams.get('template');
+
+
+
+                if (!templateName) {
+                    this.showStatus('No template specified in URL. Use ?template=<name>', 'info');
+                    return;
+                }
+
+                if (templateName.trim() === '') {
+                    this.showStatus('Template name is empty. Use ?template=<name>', 'error');
+                    return;
+                }
+
+                // S3 bucket URL - replace with your actual bucket URL
+                const s3BucketUrl = 'https://teamsantos-static-websites.s3.eu-south-2.amazonaws.com';
+
+                // Alternative: Use a proxy if CORS is an issue
+                // const s3BucketUrl = 'http://ssh.e-info.click:3000';
+                // const templateUrl = `${s3BucketUrl}/proxy/templates/${templateName}/index.html`;
+
+
+                const templateUrl = `${s3BucketUrl}/templates/${templateName}/index.html`;
+
+                this.showStatus('Loading template from S3...', 'info');
+
+                // Fetch template from S3 with CORS mode
+                fetch(templateUrl, {
+                    mode: 'cors'
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        this.templateContent = html;
+                        this.processTemplate();
+                        this.showStatus(`Template "${templateName}" loaded successfully`, 'success');
+                    })
+                    .catch(error => {
+                        console.error('Error loading template:', error);
+                        if (error.message.includes('CORS')) {
+                            this.showStatus('CORS error: Configure S3 bucket CORS policy', 'error');
+                        } else {
+                            this.showStatus(`Failed to load template: ${error.message}`, 'error');
+                        }
+                    });
             }
 
-            handleTemplateFile(event) {
-                const file = event.target.files[0];
-                if (!file) return;
 
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.templateContent = e.target.result;
-                    this.processTemplate();
-                };
-                reader.readAsText(file);
-
-                // Update template name display
-                document.getElementById('template-name').textContent = file.name;
-                this.showStatus('Template loaded successfully', 'success');
-            }
 
             clearTemplateStyles() {
                 // Remove any existing template styles
