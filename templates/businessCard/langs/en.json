@@ -1,8 +1,7 @@
 {
   "9": "9",
   "98": "98%",
-  "title": "Establishment Template",
-  "description": "A front-page template for your business.",
+  "skipToMain": "Skip to main content",
   "smilebrightDental": "SmileBright Dental",
   "services": "Services",
   "about": "About",
@@ -65,5 +64,5 @@
   "tellUsAbout": "Tell us about your dental needs...",
   "sendMessage": "Send\n                            Message",
   "2025SmilebrightDental": "© 2025 SmileBright Dental. All rights reserved. | Privacy Policy | Terms of Service",
-  "text_65": "↑"
+  "text_66": "↑"
 }

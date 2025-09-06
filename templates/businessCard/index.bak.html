@@ -486,15 +486,95 @@
         }
 
         /* Footer */
-        footer {
+            footer {
+                background: var(--text-dark);
+                color: white;
+                padding: 2rem 0;
+                text-align: center;
+            }
+
+            footer p {
+                margin: 0;
+                font-size: 0.9rem;
+                line-height: 1.5;
+            }
+
+        /* Mobile Menu Styles */
+        .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 0.5rem;
+            background: none;
+            border: none;
+            gap: 4px;
+        }
+
+        .mobile-menu-toggle span {
+            width: 25px;
+            height: 3px;
             background: var(--text-dark);
-            color: white;
-            padding: 2rem 0;
-            text-align: center;
+            transition: var(--transition);
+            transform-origin: center;
+        }
+
+        .mobile-menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .mobile-menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .nav-links.active {
+            display: flex !important;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            flex-direction: column;
+            padding: 1rem 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-links.active a {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-links.active a:last-child {
+            border-bottom: none;
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            nav {
+                position: relative;
+            }
+
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                min-height: 80vh;
+                padding: 5rem 0 2rem;
+            }
 
             .hero-content,
             .about-content,
@@ -504,20 +584,157 @@
             }
 
             .hero-text h1 {
-                font-size: 2.5rem;
+                font-size: 2rem;
+                line-height: 1.2;
             }
 
-            .nav-links {
-                display: none;
+            .hero-text p {
+                font-size: 1.1rem;
+                line-height: 1.5;
+            }
+
+            .hero-image img {
+                max-width: 100%;
+                height: auto;
+            }
+
+            .section-title {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+            }
+
+            .section-subtitle {
+                font-size: 1rem;
+                margin-bottom: 2rem;
+            }
+
+            .services,
+            .about,
+            .testimonials,
+            .contact {
+                padding: 3rem 0;
+            }
+
+            .service-card {
+                padding: 1.5rem;
+            }
+
+            .service-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 1.8rem;
             }
 
             .stats {
                 grid-template-columns: 1fr;
+                gap: 1.5rem;
+                margin-top: 1.5rem;
+            }
+
+            .stat-number {
+                font-size: 2rem;
             }
 
             .services-grid,
             .testimonials-grid {
                 grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .testimonial-card {
+                padding: 1.5rem;
+            }
+
+            .contact-info h2 {
+                font-size: 2rem;
+            }
+
+            .contact-details {
+                gap: 1rem;
+            }
+
+            .contact-item {
+                gap: 0.75rem;
+            }
+
+            .cta-button,
+            .cta-button-nav {
+                min-height: 48px;
+                padding: 0.875rem 1.5rem;
+                font-size: 1rem;
+            }
+
+            .form-group input,
+            .form-group textarea {
+                padding: 0.875rem;
+                font-size: 1rem;
+                min-height: 48px;
+            }
+
+            .form-group textarea {
+                min-height: 100px;
+            }
+
+            .scroll-to-top {
+                bottom: 1rem;
+                right: 1rem;
+                width: 48px;
+                height: 48px;
+            }
+
+            footer {
+                padding: 1.5rem 0;
+                font-size: 0.9rem;
+            }
+
+            footer p {
+                font-size: 0.85rem;
+                line-height: 1.4;
+                padding: 0 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .hero-text h1 {
+                font-size: 1.75rem;
+            }
+
+            .hero-text p {
+                font-size: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.75rem;
+            }
+
+            .about-text h2 {
+                font-size: 2rem;
+            }
+
+            .contact-info h2 {
+                font-size: 1.75rem;
+            }
+
+            .services,
+            .about,
+            .testimonials,
+            .contact {
+                padding: 2rem 0;
+            }
+
+            .service-card,
+            .testimonial-card {
+                padding: 1.25rem;
+            }
+
+            .cta-button,
+            .cta-button-nav {
+                padding: 0.75rem 1.25rem;
+                font-size: 0.95rem;
             }
         }
 
@@ -632,6 +849,50 @@
             transform: scale(1.1);
         }
 
+        /* Mobile-specific touch improvements */
+        @media (max-width: 768px) {
+            .nav-links a,
+            .cta-button,
+            .cta-button-nav,
+            .service-card,
+            .testimonial-card {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+
+            .service-card,
+            .testimonial-card {
+                cursor: default;
+            }
+
+            /* Improve tap targets for mobile */
+            .contact-item {
+                padding: 0.5rem 0;
+                min-height: 44px;
+                display: flex;
+                align-items: flex-start;
+            }
+
+            /* Better mobile form experience */
+            .form-group input:focus,
+            .form-group textarea:focus {
+                outline: 2px solid var(--primary-color);
+                outline-offset: 2px;
+            }
+
+            /* Improve readability on mobile */
+            .testimonial-content {
+                font-size: 0.95rem;
+                line-height: 1.6;
+            }
+
+            .about-text p {
+                font-size: 1rem;
+                line-height: 1.6;
+            }
+        }
+
         /* Ensure highlights alternate properly */
         .hero .highlight {
             color: var(--white);
@@ -641,14 +902,79 @@
         .contact {
             color: var(--white);
         }
+
+        /* Focus states for accessibility */
+        .nav-links a:focus,
+        .cta-button:focus,
+        .cta-button-nav:focus,
+        .mobile-menu-toggle:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* Skip to content link for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: var(--primary-color);
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 1001;
+        }
+
+        .skip-link:focus {
+            top: 6px;
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 768px) {
+            /* Prevent horizontal scroll */
+            body {
+                overflow-x: hidden;
+            }
+
+            /* Better touch scrolling */
+            * {
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Improve button tap feedback */
+            .cta-button:active,
+            .cta-button-nav:active,
+            .service-card:active {
+                transform: scale(0.98);
+            }
+
+            /* Better mobile scrolling performance */
+            .hero,
+            .services,
+            .about,
+            .testimonials,
+            .contact {
+                transform: translateZ(0);
+                backface-visibility: hidden;
+                perspective: 1000px;
+            }
+        }
     </style>
 </head>
 
-<body>
+ <body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <!-- Header -->
     <header>
         <nav class="container">
             <div class="logo" data-text-id="smilebrightDental">SmileBright Dental</div>
+            <button class="mobile-menu-toggle" aria-label="Toggle mobile menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <ul class="nav-links">
                 <li><a href="#services" data-text-id="services">Services</a></li>
                 <li><a href="#about" data-text-id="about">About</a></li>
@@ -660,7 +986,7 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero" id="main-content">
         <div class="container">
             <div class="hero-content">
                 <div class="hero-text">
@@ -671,7 +997,7 @@
                     <a href="#contact" class="cta-button" data-text-id="scheduleConsultation">Schedule Consultation</a>
                 </div>
                 <div class="hero-image">
-                    <img src="./images/tooth-made-of-tools.jpg" alt="Modern dental clinic interior" data-image-src="image_1" data-alt-text-id="modernDentalClinic">
+                    <img src="./images/tooth-made-of-tools.jpg" alt="Modern dental clinic interior" data-image-src="image_1" data-alt-text-id="modernDentalClinic" loading="lazy" decoding="async">
                 </div>
             </div>
         </div>
@@ -754,7 +1080,7 @@
                     </div>
                 </div>
                 <div class="about-image">
-                    <img src="./images/dentist-examining-female-patient-with-tools.jpg" alt="Modern dental clinic interior" style="width: 100%; border-radius: var(--border-radius); box-shadow: var(--shadow);" data-image-src="image_2" data-alt-text-id="modernDentalClinic_1">
+                    <img src="./images/dentist-examining-female-patient-with-tools.jpg" alt="Modern dental clinic interior" style="width: 100%; border-radius: var(--border-radius); box-shadow: var(--shadow);" data-image-src="image_2" data-alt-text-id="modernDentalClinic_1" loading="lazy" decoding="async">
                 </div>
             </div>
         </div>
@@ -772,7 +1098,7 @@
                         entire treatment. My smile has never looked better!"
                     </div>
                     <div class="testimonial-author">
-                        <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&amp;h=50&amp;fit=crop" alt="Sarah Johnson" class="author-avatar" data-image-src="image_3" data-alt-text-id="sarahJohnson">
+                        <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&amp;h=50&amp;fit=crop" alt="Sarah Johnson" class="author-avatar" data-image-src="image_3" data-alt-text-id="sarahJohnson" loading="lazy" decoding="async">
                         <div class="author-info">
                             <h4 data-text-id="sarahJohnson_1">Sarah Johnson</h4>
                             <span data-text-id="cosmeticDentistryPatient">Cosmetic Dentistry Patient</span>
@@ -785,7 +1111,7 @@
                         sure I was comfortable. Highly recommend!"
                     </div>
                     <div class="testimonial-author">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&amp;h=50&amp;fit=crop" alt="Michael Chen" class="author-avatar" data-image-src="image_4" data-alt-text-id="michaelChen">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&amp;h=50&amp;fit=crop" alt="Michael Chen" class="author-avatar" data-image-src="image_4" data-alt-text-id="michaelChen" loading="lazy" decoding="async">
                         <div class="author-info">
                             <h4 data-text-id="michaelChen_1">Michael Chen</h4>
                             <span data-text-id="generalDentistryPatient">General Dentistry Patient</span>
@@ -798,7 +1124,7 @@
                         results speak for themselves. Thank you!"
                     </div>
                     <div class="testimonial-author">
-                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&amp;h=50&amp;fit=crop" alt="Emily Rodriguez" class="author-avatar" data-image-src="image_5" data-alt-text-id="emilyRodriguez">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&amp;h=50&amp;fit=crop" alt="Emily Rodriguez" class="author-avatar" data-image-src="image_5" data-alt-text-id="emilyRodriguez" loading="lazy" decoding="async">
                         <div class="author-info">
                             <h4 data-text-id="emilyRodriguez_1">Emily Rodriguez</h4>
                             <span data-text-id="restorativeDentistryPatient">Restorative Dentistry Patient</span>
@@ -956,9 +1282,54 @@
             observer.observe(card);
         });
 
-        // Mobile menu toggle (if needed for smaller screens)
+        // Mobile menu toggle functionality
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+
         function toggleMobileMenu() {
-            const navLinks = document.querySelector('.nav-links');
+            mobileMenuToggle.classList.toggle('active');
             navLinks.classList.toggle('active');
+
+            // Prevent body scroll when menu is open
+            if (navLinks.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
         }
+
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+        }
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (navLinks.classList.contains('active')) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('nav') && navLinks.classList.contains('active')) {
+                toggleMobileMenu();
+            }
+        });
+
+        // Close mobile menu on window resize (if switching to desktop)
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768 && navLinks.classList.contains('active')) {
+                toggleMobileMenu();
+            }
+        });
+
+        // Handle escape key for mobile menu
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && navLinks.classList.contains('active')) {
+                toggleMobileMenu();
+            }
+        });
     </script>
+</body></html>

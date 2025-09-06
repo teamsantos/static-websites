@@ -1,6 +1,4 @@
 {
-  "title": "Modern navbar Template",
-  "description": "A modern navbar template for your business.",
   "yourbrand": "YourBrand",
   "template": "Template",
   "moreTemplates": "More Templates",
@@ -28,5 +26,8 @@
   "moreTemplates_4": "More Templates",
   "einfo_2": "E-info",
   "template_5": "Template",
-  "moreTemplates_5": "More Templates"
+  "moreTemplates_5": "More Templates",
+  "einfo_3": "E-info",
+  "template_6": "Template",
+  "moreTemplates_6": "More Templates"
 }
