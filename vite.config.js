@@ -5,6 +5,7 @@ import { viteSingleFile } from 'vite-plugin-singlefile'
 
 const projectName = process.env.PROJECT
 const templateName = process.env.TEMPLATE
+const editorBuild = process.env.EDITOR_BUILD
 
 // Resolve paths depending on PROJECT env
 function parseEnv() {
@@ -20,6 +21,13 @@ function parseEnv() {
             rootDir: resolve(__dirname, `templates/${templateName}`),
             inputFile: resolve(__dirname, `templates/${templateName}/index.html`),
             outDir: resolve(__dirname, `templates/${templateName}/dist`)
+        };
+    }
+    if (editorBuild) {
+        return {
+            rootDir: resolve(__dirname, '.'),
+            inputFile: resolve(__dirname, 'template-editor.html'),
+            outDir: resolve(__dirname, 'dist')
         };
     }
     return {

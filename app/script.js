@@ -283,8 +283,9 @@ async function loadTranslations() {
             });
         });
 
-        // IMPORTANT: Setup tilt effects AFTER all content is injected
-        // Note: setupTiltEffects, addRippleEffect, and setupRevealOnScroll are now handled by base.js
+        // IMPORTANT: Setup tilt effects and reveal AFTER all content is injected
+        if (window.setupTiltEffects) window.setupTiltEffects();
+        if (window.setupRevealOnScroll) window.setupRevealOnScroll();
 
         document.querySelectorAll("[redirect-to]").forEach(el => {
             let key = el.getAttribute("redirect-to");

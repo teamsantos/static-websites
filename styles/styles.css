@@ -620,7 +620,7 @@ p {
     opacity: 0;
     transform: translateY(12px);
     /* Separate transitions for reveal animation only */
-    transition: opacity 500ms ease, transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity 500ms ease var(--reveal-delay), transform 600ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay);
 }
 
 .reveal-visible {
