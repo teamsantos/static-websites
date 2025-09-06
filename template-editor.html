@@ -125,10 +125,7 @@
             z-index: 1001;
         }
 
-        /* Edit mode styles */
-        .edit-mode .editable-element {
-            pointer-events: auto;
-        }
+
 
         /* Text editing */
         .text-editor {
@@ -327,7 +324,6 @@
         </div>
         <div class="editor-controls">
             <button id="load-template-btn" class="editor-btn">Load Template</button>
-            <button id="toggle-edit-btn" class="editor-btn primary">Enable Editing</button>
             <button id="save-changes-btn" class="editor-btn">Save Changes</button>
             <button id="export-template-btn" class="editor-btn">Export</button>
         </div>
@@ -359,7 +355,6 @@
                 this.translations = {};
                 this.images = {};
                 this.currentLanguage = 'en';
-                this.editMode = false;
                 this.currentEditingElement = null;
 
                 this.init();
@@ -367,13 +362,12 @@
 
             init() {
                 this.bindEvents();
-                this.showStatus('Ready to load template', 'info');
+                this.showStatus('Ready to load template for editing', 'info');
             }
 
             bindEvents() {
                 // Editor controls
                 document.getElementById('load-template-btn').addEventListener('click', () => this.loadTemplate());
-                document.getElementById('toggle-edit-btn').addEventListener('click', () => this.toggleEditMode());
                 document.getElementById('save-changes-btn').addEventListener('click', () => this.saveChanges());
                 document.getElementById('export-template-btn').addEventListener('click', () => this.exportTemplate());
 
@@ -434,7 +428,7 @@
                 templateContainer.innerHTML = '';
                 templateContainer.appendChild(doc.body);
 
-                this.showStatus('Template processed and ready for editing', 'success');
+                this.showStatus('Template loaded and ready for editing', 'success');
             }
 
             extractAndApplyStyles(doc) {
@@ -500,32 +494,13 @@
 
                 editableElements.forEach(element => {
                     element.classList.add('editable-element');
+                    // Always enable editing - no conditional logic needed
                 });
             }
 
-            toggleEditMode() {
-                this.editMode = !this.editMode;
-                const btn = document.getElementById('toggle-edit-btn');
 
-                if (this.editMode) {
-                    document.body.classList.add('edit-mode');
-                    btn.textContent = 'Disable Editing';
-                    btn.classList.remove('primary');
-                    btn.classList.add('secondary');
-                    this.showStatus('Edit mode enabled', 'info');
-                } else {
-                    document.body.classList.remove('edit-mode');
-                    btn.textContent = 'Enable Editing';
-                    btn.classList.remove('secondary');
-                    btn.classList.add('primary');
-                    this.cancelCurrentEdit();
-                    this.showStatus('Edit mode disabled', 'info');
-                }
-            }
 
             handleElementClick(event) {
-                if (!this.editMode) return;
-
                 const element = event.target.closest('.editable-element');
                 if (!element) return;
 
