@@ -1,9 +1,11 @@
 {
+  "widthdevicewidthInitialscale10": "width=device-width, initial-scale=1.0",
+  "title": "Modern Header Template",
   "yourbrand": "YourBrand",
   "template": "Template",
   "moreTemplates": "More Templates",
   "modernHeaderTemplate": "Modern Header Template",
-  "experienceOurSleek": "Experience our sleek, semi-transparent header with smooth animations and modern design principles",
+  "description": "Experience our sleek, semi-transparent header with smooth animations and modern design principles",
   "headerFeatures": "Header Features",
   "clickTheButtons": "Click the buttons above to see the interactive selection system in action",
   "lightningFast": "Lightning Fast",

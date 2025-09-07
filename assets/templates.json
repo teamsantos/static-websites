@@ -1,20 +1,20 @@
 [
   {
     "name": "businessCard",
-    "commingSoon": false,
-    "title": "Establishment Template",
-    "description": "A front-page template for your business."
+    "commingSoon": "false",
+    "title": "SmileBright Dental - Modern Dental Care",
+    "description": "Experience cutting-edge dental care with our expert team. Comprehensive services from routine checkups to advanced cosmetic dentistry."
   },
   {
     "name": "bussinessCardTest",
-    "commingSoon": true,
-    "title": "Establishment Template",
-    "description": "A front-page template for your business."
+    "commingSoon": "true",
+    "title": "SmileBright Dental - Modern Dental Care",
+    "description": "Experience cutting-edge dental care with our expert team. Comprehensive services from routine checkups to advanced cosmetic dentistry."
   },
   {
     "name": "modern-header",
-    "commingSoon": false,
-    "title": "Modern navbar Template",
-    "description": "A modern navbar template for your business."
+    "commingSoon": "false",
+    "title": "Modern Header Template",
+    "description": "Experience our sleek, semi-transparent header with smooth animations and modern design principles"
   }
 ]
