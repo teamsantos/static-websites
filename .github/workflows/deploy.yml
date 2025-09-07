@@ -37,6 +37,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install Node deps
         run: npm ci
+      - name: Generate template list
+        run: node ./helpers/generateTemplates.js
       - name: Build site
         run: npm run build
       - name: Configure AWS credentials
