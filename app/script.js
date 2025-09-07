@@ -49,7 +49,6 @@ const injectTemplates = (templates, selectText) => {
         const buttonClass = template.comingSoon ? 'btn btn-secondary btn-full' : 'btn btn-primary btn-full';
 
         const frameURL = `https://${template.name}.${templatesURL}`;
-        console.log(frameURL);
         card.innerHTML = `
 <div class="template-frame">
     ${template.comingSoon
