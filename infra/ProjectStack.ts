@@ -56,6 +56,17 @@ export class ProjectSite extends cdk.Stack {
                 allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
                 cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
                 compress: true,
+                responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(this, 'CorsPolicy', {
+                    corsBehavior: {
+                        accessControlAllowCredentials: false,
+                        accessControlAllowHeaders: ['*'],
+                        accessControlAllowMethods: ['GET', 'HEAD'],
+                        accessControlAllowOrigins: ['https://editor.e-info.click'],
+                        accessControlExposeHeaders: [],
+                        accessControlMaxAge: cdk.Duration.seconds(3600), // 1 hour cache
+                        originOverride: true,
+                    },
+                }),
             },
             domainNames: [props.domainName],
             defaultRootObject: "index.html",
