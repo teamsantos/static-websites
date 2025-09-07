@@ -401,6 +401,10 @@ p {
     overflow: hidden;
 }
 
+.hidden {
+    visibility: hidden;
+}
+
 .template-image img {
     width: 100%;
     height: 100%;
@@ -409,6 +413,14 @@ p {
 
 .template-content {
     padding: 1.5rem;
+}
+
+.template-button {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    margin-top: 1.5rem;
+    /* padding: 1.5rem; */
 }
 
 .template-header {

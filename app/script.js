@@ -46,7 +46,7 @@ const injectTemplates = (templates, selectText) => {
         const card = document.createElement("div");
         card.className = `template-card ${template.comingSoon ? 'coming-soon' : ''}`;
         const buttonText = template.comingSoon ? 'Coming Soon' : selectText;
-        const buttonClass = template.comingSoon ? 'btn btn-secondary btn-full' : 'btn btn-primary btn-full';
+        const buttonClass = `${template.comingSoon ? 'btn btn-secondary btn-full hidden' : 'btn btn-primary btn-full'} `;
 
         const frameURL = `https://${template.name}.${templatesURL}`;
         card.innerHTML = `
@@ -73,6 +73,12 @@ const injectTemplates = (templates, selectText) => {
         <h3>${template.title}</h3>
     </div>
     <p>${template.description}</p>
+
+    <button class="${buttonClass} hidden" ${template.comingSoon ? 'disabled' : ''}>
+        ${buttonText}
+    </button>
+</div>
+<div class="template-content template-button">
     <button class="${buttonClass}" ${template.comingSoon ? 'disabled' : ''}>
         ${buttonText}
     </button>

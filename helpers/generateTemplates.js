@@ -17,11 +17,11 @@ async function fileExists(path) {
     }
 }
 
-async function commingSoon(path) {
+async function comingSoon(path) {
     if (await fileExists(path)) {
-        return "true";
+        return true;
     }
-    return "false"
+    return false;
 }
 
 async function getLangsFromTemplate(name) {
@@ -36,10 +36,10 @@ async function getTemplates() {
     for (const dir of dirs) {
         if (dir.isDirectory()) {
             const langs = await getLangsFromTemplate(dir.name);
-            const _commingSoon = await commingSoon(`${templatesDir}/${dir.name}/.commingsoon`);
+            const _comingSoon = await comingSoon(`${templatesDir}/${dir.name}/.commingsoon`);
             templates.push({
                 "name": dir.name,
-                "commingSoon": _commingSoon,
+                "comingSoon": _comingSoon,
                 "title": langs["title"],
                 "description": langs["description"]
             });
