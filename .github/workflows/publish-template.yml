@@ -324,19 +324,19 @@ jobs:
 
               STACK_EXISTS=$(aws cloudformation describe-stacks \
                 --region us-east-1 \
-                --stack-name "Site-$_template" \
+                --stack-name "Site-template-$_template" \
                 --query "Stacks[0].StackName" \
                 --output text 2>/dev/null || echo "")
 
               if [ -z "$STACK_EXISTS" ]; then
-                echo "⚠️ Stack Site-$_template not found, skipping cache invalidation"
+                echo "⚠️ Stack Site-tempate-$_template not found, skipping cache invalidation"
                 continue
               fi
 
               # Get distribution ID from stack outputs
               DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
                 --region us-east-1 \
-                --stack-name "Site-$_template" \
+                --stack-name "Site-tempate-$_template" \
                 --query 'Stacks[0].Outputs[?OutputKey==`'$_template'DistributionId`].OutputValue' \
                 --output text 2>/dev/null)
               

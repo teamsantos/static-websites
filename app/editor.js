@@ -305,9 +305,9 @@ class TemplateEditor {
             <div>Click to upload new image</div>
             <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">or drag and drop</div>
         </div>
-        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
-            <button class="editor-btn" onclick="this.closest('.modal').remove()">Cancel</button>
-            <button class="editor-btn primary" onclick="templateEditor.saveImageEdit('${imageId}', this)">Save</button>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 2rem;">
+            <button class="modal-btn modal-btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+            <button class="modal-btn modal-btn-primary" onclick="templateEditor.saveImageEdit('${imageId}', this)">Save Changes</button>
         </div>
     </div>
 </div>

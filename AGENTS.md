@@ -18,3 +18,12 @@
 - **CDK/Testing**: CDK v2, explicit env regions, consistent resource tagging, DNS-safe names, context for projects, warn on invalid names, Jest unit tests
 - **Performance**: Minimize bundle size, lazy load resources, optimize images, efficient DOM queries, requestAnimationFrame for animations, ResizeObserver, performance.now() timing
 - **UX Patterns**: Template frames with hover-to-scroll (pointer-events disabled on hover), visual scroll indicators, smooth CSS animations, ripple effects on buttons
+
+## Project Structure
+- `app/`: Core JavaScript modules (base.js, carousel.js, editor.js, script.js, template-loader.js)
+- `infra/`: CDK infrastructure code (TypeScript), deployment scripts, Jest tests
+- `templates/`: HTML templates with assets, languages, and build scripts
+- `projects/`: Generated project sites from templates
+- `styles/`: CSS files (base.css, editor.css, styles.css)
+- `assets/`: Shared assets (languages, templates.json)
+- `helpers/`: Build utilities (generateTemplates.js, htmlExtractor.js)
