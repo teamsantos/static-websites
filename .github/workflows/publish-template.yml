@@ -292,20 +292,19 @@ jobs:
             if [ -n "$template" ]; then
               echo "Syncing $template to S3..."
               
-              if [ -d "templates/$template/dist" ]; then
-                # Sync to the fixed bucket with template path
-                _template=$(echo "$template" | tr '[:upper:]' '[:lower:]')
+               if [ -d "templates/$template/dist" ]; then
+                 # Sync to the fixed bucket with template path
+                 _template=$(echo "$template" | tr '[:upper:]' '[:lower:]')
 
-                if [ -d "templates/$template/dist" ]; then
-                    aws s3 sync "templates/$template/dist" "s3://$S3_BUCKET/templates/$_template" \
-                      --delete \
-                      --region eu-south-2 \
-                      --exclude ".*"
-                    
-                    echo "✅ Synced $template to s3://$S3_BUCKET/$_template"
-                else
-                    echo "⚠️ Build directory templates/$template/dist not found for $template"
-                fi
+                 aws s3 sync "templates/$template/dist" "s3://$S3_BUCKET/templates/$_template" \
+                   --delete \
+                   --region eu-south-2 \
+                   --exclude ".*"
+
+                 echo "✅ Synced $template to s3://$S3_BUCKET/$_template"
+               else
+                 echo "⚠️ Build directory templates/$template/dist not found for $template"
+               fi
             fi
           done
 

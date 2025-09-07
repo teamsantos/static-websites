@@ -293,20 +293,19 @@ jobs:
             if [ -n "$project" ]; then
               echo "Syncing $project to S3..."
               
-              if [ -d "$BUILD_DIR/$project" ]; then
-                # Sync to the fixed bucket with project path
-                _project=$(echo "$project" | tr '[:upper:]' '[:lower:]')
+               if [ -d "$BUILD_DIR/$project" ]; then
+                 # Sync to the fixed bucket with project path
+                 _project=$(echo "$project" | tr '[:upper:]' '[:lower:]')
 
-                if [ -d "$BUILD_DIR/$project" ]; then
-                    aws s3 sync "$BUILD_DIR/$project" "s3://$S3_BUCKET/$_project" \
-                      --delete \
-                      --region eu-south-2 \
-                      --exclude ".*"
-                    
-                    echo "✅ Synced $project to s3://$S3_BUCKET/$_project"
-                else
-                    echo "⚠️ Build directory $BUILD_DIR/$project not found for $project"
-                fi
+                 aws s3 sync "$BUILD_DIR/$project" "s3://$S3_BUCKET/$_project" \
+                   --delete \
+                   --region eu-south-2 \
+                   --exclude ".*"
+
+                 echo "✅ Synced $project to s3://$S3_BUCKET/$_project"
+               else
+                 echo "⚠️ Build directory $BUILD_DIR/$project not found for $project"
+               fi
             fi
           done
 
