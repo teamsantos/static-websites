@@ -12,6 +12,7 @@ interface MineProjectSiteProps extends cdk.StackProps {
     hostedZoneDomainName: string;
     s3Bucket: string;
     region: string;
+    type?: 'project' | 'template';
 }
 
 export class ProjectSite extends cdk.Stack {
@@ -37,12 +38,14 @@ export class ProjectSite extends cdk.Stack {
         );
 
         const oac = new cloudfront.S3OriginAccessControl(this, "OAC", {
-            description: `OAC for ${props.projectName}`,
+            description: `OAC for ${props.type || 'project'} ${props.projectName}`,
             signing: cloudfront.Signing.SIGV4_ALWAYS,
         });
 
+        const originPath = props.type === 'template' ? `/templates/${props.projectName}` : `/${props.projectName}`;
+
         const origin = origins.S3BucketOrigin.withOriginAccessControl(siteBucket, {
-            originPath: `/${props.projectName}`,
+            originPath: originPath,
             originAccessControl: oac,
         });
 
@@ -72,7 +75,7 @@ export class ProjectSite extends cdk.Stack {
                     ttl: cdk.Duration.minutes(30),
                 }
             ],
-            comment: `CloudFront distribution for ${props.projectName}`,
+            comment: `CloudFront distribution for ${props.type || 'project'} ${props.projectName}`,
         });
 
         // No need for individual bucket policies since the bucket stack handles access for all distributions
@@ -88,17 +91,17 @@ export class ProjectSite extends cdk.Stack {
         // Output the distribution details
         new cdk.CfnOutput(this, "DistributionId", {
             value: distribution.distributionId,
-            description: `CloudFront distribution ID for ${props.projectName}`,
+            description: `CloudFront distribution ID for ${props.type || 'project'} ${props.projectName}`,
         });
 
         new cdk.CfnOutput(this, "DistributionDomainName", {
             value: distribution.distributionDomainName,
-            description: `CloudFront distribution domain name for ${props.projectName}`,
+            description: `CloudFront distribution domain name for ${props.type || 'project'} ${props.projectName}`,
         });
 
         new cdk.CfnOutput(this, "WebsiteURL", {
             value: `https://${props.domainName}`,
-            description: `Website URL for ${props.projectName}`,
+            description: `Website URL for ${props.type || 'project'} ${props.projectName}`,
         });
     }
 }

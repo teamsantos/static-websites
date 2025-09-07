@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       force_deploy_all:
-        description: 'Force deploy of all templates'
+        description: 'Force deploy all templates'
         required: false
         default: 'false'
 
@@ -18,7 +18,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      templates: ${{ steps.changed.outputs.templates }}
+      templates: ${{ steps.changed.outputs.tempates }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -35,7 +35,7 @@ jobs:
             echo "Force deploy all templates requested"
             CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
           elif [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
-            # First push or new branch - check all template folders
+            # First push or new branch - check all templates folders
             echo "First push detected, checking all templates"
             CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
           else
@@ -194,19 +194,19 @@ jobs:
             fi
           done
 
-      - name: Build CDK project
+      - name: Build CDK template
         working-directory: infra
         run: |
-          echo "🔨 Building CDK project..."
+          echo "🔨 Building CDK template..."
           # Use npx to ensure we use the local typescript
           npx tsc
-          echo "✅ CDK project built successfully"
+          echo "✅ CDK template built successfully"
 
-      - name: Convert projects to comma-separated format
+      - name: Convert template to comma-separated format
         id: format-templates
         shell: bash
         run: |
-          # Convert space-separated projects to comma-separated
+          # Convert space-separated templates to comma-separated
           TEMPLATES_SPACE="${{ needs.detect-changes.outputs.templates }}"
           TEMPLATES_COMMA=$(echo "$TEMPLATES_SPACE" | tr ' ' ',' | sed 's/,*$//' | sed 's/^,*//')
           echo "templates-comma=$TEMPLATES_COMMA" >> $GITHUB_OUTPUT
@@ -229,7 +229,7 @@ jobs:
           echo "🚀 Deploying infrastructure for templates: ${{ steps.format-templates.outputs.templates-comma }}"
           ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
           
-          # Deploy all stacks at once with comma-separated projects
+          # Deploy all stacks at once with comma-separated templates
           CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
           npx cdk deploy --all \
             --context "templates=${{ steps.format-templates.outputs.templates-comma }}" \
@@ -241,16 +241,16 @@ jobs:
       - name: Build templates
         shell: bash
         run: |
-          echo "🔨 Building projects..."
-          IFS=' ' read -ra TMPL_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
-          for template in "${TMPL_ARR[@]}"; do
+          echo "🔨 Building templates..."
+          IFS=' ' read -ra TEMP_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
+          for template in "${TEMP_ARR[@]}"; do
             if [ -n "$template" ]; then
               echo "Building template: $template"
               if [ -d "templates/$template" ]; then
                 TEMPLATE=$template npx vite build
                 echo "✅ Built $template"
               else
-                echo "⚠️ Project directory templates/$template not found"
+                echo "⚠️ Template directory templates/$template not found"
               fi
             fi
           done
@@ -259,51 +259,58 @@ jobs:
         shell: bash
         run: |
           echo "📤 Syncing built sites to S3..."
-          IFS=' ' read -ra TMPL_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
-          for template in "${TMPL_ARR[@]}"; do
+          IFS=' ' read -ra TEMP_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
+          for template in "${TEMP_ARR[@]}"; do
             if [ -n "$template" ]; then
               echo "Syncing $template to S3..."
               
               if [ -d "templates/$template/dist" ]; then
                 # Sync to the fixed bucket with template path
-                aws s3 sync "templates/$template/dist" "s3://$S3_BUCKET/templates/$template" \
-                  --delete \
-                  --region eu-south-2 \
-                  --exclude ".*"
-                
-                echo "✅ Synced $template to s3://$S3_BUCKET/$template"
-              else
-                echo "⚠️ Build directory templates/$template/dist not found for $template"
-              fi
+                _template=$(echo "$template" | tr '[:upper:]' '[:lower:]')
+
+                if [ -d "templates/$template/dist" ]; then
+                    aws s3 sync "templates/$template/dist" "s3://$S3_BUCKET/templates/$_template" \
+                      --delete \
+                      --region eu-south-2 \
+                      --exclude ".*"
+                    
+                    echo "✅ Synced $template to s3://$S3_BUCKET/$_template"
+                else
+                    echo "⚠️ Build directory templates/$template/dist not found for $template"
+                fi
             fi
           done
 
       - name: Invalidate CloudFront caches
         shell: bash
         run: |
-          echo "🔄 Invalidating CloudFront caches for updated projects..."
-          IFS=' ' read -ra TMPL_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
+          echo "🔄 Invalidating CloudFront caches for updated templates..."
+          IFS=' ' read -ra TEMP_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
           
-          for template in "${TMPL_ARR[@]}"; do
+          for template in "${TEMP_ARR[@]}"; do
             if [ -n "$template" ]; then
+              # Lowercase version for AWS resources
+              _template=$(echo "$template" | tr '[:upper:]' '[:lower:]')
+
               echo "Invalidating cache for: $template"
               
+
               STACK_EXISTS=$(aws cloudformation describe-stacks \
                 --region us-east-1 \
-                --stack-name "Site-$template" \
+                --stack-name "Site-$_template" \
                 --query "Stacks[0].StackName" \
                 --output text 2>/dev/null || echo "")
 
               if [ -z "$STACK_EXISTS" ]; then
-                echo "⚠️ Stack Site-$template not found, skipping cache invalidation"
+                echo "⚠️ Stack Site-$_template not found, skipping cache invalidation"
                 continue
               fi
 
               # Get distribution ID from stack outputs
               DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
                 --region us-east-1 \
-                --stack-name "Site-$template" \
-                --query 'Stacks[0].Outputs[?OutputKey==`'$template'DistributionId`].OutputValue' \
+                --stack-name "Site-$_template" \
+                --query 'Stacks[0].Outputs[?OutputKey==`'$_template'DistributionId`].OutputValue' \
                 --output text 2>/dev/null)
               
               if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
@@ -328,8 +335,8 @@ jobs:
           echo "Total templates: $(echo '${{ needs.detect-changes.outputs.templates }}' | wc -w)"
           echo ""
           echo "🌐 Access your sites at:"
-          IFS=' ' read -ra TMPL_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
-          for template in "${TMPL_ARR[@]}"; do
+          IFS=' ' read -ra TEMP_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
+          for template in "${TEMP_ARR[@]}"; do
             if [ -n "$template" ]; then
               echo "  • https://$template.e-info.click"
             fi
