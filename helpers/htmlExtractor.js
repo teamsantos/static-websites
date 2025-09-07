@@ -69,10 +69,22 @@ class HTMLExtractor {
         return `image_${this.imageCounter}`;
     }
 
-    hasOnlyTextContent(element) {
+    hasExtractableTextContent(element) {
+        const inlineTags = ['STRONG', 'EM', 'B', 'I', 'SPAN', 'A', 'U', 'MARK', 'SMALL', 'SUB', 'SUP'];
+
         for (let child of element.childNodes) {
-            if (child.nodeType === 1) {
-                return false;
+            if (child.nodeType === 1) { // Element node
+                if (!inlineTags.includes(child.tagName)) {
+                    return false;
+                }
+                // Recursively check if inline child has only extractable text
+                if (!this.hasExtractableTextContent(child)) {
+                    return false;
+                }
+            } else if (child.nodeType === 3) { // Text node
+                // Allow text nodes
+            } else {
+                // Skip comments, etc.
             }
         }
         return element.textContent.trim().length > 0;
@@ -207,7 +219,7 @@ class HTMLExtractor {
             }
         }
 
-        else if (this.hasOnlyTextContent(element)) {
+        else if (this.hasExtractableTextContent(element)) {
             const text = element.textContent.trim();
             if (text) {
                 const textKey = this.generateTextKey(text, element);
