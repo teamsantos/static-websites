@@ -233,31 +233,95 @@ class TemplateEditor {
         const textId = element.getAttribute('data-text-id');
         const currentText = this.translations[this.currentLanguage]?.[textId] || element.textContent;
 
-        // Create text editor
-        const editor = document.createElement('textarea');
-        editor.className = 'text-editor';
-        editor.value = currentText;
-        editor.style.width = element.offsetWidth + 'px';
-        editor.style.height = Math.min(Math.max(element.offsetHeight, 60), 150) + 'px';
+        // Create modern floating editor modal (like image editor)
+        const editorModal = document.createElement('div');
+        editorModal.className = 'modern-text-editor-overlay';
+        editorModal.innerHTML = `
+            <div class="modern-text-editor-card">
+                <div class="editor-card-content">
+                    <textarea class="modern-text-input" placeholder="Enter your text here...">${currentText}</textarea>
+                </div>
+                <div class="editor-card-footer">
+                    <div class="editor-card-actions">
+                        <button class="btn btn-outline btn-glass" onclick="const modal = this.closest('.modern-text-editor-overlay'); modal.classList.add('removing'); setTimeout(() => { modal.remove(); if(window.templateEditorInstance) { window.templateEditorInstance.cancelCurrentEdit(); } }, 300);">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary" onclick="if(window.templateEditorInstance) { window.templateEditorInstance.saveModernTextEdit.call(window.templateEditorInstance, this); } else { console.error('Template editor instance not found'); }">
+                            Save Changes
+                        </button>
+                    </div>
+                <canvas class="stars popup-stars" aria-hidden="true"></canvas>
+                </div>
+            </div>
+        `;
 
-        // Position the editor
+        // Calculate optimal dimensions for the card
         const rect = element.getBoundingClientRect();
-        editor.style.position = 'fixed';
-        editor.style.top = rect.top + 'px';
-        editor.style.left = rect.left + 'px';
-        editor.style.zIndex = '1002';
+        const minWidth = 440; // Minimum readable width for modern card
+        const minHeight = 340; // Minimum readable height for modern card
+        const maxWidth = Math.min(window.innerWidth - 48, 520);
+        const maxHeight = Math.min(window.innerHeight - 160, 640);
 
-        document.body.appendChild(editor);
-        editor.focus();
-        editor.select();
+        const optimalWidth = Math.max(minWidth, Math.min(rect.width + 100, maxWidth));
+        const optimalHeight = Math.max(minHeight, Math.min(rect.height + 180, maxHeight));
 
-        // Handle save/cancel
-        editor.addEventListener('blur', () => this.saveTextEdit(editor, element));
-        editor.addEventListener('keydown', (e) => {
+        const editorCard = editorModal.querySelector('.modern-text-editor-card');
+        editorCard.style.width = optimalWidth + 'px';
+        editorCard.style.minHeight = optimalHeight + 'px';
+        editorCard.style.maxHeight = maxHeight + 'px';
+
+        document.body.appendChild(editorModal);
+
+        // Add click handler to overlay for canceling (like image editor)
+        editorModal.addEventListener('click', (e) => {
+            // Only cancel if clicking on the overlay itself, not the card
+            if (e.target === editorModal) {
+                editorModal.classList.add('removing');
+                setTimeout(() => {
+                    editorModal.remove();
+                    if (window.templateEditorInstance) {
+                        window.templateEditorInstance.cancelCurrentEdit();
+                    }
+                }, 300);
+            }
+        });
+
+        // Prevent click events on the card from bubbling to the overlay
+        editorCard.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Focus the textarea and reinitialize stars
+        const textarea = editorModal.querySelector('.modern-text-input');
+        const starCanvas = editorModal.querySelector('.stars');
+
+        setTimeout(() => {
+            textarea.focus();
+            textarea.select();
+
+            // Reinitialize stars for the popup canvas
+            if (starCanvas && window.starsAnimationInstance) {
+                window.starsAnimationInstance.reinitializeCanvas(starCanvas);
+            }
+        }, 100);
+
+
+
+        // Handle keyboard shortcuts
+        textarea.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.ctrlKey) {
-                this.saveTextEdit(editor, element);
+                // Use the global instance for keyboard shortcuts
+                if (window.templateEditorInstance) {
+                    window.templateEditorInstance.saveModernTextEdit.call(window.templateEditorInstance, editorModal.querySelector('.editor-btn-primary'));
+                }
             } else if (e.key === 'Escape') {
-                this.cancelCurrentEdit();
+                editorModal.classList.add('removing');
+                setTimeout(() => {
+                    editorModal.remove();
+                    if (window.templateEditorInstance) {
+                        window.templateEditorInstance.cancelCurrentEdit();
+                    }
+                }, 300);
             }
         });
     }
@@ -280,6 +344,47 @@ class TemplateEditor {
         }
 
         this.cancelCurrentEdit();
+    }
+
+    saveModernTextEdit(saveBtn) {
+        console.log('saveModernTextEdit called', saveBtn);
+
+        const modal = saveBtn.closest('.modern-text-editor-overlay');
+        console.log('modal found:', modal);
+
+        const textarea = modal.querySelector('.modern-text-input');
+        console.log('textarea found:', textarea);
+
+        const newText = textarea.value.trim();
+        console.log('newText:', newText);
+        console.log('currentEditingElement:', this.currentEditingElement);
+
+        if (newText && this.currentEditingElement) {
+            const textId = this.currentEditingElement.getAttribute('data-text-id');
+            console.log('textId:', textId);
+
+            // Update element content
+            this.currentEditingElement.textContent = newText;
+            console.log('Element text updated');
+
+            // Update translations
+            if (!this.translations[this.currentLanguage]) {
+                this.translations[this.currentLanguage] = {};
+            }
+            this.translations[this.currentLanguage][textId] = newText;
+            console.log('Translations updated');
+
+            this.showStatus('Text updated successfully', 'success');
+        } else {
+            console.warn('Cannot save: newText or currentEditingElement is missing');
+        }
+
+        modal.classList.add('removing');
+        setTimeout(() => {
+            modal.remove();
+            this.cancelCurrentEdit();
+            console.log('Modal closed and editing cancelled');
+        }, 300);
     }
 
     startImageEditing(element) {
@@ -380,7 +485,7 @@ class TemplateEditor {
         }
 
         // Remove any open editors
-        const editors = document.querySelectorAll('.text-editor, .image-editor');
+        const editors = document.querySelectorAll('.text-editor, .image-editor, .modern-text-editor-overlay');
         editors.forEach(editor => editor.remove());
 
         // Remove any modals
@@ -453,5 +558,5 @@ class TemplateEditor {
 
 // Initialize the editor when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    const templateEditor = new TemplateEditor();
+    window.templateEditorInstance = new TemplateEditor();
 });

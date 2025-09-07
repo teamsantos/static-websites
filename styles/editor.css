@@ -146,56 +146,252 @@ body {
 
 
 
-/* Text editing */
-.text-editor {
+/* Modern Text Editor Modal Overlay */
+.modern-text-editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: modalFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Modern Text Editor Card */
+.modern-text-editor-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.1),
+        0 15px 35px rgba(0, 0, 0, 0.05),
+        0 5px 15px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    animation: modernCardAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: none;
+    max-width: 480px;
+    width: 90vw;
+}
+
+@keyframes modernCardAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0.92) translateY(24px);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.02) translateY(-2px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modern-text-editor-overlay.removing {
+    animation: modalFadeOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes modalFadeOut {
+    0% {
+        opacity: 1;
+        backdrop-filter: blur(2px);
+    }
+    100% {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+}
+
+/* Ensure card content is properly contained */
+.modern-text-editor-card {
+    /* Additional overflow handling */
+    max-height: min(600px, 90vh);
+}
+
+/* Make sure all content is visible */
+.editor-card-content {
+    /* Ensure content area can scroll if needed */
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+}
+
+@keyframes modernCardDisappear {
+    0% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+}
+
+
+
+/* Editor Card Content */
+.editor-card-content {
+    padding: 32px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    background: #ffffff;
+    margin: 0;
+}
+
+.modern-text-input {
+    width: 100%;
+    flex: 1;
+    min-height: 140px;
+    max-height: 320px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1.7;
+    color: #0f172a;
+    resize: none;
+    padding: 0;
+    letter-spacing: -0.01em;
+    overflow-y: auto;
+}
+
+.modern-text-input::placeholder {
+    color: #94a3b8;
+    font-style: normal;
+}
+
+.modern-text-input:focus {
+    outline: none;
+}
+
+.modern-text-input::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+    opacity: 0.8;
+}
+
+/* Add subtle border to the card */
+.modern-text-editor-card::before {
+    content: '';
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    min-height: 60px;
-    max-height: 200px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 20px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.5;
-    z-index: 1002;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-    resize: vertical;
-    overflow-y: auto;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    color: #1e293b;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    z-index: 1;
 }
 
-.text-editor:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.text-editor::placeholder {
-    color: #94a3b8;
-    font-style: italic;
-}
-
-.text-editor::-webkit-scrollbar {
+.modern-text-input::-webkit-scrollbar {
     width: 4px;
 }
 
-.text-editor::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 2px;
+.modern-text-input::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-.text-editor::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+.modern-text-input::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
     border-radius: 2px;
+    border: none;
 }
 
-.text-editor::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+.modern-text-input::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.5);
+}
+
+/* Editor Card Footer */
+.editor-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    background: linear-gradient(180deg, #0b1220 0%, #0d1b2a 50%, #0b1220 100%);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(14, 165, 233, 0.15);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.editor-card-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.editor-card-stats {
+    font-size: 14px;
+    color: #64748b;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.char-count {
+    font-weight: 600;
+    color: #3b82f6;
+}
+
+.editor-card-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.editor-btn-secondary,
+.editor-btn-primary {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+}
+
+.editor-btn-secondary {
+    background: #ffffff;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.editor-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.editor-btn-primary {
+    background: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.editor-btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.editor-btn-primary:active,
+.editor-btn-secondary:active {
+    transform: translateY(0);
 }
 
 /* Image editing */
@@ -395,9 +591,11 @@ body {
 @keyframes modalFadeIn {
     from {
         opacity: 0;
+        backdrop-filter: blur(0px);
     }
     to {
         opacity: 1;
+        backdrop-filter: blur(2px);
     }
 }
 
@@ -484,4 +682,62 @@ body {
         font-size: 0.875rem;
         border-radius: 0.5rem;
     }
+
+    .modern-text-editor-card {
+        width: 95vw !important;
+        max-width: none !important;
+        min-height: 400px !important;
+        max-height: 85vh !important;
+    }
+
+    .modern-text-editor-card {
+        border-radius: 16px;
+        max-width: 90vw;
+    }
+
+    .editor-card-content {
+        padding: 24px;
+        min-height: 120px;
+    }
+
+    .editor-card-footer {
+        padding: 24px;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .editor-card-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .modern-text-input {
+        font-size: 16px;
+        min-height: 120px;
+    }
+
+    .modern-text-input {
+        min-height: 100px;
+        max-height: 200px;
+    }
+}
+
+/* Popup stars canvas styling */
+.popup-stars {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    border-radius: 20px !important;
+    opacity: 0.6 !important;
+}
+
+/* Ensure popup card content is above the stars */
+.modern-text-editor-card {
+    position: relative;
+    z-index: 1;
 }
