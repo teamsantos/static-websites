@@ -58,7 +58,7 @@ class TemplateEditor {
         }
 
         // Load template from local templates directory
-        const templateUrl = `templates/${templateName}/index.html`;
+        const templateUrl = `templates/${templateName}/dist/index.html`;
 
         this.showStatus('Loading template...', 'info');
 
