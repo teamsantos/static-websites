@@ -90,8 +90,17 @@ jobs:
              --cache-control "no-cache, no-store, must-revalidate" \
              --content-type "text/html" \
              --include "*.html"
-      - name: Upload template-editor to 'editor' path
-        run: |
-           aws s3 cp $BUILD_DIR/template-editor.html s3://$S3_BUCKET/editor/template-editor.html \
-             --cache-control "no-cache, no-store, must-revalidate" \
-             --content-type "text/html"
+       - name: Upload template-editor to 'editor' path
+         run: |
+            aws s3 cp $BUILD_DIR/template-editor.html s3://$S3_BUCKET/editor/template-editor.html \
+              --cache-control "no-cache, no-store, must-revalidate" \
+              --content-type "text/html"
+
+       - name: Invalidate CloudFront cache
+         run: |
+           echo "🔄 Invalidating CloudFront cache for distribution E36XL69TGV6QU9..."
+           aws cloudfront create-invalidation \
+             --distribution-id E36XL69TGV6QU9 \
+             --paths "/*" \
+             --output table
+           echo "✅ CloudFront cache invalidated successfully"
