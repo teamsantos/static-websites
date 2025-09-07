@@ -18,7 +18,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      templates: ${{ steps.changed.outputs.tempates }}
+      templates: ${{ steps.changed.outputs.templates }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -30,40 +30,68 @@ jobs:
           echo "Before commit: ${{ github.event.before }}"
           echo "Current commit: ${{ github.sha }}"
           
-          # Check if this is a manual dispatch with force deploy
-          if [ "${{ github.event.inputs.force_deploy_all }}" == "true" ]; then
-            echo "Force deploy all templates requested"
-            CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
-          elif [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
-            # First push or new branch - check all templates folders
-            echo "First push detected, checking all templates"
-            CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
-          else
-            # Check if both commits exist
-            if git cat-file -e "${{ github.event.before }}" 2>/dev/null && git cat-file -e "${{ github.sha }}" 2>/dev/null; then
-              echo "Both commits found, doing normal diff"
-              CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" 2>/dev/null \
-                | grep '^templates/' | cut -d/ -f2 | sort -u || echo "")
-            else
-              echo "One or both commits not found, trying fallback methods..."
-              # Try HEAD~1 comparison
-              if git cat-file -e "HEAD~1" 2>/dev/null; then
-                echo "Using HEAD~1 comparison"
-                CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
-                  | grep '^templates/' | cut -d/ -f2 | sort -u || echo "")
-              else
-                # Last resort - deploy all templates
-                echo "Cannot determine changes, deploying all templates"
-                CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
-              fi
-            fi
-          fi
+           # Check if this is a manual dispatch with force deploy
+           if [ "${{ github.event.inputs.force_deploy_all }}" == "true" ]; then
+             echo "Force deploy all templates requested"
+             CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
+           elif [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
+             # First push or new branch - check all templates folders
+             echo "First push detected, checking all templates"
+             CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
+           else
+             # Check if both commits exist
+             if git cat-file -e "${{ github.event.before }}" 2>/dev/null && git cat-file -e "${{ github.sha }}" 2>/dev/null; then
+               echo "Both commits found, doing normal diff"
+               # Get changed files, then filter to only directories
+               CHANGED_FILES=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" 2>/dev/null \
+                 | grep '^templates/' | cut -d/ -f2 | sort -u || echo "")
+
+               # Filter to only directories (exclude files like buildTemplates.sh)
+               CHANGED=""
+               for item in $CHANGED_FILES; do
+                 if [ -d "templates/$item" ]; then
+                   CHANGED="$CHANGED $item"
+                 fi
+               done
+               CHANGED=$(echo "$CHANGED" | xargs | sort -u || echo "")
+             else
+               echo "One or both commits not found, trying fallback methods..."
+               # Try HEAD~1 comparison
+               if git cat-file -e "HEAD~1" 2>/dev/null; then
+                 echo "Using HEAD~1 comparison"
+                 CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
+                   | grep '^templates/' | cut -d/ -f2 | sort -u || echo "")
+
+                 # Filter to only directories
+                 CHANGED=""
+                 for item in $CHANGED_FILES; do
+                   if [ -d "templates/$item" ]; then
+                     CHANGED="$CHANGED $item"
+                   fi
+                 done
+                 CHANGED=$(echo "$CHANGED" | xargs | sort -u || echo "")
+               else
+                 # Last resort - deploy all templates
+                 echo "Cannot determine changes, deploying all templates"
+                 CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
+               fi
+             fi
+           fi
           
-          # If still no changes detected, force deploy all as fallback
-          if [ -z "$CHANGED" ]; then
-            echo "No changes detected, falling back to deploy all templates"
-            CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
-          fi
+           # If still no changes detected, force deploy all as fallback
+           if [ -z "$CHANGED" ]; then
+             echo "No changes detected, falling back to deploy all templates"
+             CHANGED=$(find templates -maxdepth 1 -mindepth 1 -type d 2>/dev/null | cut -d/ -f2 | sort -u || echo "")
+           fi
+
+           # Final filter to ensure only directories are included
+           FINAL_CHANGED=""
+           for item in $CHANGED; do
+             if [ -d "templates/$item" ]; then
+               FINAL_CHANGED="$FINAL_CHANGED $item"
+             fi
+           done
+           CHANGED=$(echo "$FINAL_CHANGED" | xargs | sort -u || echo "")
           
           # Convert to space-separated string for output
           CHANGED_STR=$(echo "$CHANGED" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
