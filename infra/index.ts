@@ -97,7 +97,7 @@ if (!projectsParam && !templatesParam) {
                     s3Bucket: config.s3Bucket,
                     region: config.region,
                     projectName: template,
-                    domainName: `${template}.${config.domain}`,
+                    domainName: `${template}.templates.${config.domain}`,
                     hostedZoneDomainName: config.domain,
                     type: 'template',
                     env: {
@@ -107,7 +107,7 @@ if (!projectsParam && !templatesParam) {
                     tags: {
                         Project: template,
                         Type: 'template',
-                        Domain: `${template}.${config.domain}`,
+                        Domain: `${template}.templates.${config.domain}`,
                         ManagedBy: "CDK",
                         Environment: "production",
                     },
