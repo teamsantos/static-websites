@@ -22,6 +22,7 @@ ${plan.description.map(point => `
 <li><p>${point}</p></li>
 `).join("")}
 </ul>
+<button class="btn btn-primary btn-full" onclick="window.location.href='${plan.product_stripe_url}'">Pay Now</button>
 </div>
 `).join("");
 };
