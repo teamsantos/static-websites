@@ -1,0 +1,9 @@
+{
+  "name": "create-project-lambda",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@octokit/rest": "^20.0.2",
+    "aws-sdk": "^2.1541.0"
+  }
+}

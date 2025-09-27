@@ -1,6 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import { BucketStack } from "./bucketStack";
 import { ProjectSite } from "./ProjectStack";
+import { CreateProjectStack } from "./CreateProjectStack";
 
 const app = new cdk.App();
 
@@ -27,6 +28,13 @@ new BucketStack(app, "StaticWebsitesBucket", {
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "StaticWebsiteHosting",
+    },
+});
+
+new CreateProjectStack(app, "CreateProjectStack", {
+    env: {
+        account: account,
+        region: config.region,
     },
 });
 
