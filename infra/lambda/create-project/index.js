@@ -1,7 +1,7 @@
 const { Octokit } = require("@octokit/rest");
 const AWS = require("aws-sdk");
 
-const ses = new AWS.SES({ region: process.env.AWS_REGION });
+const ses = new AWS.SES({ region: process.env.AWS_SES_REGION });
 
 exports.handler = async (event) => {
     // Handle CORS preflight OPTIONS requests
