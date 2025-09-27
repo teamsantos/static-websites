@@ -134,7 +134,17 @@ exports.handler = async (event) => {
             },
             Body: {
                 Text: {
-                    Data: `Your website can be accessed via ${projectName}.e-info.click`,
+                    Data: ` Your website has been successfully deployed and is now ready to use.
+
+You can access your website at the following URL:
+https://${projectName}.e-info.click
+
+You can edit your website via:
+https://editor.e-info.click/?project=${projectName}
+If you have any questions or need assistance, please don't hesitate to contact us.
+
+Best regards,
+E-info team.`
                 },
             },
         },
