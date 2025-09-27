@@ -4,9 +4,12 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 
+interface CreateProjectProps extends cdk.StackProps {
+    ses_region: string;
+}
 
 export class CreateProjectStack extends cdk.Stack {
-    constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+    constructor(scope: cdk.App, id: string, props?: CreateProjectProps) {
         super(scope, id, props);
 
         // Lambda function with dynamic references
@@ -20,6 +23,7 @@ export class CreateProjectStack extends cdk.Stack {
                 GITHUB_OWNER: `{{resolve:secretsmanager:github-config:SecretString:owner}}`,
                 GITHUB_REPO: `{{resolve:secretsmanager:github-config:SecretString:repo}}`,
                 FROM_EMAIL: 'noreply@e-info.click',
+                AWS_SES_REGION: props?.ses_region || "us-east-1"
             },
             timeout: cdk.Duration.seconds(30),
         });

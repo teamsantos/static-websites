@@ -1,7 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import { BucketStack } from "./bucketStack";
-import { ProjectSite } from "./ProjectStack";
 import { CreateProjectStack } from "./CreateProjectStack";
+import { ProjectSite } from "./ProjectStack";
 
 const app = new cdk.App();
 
@@ -32,6 +32,7 @@ new BucketStack(app, "StaticWebsitesBucket", {
 });
 
 new CreateProjectStack(app, "CreateProjectStack", {
+    ses_region: config.certificateRegion,
     env: {
         account: account,
         region: config.region,
