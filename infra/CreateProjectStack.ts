@@ -38,9 +38,26 @@ export class CreateProjectStack extends cdk.Stack {
             resources: ['*'],
         }));
 
-        // API Gateway
+        // API Gateway with CORS
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
+            defaultCorsPreflightOptions: {
+                allowOrigins: apigateway.Cors.ALL_ORIGINS, // Will be restricted in Lambda
+                allowMethods: apigateway.Cors.ALL_METHODS,
+                allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'Origin'],
+            },
+            deployOptions: {
+                stageName: 'prod', // Default stage is prod
+            },
+        });
+
+        // Create test stage
+        const testDeployment = new apigateway.Deployment(this, 'TestDeployment', {
+            api: api,
+        });
+        const testStage = new apigateway.Stage(this, 'TestStage', {
+            deployment: testDeployment,
+            stageName: 'test',
         });
 
         const createProjectResource = api.root.addResource('create-project');
@@ -51,6 +68,9 @@ export class CreateProjectStack extends cdk.Stack {
                 },
                 {
                     statusCode: '400',
+                },
+                {
+                    statusCode: '403',
                 },
                 {
                     statusCode: '409',
@@ -71,10 +91,15 @@ export class CreateProjectStack extends cdk.Stack {
             }),
         });
 
-        // Output the API URL
-        new cdk.CfnOutput(this, 'ApiUrl', {
+        // Output the API URLs
+        new cdk.CfnOutput(this, 'ApiUrlProd', {
             value: api.url,
-            description: 'API Gateway URL for creating projects',
+            description: 'Production API Gateway URL for creating projects (restricted to editor.e-info.click)',
+        });
+
+        new cdk.CfnOutput(this, 'ApiUrlTest', {
+            value: `${api.url.replace('/prod/', '/test/')}`,
+            description: 'Test API Gateway URL for creating projects (open to all origins)',
         });
     }
 }

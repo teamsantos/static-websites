@@ -35,32 +35,31 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateProjectStack = void 0;
 const cdk = __importStar(require("aws-cdk-lib"));
-const lambda = __importStar(require("aws-cdk-lib/aws-lambda"));
 const apigateway = __importStar(require("aws-cdk-lib/aws-apigateway"));
-const secretsmanager = __importStar(require("aws-cdk-lib/aws-secretsmanager"));
 const iam = __importStar(require("aws-cdk-lib/aws-iam"));
+const lambda = __importStar(require("aws-cdk-lib/aws-lambda"));
+const secretsmanager = __importStar(require("aws-cdk-lib/aws-secretsmanager"));
 const custom_resources_1 = require("aws-cdk-lib/custom-resources");
 class CreateProjectStack extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
-        // GitHub token secret
-        const githubTokenSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubToken', 'github-token');
-        // GitHub config secret
-        const githubConfigSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubConfig', 'github-config');
-        // Lambda function
+        // Lambda function with dynamic references
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset('lambda/create-project'),
             handler: 'index.handler',
             environment: {
-                GITHUB_TOKEN: githubTokenSecret.secretValue.unsafeUnwrap(),
-                GITHUB_OWNER: githubConfigSecret.secretValueFromJson('owner').unsafeUnwrap(),
-                GITHUB_REPO: githubConfigSecret.secretValueFromJson('repo').unsafeUnwrap(),
+                // CloudFormation will resolve these at deployment time and inject as env vars
+                GITHUB_TOKEN: `{{resolve:secretsmanager:github-token:SecretString}}`,
+                GITHUB_OWNER: `{{resolve:secretsmanager:github-config:SecretString:owner}}`,
+                GITHUB_REPO: `{{resolve:secretsmanager:github-config:SecretString:repo}}`,
                 FROM_EMAIL: 'noreply@e-info.click',
             },
             timeout: cdk.Duration.seconds(30),
         });
-        // Grant read access to the secrets
+        // Still need to grant permissions even though we're using dynamic references
+        const githubTokenSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubToken', 'github-token');
+        const githubConfigSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubConfig', 'github-config');
         githubTokenSecret.grantRead(createProjectFunction);
         githubConfigSecret.grantRead(createProjectFunction);
         // Grant SES permissions
@@ -68,9 +67,25 @@ class CreateProjectStack extends cdk.Stack {
             actions: ['ses:SendEmail'],
             resources: ['*'],
         }));
-        // API Gateway
+        // API Gateway with CORS
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
+            defaultCorsPreflightOptions: {
+                allowOrigins: apigateway.Cors.ALL_ORIGINS, // Will be restricted in Lambda
+                allowMethods: apigateway.Cors.ALL_METHODS,
+                allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'Origin'],
+            },
+            deployOptions: {
+                stageName: 'prod', // Default stage is prod
+            },
+        });
+        // Create test stage
+        const testDeployment = new apigateway.Deployment(this, 'TestDeployment', {
+            api: api,
+        });
+        const testStage = new apigateway.Stage(this, 'TestStage', {
+            deployment: testDeployment,
+            stageName: 'test',
         });
         const createProjectResource = api.root.addResource('create-project');
         createProjectResource.addMethod('POST', new apigateway.LambdaIntegration(createProjectFunction), {
@@ -80,6 +95,9 @@ class CreateProjectStack extends cdk.Stack {
                 },
                 {
                     statusCode: '400',
+                },
+                {
+                    statusCode: '403',
                 },
                 {
                     statusCode: '409',
@@ -98,10 +116,14 @@ class CreateProjectStack extends cdk.Stack {
                 resources: custom_resources_1.AwsCustomResourcePolicy.ANY_RESOURCE,
             }),
         });
-        // Output the API URL
-        new cdk.CfnOutput(this, 'ApiUrl', {
+        // Output the API URLs
+        new cdk.CfnOutput(this, 'ApiUrlProd', {
             value: api.url,
-            description: 'API Gateway URL for creating projects',
+            description: 'Production API Gateway URL for creating projects (restricted to editor.e-info.click)',
+        });
+        new cdk.CfnOutput(this, 'ApiUrlTest', {
+            value: `${api.url.replace('/prod/', '/test/')}`,
+            description: 'Test API Gateway URL for creating projects (open to all origins)',
         });
     }
 }
