@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from "aws-cdk-lib/custom-resources";
 
@@ -23,6 +24,8 @@ export class CreateProjectStack extends cdk.Stack {
                 FROM_EMAIL: 'noreply@e-info.click',
             },
             timeout: cdk.Duration.seconds(30),
+            logRetention: logs.RetentionDays.ONE_WEEK,
+            tracing: lambda.Tracing.ACTIVE,
         });
 
         // Still need to grant permissions even though we're using dynamic references
@@ -35,6 +38,12 @@ export class CreateProjectStack extends cdk.Stack {
         // Grant SES permissions
         createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['ses:SendEmail'],
+            resources: ['*'],
+        }));
+
+        // Grant CloudWatch Logs permissions
+        createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
             resources: ['*'],
         }));
 

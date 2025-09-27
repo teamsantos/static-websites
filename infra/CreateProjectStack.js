@@ -38,6 +38,7 @@ const cdk = __importStar(require("aws-cdk-lib"));
 const apigateway = __importStar(require("aws-cdk-lib/aws-apigateway"));
 const iam = __importStar(require("aws-cdk-lib/aws-iam"));
 const lambda = __importStar(require("aws-cdk-lib/aws-lambda"));
+const logs = __importStar(require("aws-cdk-lib/aws-logs"));
 const secretsmanager = __importStar(require("aws-cdk-lib/aws-secretsmanager"));
 const custom_resources_1 = require("aws-cdk-lib/custom-resources");
 class CreateProjectStack extends cdk.Stack {
@@ -56,6 +57,8 @@ class CreateProjectStack extends cdk.Stack {
                 FROM_EMAIL: 'noreply@e-info.click',
             },
             timeout: cdk.Duration.seconds(30),
+            logRetention: logs.RetentionDays.ONE_WEEK,
+            tracing: lambda.Tracing.ACTIVE,
         });
         // Still need to grant permissions even though we're using dynamic references
         const githubTokenSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubToken', 'github-token');
@@ -65,6 +68,11 @@ class CreateProjectStack extends cdk.Stack {
         // Grant SES permissions
         createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['ses:SendEmail'],
+            resources: ['*'],
+        }));
+        // Grant CloudWatch Logs permissions
+        createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
             resources: ['*'],
         }));
         // API Gateway with CORS

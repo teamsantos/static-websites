@@ -108,7 +108,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-south-2/6e32b3be2b4d51af40ec63d6ec4e30116a7956188d5388be213274ed1ed29659.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-south-2/020c9665ef9dcace22dc3de42016fee3714e7dbaff7c0018d0fd786710ef1e28.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -142,6 +142,30 @@
             "data": "CreateProjectFunction0FC649A9"
           }
         ],
+        "/CreateProjectStack/CreateProjectFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectFunctionLogRetention6A67A69A"
+          }
+        ],
+        "/CreateProjectStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+          }
+        ],
+        "/CreateProjectStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB"
+          }
+        ],
+        "/CreateProjectStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A"
+          }
+        ],
         "/CreateProjectStack/CreateProjectApi/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -163,7 +187,7 @@
         "/CreateProjectStack/CreateProjectApi/Deployment/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "CreateProjectApiDeployment97BD925266ca2efe9b036e4989eec14abb55a4c0"
+            "data": "CreateProjectApiDeployment97BD9252f675faa5a59fefe02b1428cf76dd70ae"
           }
         ],
         "/CreateProjectStack/CreateProjectApi/DeploymentStage.prod/Resource": [
@@ -178,10 +202,22 @@
             "data": "CreateProjectApiEndpointF0D343B6"
           }
         ],
+        "/CreateProjectStack/CreateProjectApi/Default/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApiOPTIONS5F06F84E"
+          }
+        ],
         "/CreateProjectStack/CreateProjectApi/Default/create-project/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CreateProjectApicreateproject3FEDB622"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/create-project/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicreateprojectOPTIONSBB9446E5"
           }
         ],
         "/CreateProjectStack/CreateProjectApi/Default/create-project/POST/ApiPermission.CreateProjectStackCreateProjectApi4BA50C0B.POST..create-project": [
@@ -202,10 +238,97 @@
             "data": "CreateProjectApicreateprojectPOSTBF2BA3C0"
           }
         ],
-        "/CreateProjectStack/ApiUrl": [
+        "/CreateProjectStack/TestDeployment/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "ApiUrl"
+            "data": "TestDeploymentD77B5686bc2dd17a9069ca3a97297c40504038cc"
+          }
+        ],
+        "/CreateProjectStack/TestStage/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TestStage3097EB68"
+          }
+        ],
+        "/CreateProjectStack/ListSecrets": [
+          {
+            "type": "aws:cdk:warning",
+            "data": "installLatestAwsSdk was not specified, and defaults to true. You probably do not want this. Set the global context flag '@aws-cdk/customresources:installLatestAwsSdkDefault' to false to switch this behavior off project-wide, or set the property explicitly to true if you know you need to call APIs that are not in Lambda's built-in SDK version. [ack: @aws-cdk/custom-resources:installLatestAwsSdkNotSpecified]",
+            "trace": [
+              "Annotations.addMessage (/home/awman/projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
+              "Annotations.addWarningV2 (/home/awman/projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:896)",
+              "new AwsCustomResource2 (/home/awman/projects/static-websites/infra/node_modules/aws-cdk-lib/custom-resources/lib/aws-custom-resource/aws-custom-resource.js:1:5991)",
+              "new AwsCustomResource2 (/home/awman/projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
+              "new CreateProjectStack (/home/awman/projects/static-websites/infra/CreateProjectStack.ts:91:9)",
+              "Object.<anonymous> (/home/awman/projects/static-websites/infra/index.ts:34:1)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Module.m._compile (/home/awman/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
+              "node:internal/modules/cjs/loader:1871:10",
+              "Object.require.extensions.<computed> [as .ts] (/home/awman/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "phase4 (/home/awman/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
+              "bootstrap (/home/awman/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
+              "main (/home/awman/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
+              "Object.<anonymous> (/home/awman/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
+            ]
+          }
+        ],
+        "/CreateProjectStack/ListSecrets/Resource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ListSecrets322A7A5A"
+          }
+        ],
+        "/CreateProjectStack/ListSecrets/CustomResourcePolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ListSecretsCustomResourcePolicy210A2BF9"
+          }
+        ],
+        "/CreateProjectStack/AWS679f53fac002430cb0da5b7982bd2287": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-singleton",
+            "data": true
+          },
+          {
+            "type": "aws:cdk:is-custom-resource-handler-runtime-family",
+            "data": 0
+          }
+        ],
+        "/CreateProjectStack/AWS679f53fac002430cb0da5b7982bd2287/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
+          }
+        ],
+        "/CreateProjectStack/AWS679f53fac002430cb0da5b7982bd2287/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AWS679f53fac002430cb0da5b7982bd22872D164C4C"
+          }
+        ],
+        "/CreateProjectStack/ApiUrlProd": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiUrlProd"
+          }
+        ],
+        "/CreateProjectStack/ApiUrlTest": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiUrlTest"
           }
         ],
         "/CreateProjectStack/CDKMetadata/Default": [
