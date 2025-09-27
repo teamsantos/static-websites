@@ -1,0 +1,174 @@
+name: Deploy Infrastructure
+on:
+  push:
+    branches: [master]
+    paths:
+        - 'infra/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'master' && 'production' || 'staging' }}
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/static-websites:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  # Set to us-east-1 for CloudFront certificates
+
+      - name: Install infra dependencies
+        working-directory: infra
+        run: |
+          echo "Installing infra dependencies..."
+          # Handle lock file sync issues
+          if ! npm ci 2>/dev/null; then
+            echo "npm ci failed, falling back to npm install..."
+            rm -rf node_modules package-lock.json
+            npm install
+          fi
+          echo "✅ Infra dependencies installed"
+
+      - name: Install CDK CLI globally
+        run: |
+          echo "Installing CDK CLI globally..."
+          npm install -g aws-cdk typescript ts-node
+          echo "✅ CDK CLI installed"
+
+      - name: Check if CDK bootstrap is needed
+        id: check-bootstrap
+        working-directory: infra
+        shell: bash
+        run: |
+          echo "Checking CDK bootstrap status..."
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          
+          # Function to check if region is bootstrapped
+          check_bootstrap() {
+            local region=$1
+            echo "Checking bootstrap for region: $region"
+            
+            if aws cloudformation describe-stacks \
+              --region "$region" \
+              --stack-name CDKToolkit \
+              --query 'Stacks[0].StackStatus' \
+              --output text 2>/dev/null | grep -q "COMPLETE"; then
+              echo "✅ Region $region is already bootstrapped"
+              return 0
+            else
+              echo "❌ Region $region needs bootstrapping"
+              return 1
+            fi
+          }
+          
+          # Check required regions
+          BOOTSTRAP_NEEDED=""
+          
+          # Check us-east-1 (required for CloudFront certificates)
+          if ! check_bootstrap "us-east-1"; then
+            BOOTSTRAP_NEEDED="$BOOTSTRAP_NEEDED us-east-1"
+          fi
+          
+          # Check eu-south-2 (your S3 bucket region - optional but recommended)
+          if ! check_bootstrap "eu-south-2"; then
+            BOOTSTRAP_NEEDED="$BOOTSTRAP_NEEDED eu-south-2"
+          fi
+          
+          # Clean up and set output
+          BOOTSTRAP_NEEDED=$(echo "$BOOTSTRAP_NEEDED" | xargs)
+          echo "bootstrap-needed=$BOOTSTRAP_NEEDED" >> $GITHUB_OUTPUT
+          echo "account-id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+          
+          if [ -n "$BOOTSTRAP_NEEDED" ]; then
+            echo "🔄 Bootstrap needed for regions: $BOOTSTRAP_NEEDED"
+          else
+            echo "✅ All regions are already bootstrapped"
+          fi
+
+      - name: Bootstrap CDK regions
+        if: steps.check-bootstrap.outputs.bootstrap-needed != ''
+        working-directory: infra
+        shell: bash
+        run: |
+          echo "Bootstrapping CDK for regions: ${{ steps.check-bootstrap.outputs.bootstrap-needed }}"
+          ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
+          
+          for region in ${{ steps.check-bootstrap.outputs.bootstrap-needed }}; do
+            echo "🔄 Bootstrapping region: $region"
+            CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=$region \
+            npx cdk bootstrap "aws://$ACCOUNT_ID/$region" \
+              --require-approval never \
+              --verbose
+            
+            # Verify bootstrap was successful
+            if aws cloudformation describe-stacks \
+              --region "$region" \
+              --stack-name CDKToolkit \
+              --query 'Stacks[0].StackStatus' \
+              --output text 2>/dev/null | grep -q "COMPLETE"; then
+              echo "✅ Successfully bootstrapped $region"
+            else
+              echo "❌ Failed to bootstrap $region"
+              exit 1
+            fi
+          done
+
+      - name: Build CDK project
+        working-directory: infra
+        run: |
+          echo "🔨 Building CDK project..."
+          # Use npx to ensure we use the local typescript
+          npx tsc
+          echo "✅ CDK project built successfully"
+
+      - name: Preview infrastructure changes
+        working-directory: infra
+        shell: bash
+        run: |
+          echo "🔍 Previewing infrastructure changes..."
+          ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
+          CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
+          npx cdk diff --all || true
+
+      - name: Deploy infrastructure
+        working-directory: infra
+        shell: bash
+        run: |
+          echo "🚀 Deploying infrastructure..."
+          ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
+          
+          # Deploy all stacks (BucketStack and CreateProjectStack only, since no projects/templates context)
+          CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
+          npx cdk deploy --all \
+            --require-approval never \
+            --verbose
+          
+          echo "✅ Successfully deployed infrastructure"
+
+      - name: Deployment Summary
+        shell: bash
+        run: |
+          echo "🎉 Infrastructure Deployment Summary"
+          echo "===================================="
+          echo "Deployed stacks:"
+          echo "  • StaticWebsitesBucket (S3 bucket for static websites)"
+          echo "  • CreateProjectStack (Lambda function for project creation)"
+          echo ""
+          echo "📊 S3 bucket: teamsantos-static-websites"
+          echo "🌍 Certificate region: us-east-1"
+          echo "🗂️ S3 region: eu-south-2"

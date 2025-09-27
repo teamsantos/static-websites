@@ -11,7 +11,7 @@
     },
     "StaticWebsitesBucket": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://396913706953/eu-south-2",
+      "environment": "aws://unknown-account/eu-south-2",
       "properties": {
         "templateFile": "StaticWebsitesBucket.template.json",
         "terminationProtection": false,
@@ -21,16 +21,16 @@
           "Purpose": "StaticWebsiteHosting"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/c314397dbb5bb063047bcebfd5b7fa4e7e2e9e9d88287aae01a579baf3ec3ffe.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-south-2/658fcf72c6a1204c4c07ca3b46bfc1d1014c3146e5827d993b20e4fbacb6844b.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "StaticWebsitesBucket.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -56,18 +56,6 @@
                 "Value": "StaticWebsiteHosting"
               }
             ]
-          }
-        ],
-        "/StaticWebsitesBucket/StaticWebsitesBucket/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "StaticWebsitesBucket444D8C52"
-          }
-        ],
-        "/StaticWebsitesBucket/CloudFrontAccessPolicy/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CloudFrontAccessPolicyFE2F1B00"
           }
         ],
         "/StaticWebsitesBucket/BucketName": [
@@ -103,171 +91,143 @@
       },
       "displayName": "StaticWebsitesBucket"
     },
-    "Site-temp27.assets": {
+    "CreateProjectStack.assets": {
       "type": "cdk:asset-manifest",
       "properties": {
-        "file": "Site-temp27.assets.json",
+        "file": "CreateProjectStack.assets.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
       }
     },
-    "Site-temp27": {
+    "CreateProjectStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://396913706953/us-east-1",
+      "environment": "aws://unknown-account/eu-south-2",
       "properties": {
-        "templateFile": "Site-temp27.template.json",
+        "templateFile": "CreateProjectStack.template.json",
         "terminationProtection": false,
-        "tags": {
-          "Domain": "temp27.e-info.click",
-          "Environment": "production",
-          "ManagedBy": "CDK",
-          "Project": "temp27"
-        },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-us-east-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-us-east-1/c56b6d6d75110ffb381f95381ba44753af5a22d00f892da7aac7062e2168b8a8.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-south-2/6e32b3be2b4d51af40ec63d6ec4e30116a7956188d5388be213274ed1ed29659.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
-          "Site-temp27.assets"
+          "CreateProjectStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-us-east-1",
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
       },
       "dependencies": [
-        "Site-temp27.assets"
+        "CreateProjectStack.assets"
       ],
       "metadata": {
-        "/Site-temp27": [
-          {
-            "type": "aws:cdk:stack-tags",
-            "data": [
-              {
-                "Key": "Domain",
-                "Value": "temp27.e-info.click"
-              },
-              {
-                "Key": "Environment",
-                "Value": "production"
-              },
-              {
-                "Key": "ManagedBy",
-                "Value": "CDK"
-              },
-              {
-                "Key": "Project",
-                "Value": "temp27"
-              }
-            ]
-          }
-        ],
-        "/Site-temp27/Certificate/Resource": [
+        "/CreateProjectStack/CreateProjectFunction/ServiceRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "Certificate4E7ABB08"
+            "data": "CreateProjectFunctionServiceRoleCF8E7F22"
           }
         ],
-        "/Site-temp27/OAC/Resource": [
+        "/CreateProjectStack/CreateProjectFunction/ServiceRole/DefaultPolicy/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "OAC5B452445"
+            "data": "CreateProjectFunctionServiceRoleDefaultPolicy65CCDA1A"
           }
         ],
-        "/Site-temp27/Distribution/Origin1": [
-          {
-            "type": "aws:cdk:warning",
-            "data": "Cannot update bucket policy of an imported bucket. You will need to update the policy manually instead.\nSee the \"Setting up OAC with imported S3 buckets\" section of module's README for more info. [ack: @aws-cdk/aws-cloudfront-origins:updateImportedBucketPolicyOac]",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addWarningV2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:896)",
-              "S3BucketOriginWithOAC.bind (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront-origins/lib/s3-bucket-origin.js:2:282)",
-              "WrappedClass.addOrigin (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:14065)",
-              "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
-              "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
-              "new ProjectSite (/Users/fmpi.santos/Projects/static-websites/infra/ProjectStack.ts:49:30)",
-              "/Users/fmpi.santos/Projects/static-websites/infra/index.ts:53:13",
-              "Array.forEach (<anonymous>)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:46:18)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
-              "node:internal/main/run_main_module:17:47"
-            ]
-          }
-        ],
-        "/Site-temp27/Distribution/Resource": [
+        "/CreateProjectStack/CreateProjectFunction/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "Distribution830FAC52"
+            "data": "CreateProjectFunction0FC649A9"
           }
         ],
-        "/Site-temp27/AliasRecord/Resource": [
+        "/CreateProjectStack/CreateProjectApi/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "AliasRecord851000D2"
+            "data": "CreateProjectApi5DF64835"
           }
         ],
-        "/Site-temp27/AWSCloudFrontPartitionHostedZoneIdMap": [
+        "/CreateProjectStack/CreateProjectApi/CloudWatchRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "AWSCloudFrontPartitionHostedZoneIdMap"
+            "data": "CreateProjectApiCloudWatchRoleCF5C25E9"
           }
         ],
-        "/Site-temp27/DistributionId": [
+        "/CreateProjectStack/CreateProjectApi/Account": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "DistributionId"
+            "data": "CreateProjectApiAccount3439E5A6"
           }
         ],
-        "/Site-temp27/DistributionDomainName": [
+        "/CreateProjectStack/CreateProjectApi/Deployment/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "DistributionDomainName"
+            "data": "CreateProjectApiDeployment97BD925266ca2efe9b036e4989eec14abb55a4c0"
           }
         ],
-        "/Site-temp27/WebsiteURL": [
+        "/CreateProjectStack/CreateProjectApi/DeploymentStage.prod/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "WebsiteURL"
+            "data": "CreateProjectApiDeploymentStageprod4BA0C96B"
           }
         ],
-        "/Site-temp27/CDKMetadata/Default": [
+        "/CreateProjectStack/CreateProjectApi/Endpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApiEndpointF0D343B6"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/create-project/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicreateproject3FEDB622"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/create-project/POST/ApiPermission.CreateProjectStackCreateProjectApi4BA50C0B.POST..create-project": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicreateprojectPOSTApiPermissionCreateProjectStackCreateProjectApi4BA50C0BPOSTcreateprojectAD7D20E1"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/create-project/POST/ApiPermission.Test.CreateProjectStackCreateProjectApi4BA50C0B.POST..create-project": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicreateprojectPOSTApiPermissionTestCreateProjectStackCreateProjectApi4BA50C0BPOSTcreateproject247838FA"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/create-project/POST/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicreateprojectPOSTBF2BA3C0"
+          }
+        ],
+        "/CreateProjectStack/ApiUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiUrl"
+          }
+        ],
+        "/CreateProjectStack/CDKMetadata/Default": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CDKMetadata"
           }
         ],
-        "/Site-temp27/BootstrapVersion": [
+        "/CreateProjectStack/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "BootstrapVersion"
           }
         ],
-        "/Site-temp27/CheckBootstrapVersion": [
+        "/CreateProjectStack/CheckBootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CheckBootstrapVersion"
           }
         ]
       },
-      "displayName": "Site-temp27"
+      "displayName": "CreateProjectStack"
     },
     "Tree": {
       "type": "cdk:tree",
