@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const cdk = __importStar(require("aws-cdk-lib"));
 const bucketStack_1 = require("./bucketStack");
 const ProjectStack_1 = require("./ProjectStack");
+const CreateProjectStack_1 = require("./CreateProjectStack");
 const app = new cdk.App();
 const config = {
     region: "eu-south-2",
@@ -57,6 +58,12 @@ new bucketStack_1.BucketStack(app, "StaticWebsitesBucket", {
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "StaticWebsiteHosting",
+    },
+});
+new CreateProjectStack_1.CreateProjectStack(app, "CreateProjectStack", {
+    env: {
+        account: account,
+        region: config.region,
     },
 });
 const projectsParam = app.node.tryGetContext("projects");
