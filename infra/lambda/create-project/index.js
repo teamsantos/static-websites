@@ -17,16 +17,20 @@ exports.handler = async (event) => {
         };
     }
 
-    // Check origin for security - only restrict in production
-    const stage = event.requestContext?.stage || 'prod';
+    // Check origin for security - allow specific origins
     const origin = event.headers?.origin || event.headers?.Origin;
-    const allowedOrigin = 'https://editor.e-info.click';
+    const allowedOrigins = [
+        'https://editor.e-info.click',
+        'https://ssh.e-info.click',
+        'http://89.152.33.66',
+        'https://89.152.33.66'
+    ];
 
-    // In production, only allow requests from the editor
-    // In test/dev stages, allow all origins
-    const isProduction = stage === 'prod';
+    const isAllowedOrigin = !origin || allowedOrigins.some(allowed =>
+        origin === allowed || origin.startsWith(allowed)
+    );
 
-    if (isProduction && origin && !origin.startsWith(allowedOrigin)) {
+    if (!isAllowedOrigin) {
         return {
             statusCode: 403,
             headers: {

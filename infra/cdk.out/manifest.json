@@ -108,7 +108,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-south-2/7412bb93debab52e0ad2c89d663264d17491897a2d478da53ad9448f555b80ab.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-south-2/a1f827a058867ca7a11ac04e5ac7e289644e0eb8b3504205c91eaf2a5deefe39.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -214,28 +214,10 @@
             "data": "CreateProjectApicreateprojectPOSTBF2BA3C0"
           }
         ],
-        "/CreateProjectStack/TestDeployment/Resource": [
+        "/CreateProjectStack/ApiUrl": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "TestDeploymentD77B5686bc2dd17a9069ca3a97297c40504038cc"
-          }
-        ],
-        "/CreateProjectStack/TestStage/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "TestStage3097EB68"
-          }
-        ],
-        "/CreateProjectStack/ApiUrlProd": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ApiUrlProd"
-          }
-        ],
-        "/CreateProjectStack/ApiUrlTest": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ApiUrlTest"
+            "data": "ApiUrl"
           }
         ],
         "/CreateProjectStack/CDKMetadata/Default": [
