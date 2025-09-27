@@ -18,10 +18,6 @@
 - **Performance**: Minimize bundle, lazy load, efficient DOM, requestAnimationFrame, ResizeObserver
 
 ## Project Structure
-- `app/`: Core JS modules
-- `infra/`: CDK infrastructure (TS), Jest tests
-- `templates/`: HTML templates with assets/languages
-- `projects/`: Generated sites from templates
-- `styles/`: CSS files
-- `assets/`: Shared assets (languages, templates.json)
-- `helpers/`: Build utilities
+- `app/`: Core JS modules | `infra/`: CDK infrastructure (TS), Jest tests
+- `templates/`: HTML templates with assets/languages | `projects/`: Generated sites from templates
+- `styles/`: CSS files | `assets/`: Shared assets (languages, templates.json) | `helpers/`: Build utilities

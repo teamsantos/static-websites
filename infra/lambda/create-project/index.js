@@ -4,6 +4,19 @@ const AWS = require("aws-sdk");
 const ses = new AWS.SES({ region: process.env.AWS_REGION });
 
 exports.handler = async (event) => {
+    // Handle CORS preflight OPTIONS requests
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                'Access-Control-Allow-Methods': 'POST,OPTIONS',
+            },
+            body: '',
+        };
+    }
+
     // Check origin for security - only restrict in production
     const stage = event.requestContext?.stage || 'prod';
     const origin = event.headers?.origin || event.headers?.Origin;
@@ -11,7 +24,10 @@ exports.handler = async (event) => {
 
     // In production, only allow requests from the editor
     // In test/dev stages, allow all origins
-    if (stage === 'prod' && origin && !origin.startsWith(allowedOrigin)) {
+    const isProduction = stage === 'prod';
+    const isTestEnvironment = stage === 'test' || stage === 'dev' || !event.requestContext?.stage;
+
+    if (isProduction && origin && !origin.startsWith(allowedOrigin)) {
         return {
             statusCode: 403,
             headers: {
