@@ -38,9 +38,7 @@ const cdk = __importStar(require("aws-cdk-lib"));
 const apigateway = __importStar(require("aws-cdk-lib/aws-apigateway"));
 const iam = __importStar(require("aws-cdk-lib/aws-iam"));
 const lambda = __importStar(require("aws-cdk-lib/aws-lambda"));
-const logs = __importStar(require("aws-cdk-lib/aws-logs"));
 const secretsmanager = __importStar(require("aws-cdk-lib/aws-secretsmanager"));
-const custom_resources_1 = require("aws-cdk-lib/custom-resources");
 class CreateProjectStack extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
@@ -57,8 +55,6 @@ class CreateProjectStack extends cdk.Stack {
                 FROM_EMAIL: 'noreply@e-info.click',
             },
             timeout: cdk.Duration.seconds(30),
-            logRetention: logs.RetentionDays.ONE_WEEK,
-            tracing: lambda.Tracing.ACTIVE,
         });
         // Still need to grant permissions even though we're using dynamic references
         const githubTokenSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubToken', 'github-token');
@@ -70,11 +66,6 @@ class CreateProjectStack extends cdk.Stack {
             actions: ['ses:SendEmail'],
             resources: ['*'],
         }));
-        // Grant CloudWatch Logs permissions
-        createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
-            actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-            resources: ['*'],
-        }));
         // API Gateway with CORS
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
@@ -83,17 +74,6 @@ class CreateProjectStack extends cdk.Stack {
                 allowMethods: apigateway.Cors.ALL_METHODS,
                 allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'Origin'],
             },
-            deployOptions: {
-                stageName: 'prod', // Default stage is prod
-            },
-        });
-        // Create test stage
-        const testDeployment = new apigateway.Deployment(this, 'TestDeployment', {
-            api: api,
-        });
-        const testStage = new apigateway.Stage(this, 'TestStage', {
-            deployment: testDeployment,
-            stageName: 'test',
         });
         const createProjectResource = api.root.addResource('create-project');
         createProjectResource.addMethod('POST', new apigateway.LambdaIntegration(createProjectFunction), {
@@ -112,26 +92,10 @@ class CreateProjectStack extends cdk.Stack {
                 },
             ],
         });
-        // Custom resource to list secrets for debugging
-        new custom_resources_1.AwsCustomResource(this, 'ListSecrets', {
-            onCreate: {
-                service: 'SecretsManager',
-                action: 'listSecrets',
-                parameters: {},
-                physicalResourceId: custom_resources_1.PhysicalResourceId.of('ListSecrets'),
-            },
-            policy: custom_resources_1.AwsCustomResourcePolicy.fromSdkCalls({
-                resources: custom_resources_1.AwsCustomResourcePolicy.ANY_RESOURCE,
-            }),
-        });
-        // Output the API URLs
-        new cdk.CfnOutput(this, 'ApiUrlProd', {
+        // Output the API URL
+        new cdk.CfnOutput(this, 'ApiUrl', {
             value: api.url,
-            description: 'Production API Gateway URL for creating projects (restricted to editor.e-info.click)',
-        });
-        new cdk.CfnOutput(this, 'ApiUrlTest', {
-            value: `${api.url.replace('/prod/', '/test/')}`,
-            description: 'Test API Gateway URL for creating projects (open to all origins)',
+            description: 'API Gateway URL for creating projects (restricted to allowed origins)',
         });
     }
 }
