@@ -209,6 +209,14 @@ class TemplateEditor {
             styleElement.textContent = cssContent;
         });
 
+        // Remove any editor-added padding
+        const allElements = originalDoc.querySelectorAll('*');
+        allElements.forEach(el => {
+            if (el.style.paddingTop === '56px') {
+                el.style.paddingTop = '';
+            }
+        });
+
         // Serialize the complete document
         return originalDoc.documentElement.outerHTML;
     }
@@ -327,6 +335,9 @@ class TemplateEditor {
         const templateContainer = document.getElementById('template-content');
         templateContainer.innerHTML = '';
         templateContainer.appendChild(doc.body);
+
+        // Add padding to prevent editor overlay from blocking content
+        templateContainer.style.paddingTop = '56px';
 
         this.showStatus('Template ready for editing!', 'success');
     }
@@ -715,6 +726,14 @@ class TemplateEditor {
             // Revert top positioning back to original
             cssContent = cssContent.replace(/top:\s*56px/g, 'top: 0');
             styleElement.textContent = cssContent;
+        });
+
+        // Remove any editor-added padding
+        const allElements = originalDoc.querySelectorAll('*');
+        allElements.forEach(el => {
+            if (el.style.paddingTop === '56px') {
+                el.style.paddingTop = '';
+            }
         });
 
         // Serialize the complete document
