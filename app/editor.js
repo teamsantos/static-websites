@@ -6,6 +6,7 @@ class TemplateEditor {
         this.images = {};
         this.currentLanguage = 'en';
         this.currentEditingElement = null;
+        this.mode = 'create'; // 'create' or 'save'
 
         // Support email - change this in one place
         this.supportEmail = 'teamsantos.software+support@gmail.com';
@@ -16,6 +17,7 @@ class TemplateEditor {
     init() {
         this.bindEvents();
         this.updateSupportEmail();
+        this.determineMode();
         this.autoLoadTemplate();
     }
 
@@ -26,13 +28,26 @@ class TemplateEditor {
         }
     }
 
+    determineMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        this.mode = urlParams.get('project') ? 'save' : 'create';
+        this.updateButton();
+    }
+
+    updateButton() {
+        const btn = document.getElementById('export-template-btn');
+        if (btn) {
+            btn.textContent = this.mode === 'create' ? 'Create' : 'Save changes';
+        }
+    }
+
     bindEvents() {
         // Editor controls
         document.getElementById('change-template-btn').addEventListener('click', () => {
             window.location.href = `https://${baseURL}/#templates`;
         });
         document.getElementById('save-changes-btn').addEventListener('click', () => this.saveChanges());
-        document.getElementById('export-template-btn').addEventListener('click', () => this.exportTemplate());
+        document.getElementById('export-template-btn').addEventListener('click', () => this.openModal());
 
         // File inputs
         document.getElementById('image-file-input').addEventListener('change', (e) => this.handleImageFile(e));
@@ -40,6 +55,166 @@ class TemplateEditor {
         // Global events
         document.addEventListener('click', (e) => this.handleElementClick(e));
         document.addEventListener('keydown', (e) => this.handleKeydown(e));
+    }
+
+    openModal() {
+        if (this.mode === 'create') {
+            this.showCreateModal();
+        } else {
+            this.showSaveModal();
+        }
+    }
+
+    showCreateModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content glass-modal">
+                <div class="modal-header">
+                    <h3>Create New Project</h3>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="creator-email">Creator Email:</label>
+                        <input type="email" id="creator-email" placeholder="your@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="project-name">Project Name:</label>
+                        <input type="text" id="project-name" placeholder="my-project" required>
+                        <small class="url-preview">Your project URL will be: <span id="url-preview">my-project.e-info.click</span></small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                    <button class="btn btn-primary" onclick="window.templateEditorInstance.createProject()">Create Project</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Update URL preview on input
+        const projectNameInput = modal.querySelector('#project-name');
+        const urlPreview = modal.querySelector('#url-preview');
+        projectNameInput.addEventListener('input', () => {
+            const name = projectNameInput.value.trim() || 'my-project';
+            urlPreview.textContent = `${name}.e-info.click`;
+        });
+    }
+
+    showSaveModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content glass-modal">
+                <div class="modal-header">
+                    <h3>Save Changes</h3>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Enter the verification code sent to your email:</p>
+                    <div class="form-group">
+                        <input type="text" id="verification-code" placeholder="Enter code" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                    <button class="btn btn-primary" onclick="window.templateEditorInstance.saveWithCode()">Save Changes</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    async createProject() {
+        const email = document.getElementById('creator-email').value.trim();
+        const projectName = document.getElementById('project-name').value.trim();
+
+        if (!email || !projectName) {
+            this.showStatus('Please fill in all fields', 'error');
+            return;
+        }
+
+        // Validate email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            this.showStatus('Please enter a valid email address', 'error');
+            return;
+        }
+
+        // Validate project name (alphanumeric, hyphens, underscores)
+        const nameRegex = /^[a-zA-Z0-9_-]+$/;
+        if (!nameRegex.test(projectName)) {
+            this.showStatus('Project name can only contain letters, numbers, hyphens, and underscores', 'error');
+            return;
+        }
+
+        this.showStatus('Creating project...', 'info');
+
+        // Get the edited HTML
+        const html = this.getEditedHtml();
+
+        try {
+            const response = await fetch('https://api.e-info.click/create-project', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    html,
+                    email,
+                    name: projectName
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                this.showStatus(`Project created successfully! URL: ${data.url}`, 'success');
+                document.querySelector('.modal-overlay').remove();
+            } else {
+                this.showStatus(data.error || 'Failed to create project', 'error');
+            }
+        } catch (error) {
+            console.error('Error creating project:', error);
+            this.showStatus('Failed to create project. Please try again.', 'error');
+        }
+    }
+
+    getEditedHtml() {
+        // Similar to exportTemplate but return the HTML string
+        const parser = new DOMParser();
+        const originalDoc = parser.parseFromString(this.templateContent, 'text/html');
+
+        // Update the body content with our modifications
+        const templateContainer = document.getElementById('template-content');
+        originalDoc.body.innerHTML = templateContainer.innerHTML;
+
+        // Clean up editor-specific styles
+        const styleElements = originalDoc.querySelectorAll('style');
+        styleElements.forEach(styleElement => {
+            let cssContent = styleElement.textContent;
+            // Remove editor-specific CSS rules
+            cssContent = cssContent.replace(/#template-content header\s*\{[^}]*\}/g, '');
+            // Revert top positioning back to original
+            cssContent = cssContent.replace(/top:\s*56px/g, 'top: 0');
+            styleElement.textContent = cssContent;
+        });
+
+        // Serialize the complete document
+        return originalDoc.documentElement.outerHTML;
+    }
+
+    saveWithCode() {
+        const code = document.getElementById('verification-code').value.trim();
+
+        // For demo purposes, accept '1234' as valid code
+        if (code === '1234') {
+            this.saveChanges();
+            document.querySelector('.modal-overlay').remove();
+        } else {
+            this.showStatus('Invalid verification code', 'error');
+        }
     }
 
     autoLoadTemplate() {
