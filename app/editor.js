@@ -31,6 +31,7 @@ class TemplateEditor {
     determineMode() {
         const urlParams = new URLSearchParams(window.location.search);
         this.mode = urlParams.get('project') ? 'save' : 'create';
+        this.updateTitle();
         this.updateButton();
     }
 
@@ -38,6 +39,13 @@ class TemplateEditor {
         const btn = document.getElementById('export-template-btn');
         if (btn) {
             btn.textContent = this.mode === 'create' ? 'Create' : 'Save changes';
+        }
+    }
+
+    updateTitle() {
+        const titleEl = document.querySelector('.editor-info h2');
+        if (titleEl) {
+            titleEl.textContent = this.mode === 'create' ? 'Template Editor' : 'Project Editor';
         }
     }
 
@@ -218,27 +226,37 @@ class TemplateEditor {
     }
 
     autoLoadTemplate() {
-        // Get template name from URL parameter
+        // Get template or project name from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
         const templateName = urlParams.get('template');
+        const projectName = urlParams.get('project');
 
-        if (!templateName) {
-            this.showStatus(`No template specified. Please check your URL and try again, or contact us at ${this.supportEmail}`, 'info');
+        let itemName, itemType, itemUrl, remoteUrl;
+
+        if (projectName) {
+            itemName = projectName;
+            itemType = 'project';
+            itemUrl = `projects/${projectName}/index.html`;
+            remoteUrl = `https://${projectName}.e-info.click`;
+        } else if (templateName) {
+            itemName = templateName;
+            itemType = 'template';
+            itemUrl = `templates/${templateName}/dist/index.html`;
+            remoteUrl = `https://${templateName}.templates.e-info.click`;
+        } else {
+            this.showStatus(`No ${this.mode === 'create' ? 'template' : 'project'} specified. Please check your URL and try again, or contact us at ${this.supportEmail}`, 'info');
             return;
         }
 
-        if (templateName.trim() === '') {
+        if (itemName.trim() === '') {
             this.showStatus(`Something went wrong. Please try again later or contact us at ${this.supportEmail}`, 'error');
             return;
         }
 
-        // Load template from local templates directory
-        const templateUrl = `templates/${templateName}/dist/index.html`;
+        this.showStatus(`Loading ${itemType}...`, 'info');
 
-        this.showStatus('Loading template...', 'info');
-
-        // Fetch template from local directory
-        fetch(templateUrl)
+        // Fetch item from local directory
+        fetch(itemUrl)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -248,13 +266,12 @@ class TemplateEditor {
             .then(html => {
                 this.templateContent = html;
                 this.processTemplate();
-                this.showStatus('Template loaded successfully!', 'success');
+                this.showStatus(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} loaded successfully!`, 'success');
             })
             .catch(error => {
-                console.error('Error loading template:', error);
+                console.error(`Error loading ${itemType}:`, error);
                 // Fallback to remote URL if local fails
-                const remoteUrl = `https://${templateName}.templates.e-info.click`;
-                this.showStatus('Trying remote template...', 'info');
+                this.showStatus(`Trying remote ${itemType}...`, 'info');
 
                 fetch(remoteUrl)
                     .then(response => {
@@ -266,11 +283,11 @@ class TemplateEditor {
                     .then(html => {
                         this.templateContent = html;
                         this.processTemplate();
-                        this.showStatus('Template loaded from remote successfully!', 'success');
+                        this.showStatus(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} loaded from remote successfully!`, 'success');
                     })
                     .catch(remoteError => {
-                        console.error('Error loading remote template:', remoteError);
-                        this.showStatus(`Template not found. Please check the template name or contact us at ${this.supportEmail}`, 'error');
+                        console.error(`Error loading remote ${itemType}:`, remoteError);
+                        this.showStatus(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} not found. Please check the ${itemType} name or contact us at ${this.supportEmail}`, 'error');
                     });
             });
     }
