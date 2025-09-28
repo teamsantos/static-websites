@@ -34,6 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateProjectStack = void 0;
+const acm = __importStar(require("aws-cdk-lib/aws-certificatemanager"));
 const cdk = __importStar(require("aws-cdk-lib"));
 const apigateway = __importStar(require("aws-cdk-lib/aws-apigateway"));
 const iam = __importStar(require("aws-cdk-lib/aws-iam"));
@@ -45,7 +46,15 @@ class CreateProjectStack extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
         const domain = props?.domain || 'e-info.click';
-        const certificate = props.certificate;
+        // Hosted Zone
+        const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
+            domainName: domain,
+        });
+        // Certificate for API domain
+        const certificate = new acm.Certificate(this, 'ApiCertificate', {
+            domainName: `api.${domain}`,
+            validation: acm.CertificateValidation.fromDns(hostedZone),
+        });
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset('lambda/create-project'),
@@ -67,10 +76,6 @@ class CreateProjectStack extends cdk.Stack {
             actions: ['ses:SendEmail'],
             resources: ['*'],
         }));
-        // Hosted Zone
-        const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
-            domainName: domain,
-        });
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
             defaultCorsPreflightOptions: {

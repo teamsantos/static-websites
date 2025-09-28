@@ -37,8 +37,6 @@ const cdk = __importStar(require("aws-cdk-lib"));
 const bucketStack_1 = require("./bucketStack");
 const CreateProjectStack_1 = require("./CreateProjectStack");
 const ProjectStack_1 = require("./ProjectStack");
-const acm = __importStar(require("aws-cdk-lib/aws-certificatemanager"));
-const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
 const app = new cdk.App();
 const config = {
     region: "eu-south-2",
@@ -50,28 +48,6 @@ const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('accou
 if (!account) {
     console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
 }
-// Certificate for API domain
-class ApiCertificateStack extends cdk.Stack {
-    constructor(scope, id, props) {
-        super(scope, id, {
-            env: {
-                account: account,
-                region: config.certificateRegion,
-            },
-        });
-        const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
-            domainName: props.hostedZoneDomain,
-        });
-        this.certificate = new acm.Certificate(this, 'ApiCertificate', {
-            domainName: `api.${props.domain}`,
-            validation: acm.CertificateValidation.fromDns(hostedZone),
-        });
-    }
-}
-const apiCertStack = new ApiCertificateStack(app, "ApiCertificateStack", {
-    domain: config.domain,
-    hostedZoneDomain: config.domain,
-});
 new bucketStack_1.BucketStack(app, "StaticWebsitesBucket", {
     bucketName: config.s3Bucket,
     env: {
@@ -88,10 +64,9 @@ new CreateProjectStack_1.CreateProjectStack(app, "CreateProjectStack", {
     ses_region: config.certificateRegion,
     domain: config.domain,
     certificateRegion: config.certificateRegion,
-    certificate: apiCertStack.certificate,
     env: {
         account: account,
-        region: config.region,
+        region: config.certificateRegion, // Deploy in us-east-1 for certificate
     },
 });
 const projectsParam = app.node.tryGetContext("projects");

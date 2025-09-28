@@ -20,34 +20,6 @@ if (!account) {
     console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
 }
 
-// Certificate for API domain
-class ApiCertificateStack extends cdk.Stack {
-    public readonly certificate: acm.Certificate;
-
-    constructor(scope: cdk.App, id: string, props: { domain: string; hostedZoneDomain: string }) {
-        super(scope, id, {
-            env: {
-                account: account,
-                region: config.certificateRegion,
-            },
-        });
-
-        const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
-            domainName: props.hostedZoneDomain,
-        });
-
-        this.certificate = new acm.Certificate(this, 'ApiCertificate', {
-            domainName: `api.${props.domain}`,
-            validation: acm.CertificateValidation.fromDns(hostedZone),
-        });
-    }
-}
-
-const apiCertStack = new ApiCertificateStack(app, "ApiCertificateStack", {
-    domain: config.domain,
-    hostedZoneDomain: config.domain,
-});
-
 new BucketStack(app, "StaticWebsitesBucket", {
     bucketName: config.s3Bucket,
     env: {
@@ -65,10 +37,9 @@ new CreateProjectStack(app, "CreateProjectStack", {
     ses_region: config.certificateRegion,
     domain: config.domain,
     certificateRegion: config.certificateRegion,
-    certificate: apiCertStack.certificate,
     env: {
         account: account,
-        region: config.region,
+        region: config.certificateRegion, // Deploy in us-east-1 for certificate
     },
 });
 

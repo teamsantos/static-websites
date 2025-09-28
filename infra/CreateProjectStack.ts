@@ -11,7 +11,6 @@ interface CreateProjectProps extends cdk.StackProps {
     ses_region: string;
     domain?: string;
     certificateRegion?: string;
-    certificate: acm.Certificate;
 }
 
 export class CreateProjectStack extends cdk.Stack {
@@ -19,7 +18,17 @@ export class CreateProjectStack extends cdk.Stack {
         super(scope, id, props);
 
         const domain = props?.domain || 'e-info.click';
-        const certificate = props.certificate;
+
+        // Hosted Zone
+        const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
+            domainName: domain,
+        });
+
+        // Certificate for API domain
+        const certificate = new acm.Certificate(this, 'ApiCertificate', {
+            domainName: `api.${domain}`,
+            validation: acm.CertificateValidation.fromDns(hostedZone),
+        });
 
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
             runtime: lambda.Runtime.NODEJS_18_X,
@@ -45,11 +54,6 @@ export class CreateProjectStack extends cdk.Stack {
             actions: ['ses:SendEmail'],
             resources: ['*'],
         }));
-
-        // Hosted Zone
-        const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
-            domainName: domain,
-        });
 
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
