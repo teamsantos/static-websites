@@ -35,13 +35,18 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateProjectStack = void 0;
 const cdk = __importStar(require("aws-cdk-lib"));
+const acm = __importStar(require("aws-cdk-lib/aws-certificatemanager"));
 const apigateway = __importStar(require("aws-cdk-lib/aws-apigateway"));
 const iam = __importStar(require("aws-cdk-lib/aws-iam"));
 const lambda = __importStar(require("aws-cdk-lib/aws-lambda"));
+const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
+const route53Targets = __importStar(require("aws-cdk-lib/aws-route53-targets"));
 const secretsmanager = __importStar(require("aws-cdk-lib/aws-secretsmanager"));
 class CreateProjectStack extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
+        const domain = props.domain || 'e-info.click';
+        const certificateRegion = props.certificateRegion || 'us-east-1';
         // Lambda function with dynamic references
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
             runtime: lambda.Runtime.NODEJS_18_X,
@@ -66,6 +71,17 @@ class CreateProjectStack extends cdk.Stack {
             actions: ['ses:SendEmail'],
             resources: ['*'],
         }));
+        // Hosted Zone
+        const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
+            domainName: domain,
+        });
+
+        // Certificate for API domain
+        const certificate = new acm.Certificate(this, 'ApiCertificate', {
+            domainName: `api.${domain}`,
+            validation: acm.CertificateValidation.fromDns(hostedZone),
+        });
+
         // API Gateway with CORS
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
@@ -74,6 +90,26 @@ class CreateProjectStack extends cdk.Stack {
                 allowMethods: apigateway.Cors.ALL_METHODS,
                 allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'Origin'],
             },
+        });
+
+        // Custom domain for API
+        const apiDomain = new apigateway.DomainName(this, 'ApiDomain', {
+            domainName: `api.${domain}`,
+            certificate: certificate,
+            endpointType: apigateway.EndpointType.EDGE,
+        });
+
+        // Map domain to API
+        new apigateway.BasePathMapping(this, 'ApiMapping', {
+            domainName: apiDomain,
+            restApi: api,
+        });
+
+        // Route53 A record for API domain
+        new route53.ARecord(this, 'ApiAliasRecord', {
+            zone: hostedZone,
+            recordName: `api.${domain}`,
+            target: route53.RecordTarget.fromAlias(new route53Targets.ApiGatewayDomain(apiDomain)),
         });
         const createProjectResource = api.root.addResource('create-project');
         createProjectResource.addMethod('POST', new apigateway.LambdaIntegration(createProjectFunction), {
@@ -96,6 +132,10 @@ class CreateProjectStack extends cdk.Stack {
         new cdk.CfnOutput(this, 'ApiUrl', {
             value: api.url,
             description: 'API Gateway URL for creating projects (restricted to allowed origins)',
+        });
+        new cdk.CfnOutput(this, 'ApiCustomUrl', {
+            value: `https://api.${domain}/create-project`,
+            description: 'Custom domain URL for creating projects',
         });
     }
 }

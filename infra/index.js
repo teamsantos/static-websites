@@ -65,6 +65,8 @@ new CreateProjectStack_1.CreateProjectStack(app, "CreateProjectStack", {
         account: account,
         region: config.region,
     },
+    domain: config.domain,
+    certificateRegion: config.certificateRegion,
 });
 const projectsParam = app.node.tryGetContext("projects");
 const templatesParam = app.node.tryGetContext("templates");
