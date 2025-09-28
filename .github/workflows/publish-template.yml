@@ -266,22 +266,14 @@ jobs:
           
           echo "✅ Successfully deployed infrastructure for all templates"
 
+      - name: Make build script executable
+        run: chmod +x templates/buildTemplates.sh
+
       - name: Build templates
         shell: bash
         run: |
-          echo "🔨 Building templates..."
-          IFS=' ' read -ra TEMP_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
-          for template in "${TEMP_ARR[@]}"; do
-            if [ -n "$template" ]; then
-              echo "Building template: $template"
-              if [ -d "templates/$template" ]; then
-                TEMPLATE=$template npx vite build
-                echo "✅ Built $template"
-              else
-                echo "⚠️ Template directory templates/$template not found"
-              fi
-            fi
-          done
+           echo "🔨 Building templates..."
+           cd templates && ./buildTemplates.sh
 
       - name: Sync built sites to S3
         shell: bash
