@@ -33,6 +33,8 @@ new BucketStack(app, "StaticWebsitesBucket", {
 
 new CreateProjectStack(app, "CreateProjectStack", {
     ses_region: config.certificateRegion,
+    domain: config.domain,
+    certificateRegion: config.certificateRegion,
     env: {
         account: account,
         region: config.region,
