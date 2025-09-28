@@ -155,12 +155,7 @@ p {
 }
 
 .gradient-text {
-    background: linear-gradient(135deg, var(--color-primary-strong), var(--color-primary), var(--color-primary-strong));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    background-size: 200% 200%;
-    animation: gradientShift 8s ease-in-out infinite alternate;
+    color: var(--color-primary);
     text-shadow: 0 1px 12px var(--shadow-text-light);
 }
 
