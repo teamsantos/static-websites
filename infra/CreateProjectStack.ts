@@ -12,13 +12,11 @@ export class CreateProjectStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: CreateProjectProps) {
         super(scope, id, props);
 
-        // Lambda function with dynamic references
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset('lambda/create-project'),
             handler: 'index.handler',
             environment: {
-                // CloudFormation will resolve these at deployment time and inject as env vars
                 GITHUB_TOKEN: `{{resolve:secretsmanager:github-token:SecretString}}`,
                 GITHUB_OWNER: `{{resolve:secretsmanager:github-config:SecretString:owner}}`,
                 GITHUB_REPO: `{{resolve:secretsmanager:github-config:SecretString:repo}}`,
@@ -28,24 +26,21 @@ export class CreateProjectStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(30),
         });
 
-        // Still need to grant permissions even though we're using dynamic references
         const githubTokenSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubToken', 'github-token');
         const githubConfigSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubConfig', 'github-config');
 
         githubTokenSecret.grantRead(createProjectFunction);
         githubConfigSecret.grantRead(createProjectFunction);
 
-        // Grant SES permissions
         createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['ses:SendEmail'],
             resources: ['*'],
         }));
 
-        // API Gateway with CORS
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
             defaultCorsPreflightOptions: {
-                allowOrigins: apigateway.Cors.ALL_ORIGINS, // Will be restricted in Lambda
+                allowOrigins: apigateway.Cors.ALL_ORIGINS,
                 allowMethods: apigateway.Cors.ALL_METHODS,
                 allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'Origin'],
             },
@@ -69,7 +64,6 @@ export class CreateProjectStack extends cdk.Stack {
             ],
         });
 
-        // Output the API URL
         new cdk.CfnOutput(this, 'ApiUrl', {
             value: api.url,
             description: 'API Gateway URL for creating projects (restricted to allowed origins)',
