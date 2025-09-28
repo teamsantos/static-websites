@@ -33,12 +33,13 @@ class TemplateEditor {
         this.mode = urlParams.get('project') ? 'save' : 'create';
         this.updateTitle();
         this.updateButton();
+        this.updateButtonsVisibility();
     }
 
     updateButton() {
         const btn = document.getElementById('export-template-btn');
         if (btn) {
-            btn.textContent = this.mode === 'create' ? 'Create' : 'Save changes';
+            btn.textContent = this.mode === 'create' ? 'Create website' : 'Save changes';
         }
     }
 
@@ -46,6 +47,24 @@ class TemplateEditor {
         const titleEl = document.querySelector('.editor-info h2');
         if (titleEl) {
             titleEl.textContent = this.mode === 'create' ? 'Template Editor' : 'Project Editor';
+        }
+    }
+
+    updateButtonsVisibility() {
+        const changeBtn = document.getElementById('change-template-btn');
+        const saveBtn = document.getElementById('save-changes-btn');
+        const exportBtn = document.getElementById('export-template-btn');
+
+        if (this.mode === 'save') {
+            // For projects: show only Save changes (export button)
+            if (changeBtn) changeBtn.style.display = 'none';
+            if (saveBtn) saveBtn.style.display = 'none';
+            if (exportBtn) exportBtn.style.display = 'inline-block';
+        } else {
+            // For templates: show Change template and Create website (change and export)
+            if (changeBtn) changeBtn.style.display = 'inline-block';
+            if (saveBtn) saveBtn.style.display = 'none';
+            if (exportBtn) exportBtn.style.display = 'inline-block';
         }
     }
 
