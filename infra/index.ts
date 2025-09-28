@@ -2,8 +2,6 @@ import * as cdk from "aws-cdk-lib";
 import { BucketStack } from "./bucketStack";
 import { CreateProjectStack } from "./CreateProjectStack";
 import { ProjectSite } from "./ProjectStack";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
-import * as route53 from "aws-cdk-lib/aws-route53";
 
 const app = new cdk.App();
 
@@ -39,7 +37,7 @@ new CreateProjectStack(app, "CreateProjectStack", {
     certificateRegion: config.certificateRegion,
     env: {
         account: account,
-        region: config.certificateRegion, // Deploy in us-east-1 for certificate
+        region: config.region,
     },
 });
 

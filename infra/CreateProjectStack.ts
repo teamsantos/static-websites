@@ -1,6 +1,6 @@
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cdk from "aws-cdk-lib";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as route53 from "aws-cdk-lib/aws-route53";
@@ -19,15 +19,14 @@ export class CreateProjectStack extends cdk.Stack {
 
         const domain = props?.domain || 'e-info.click';
 
-        // Hosted Zone
         const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
             domainName: domain,
         });
 
-        // Certificate for API domain
-        const certificate = new acm.Certificate(this, 'ApiCertificate', {
+        const certificate = new DnsValidatedCertificate(this, 'ApiCertificate', {
             domainName: `api.${domain}`,
-            validation: acm.CertificateValidation.fromDns(hostedZone),
+            hostedZone: hostedZone,
+            region: 'us-east-1',
         });
 
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
