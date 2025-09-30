@@ -128,18 +128,16 @@ jobs:
             fi
           done
 
-
-
-       - name: Install Lambda dependencies
-         working-directory: infra/lambda/create-project
-         run: |
+      - name: Install Lambda dependencies
+        working-directory: infra/lambda/create-project
+        run: |
            echo "📦 Installing Lambda dependencies..."
            npm ci
            echo "✅ Lambda dependencies installed"
 
-       - name: Build CDK project
-         working-directory: infra
-         run: |
+      - name: Build CDK project
+        working-directory: infra
+        run: |
             echo "🔨 Building CDK project..."
             # Use npx to ensure we use the local typescript
             npx tsc
