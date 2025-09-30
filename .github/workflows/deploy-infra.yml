@@ -130,13 +130,20 @@ jobs:
 
 
 
-      - name: Build CDK project
-        working-directory: infra
-        run: |
-           echo "🔨 Building CDK project..."
-           # Use npx to ensure we use the local typescript
-           npx tsc
-           echo "✅ CDK project built successfully"
+       - name: Install Lambda dependencies
+         working-directory: infra/lambda/create-project
+         run: |
+           echo "📦 Installing Lambda dependencies..."
+           npm ci
+           echo "✅ Lambda dependencies installed"
+
+       - name: Build CDK project
+         working-directory: infra
+         run: |
+            echo "🔨 Building CDK project..."
+            # Use npx to ensure we use the local typescript
+            npx tsc
+            echo "✅ CDK project built successfully"
 
       - name: Preview infrastructure changes
         working-directory: infra
