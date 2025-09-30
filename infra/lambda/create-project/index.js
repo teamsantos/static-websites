@@ -1,4 +1,4 @@
-import { Octokit } from "@octokit/rest";
+import { Octokit } from "octokit";
 import AWS from "aws-sdk";
 
 const ses = new AWS.SES({ region: process.env.AWS_SES_REGION });
