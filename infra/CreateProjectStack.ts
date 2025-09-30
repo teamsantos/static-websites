@@ -3,6 +3,7 @@ import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as lambda_nodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
@@ -29,10 +30,9 @@ export class CreateProjectStack extends cdk.Stack {
             region: 'us-east-1',
         });
 
-        const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
+        const createProjectFunction = new lambda_nodejs.NodejsFunction(this, 'CreateProjectFunction', {
             runtime: lambda.Runtime.NODEJS_18_X,
-            code: lambda.Code.fromAsset('lambda/create-project'),
-            handler: 'index.handler',
+            entry: 'lambda/create-project/index.js',
             environment: {
                 GITHUB_TOKEN: `{{resolve:secretsmanager:github-token:SecretString}}`,
                 GITHUB_OWNER: `{{resolve:secretsmanager:github-config:SecretString:owner}}`,

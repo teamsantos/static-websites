@@ -128,12 +128,7 @@ jobs:
             fi
           done
 
-      - name: Install Lambda dependencies
-        working-directory: infra/lambda/create-project
-        run: |
-          echo "📦 Installing Lambda dependencies..."
-          npm ci
-          echo "✅ Lambda dependencies installed"
+
 
       - name: Build CDK project
         working-directory: infra
