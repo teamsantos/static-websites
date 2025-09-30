@@ -81,7 +81,7 @@ export const handler = async (event) => {
     try {
         // Check if project exists
         const path = `projects/${projectName}`;
-        await octokit.repos.getContent({
+        await octokit.rest.repos.getContent({
             owner,
             repo,
             path,
@@ -105,7 +105,7 @@ export const handler = async (event) => {
     }
 
     // Create index.html
-    await octokit.repos.createOrUpdateFileContents({
+    await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
         path: `projects/${projectName}/index.html`,
@@ -114,7 +114,7 @@ export const handler = async (event) => {
     });
 
     // Create .email file
-    await octokit.repos.createOrUpdateFileContents({
+    await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
         path: `projects/${projectName}/.email`,
