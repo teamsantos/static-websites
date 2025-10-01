@@ -94,14 +94,10 @@ class TemplateEditor {
 
     showCreateModal() {
         const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
+        modal.className = 'modern-text-editor-overlay';
         modal.innerHTML = `
-            <div class="modal-content glass-modal">
-                <div class="modal-header">
-                    <h3>Create New Project</h3>
-                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
-                </div>
-                <div class="modal-body">
+            <div class="modern-text-editor-card">
+                <div class="editor-card-content">
                     <div class="form-group">
                         <label for="creator-email">Creator Email:</label>
                         <input type="email" id="creator-email" placeholder="your@email.com" required>
@@ -112,9 +108,16 @@ class TemplateEditor {
                         <small class="url-preview">Your project URL will be: <span id="url-preview">my-project.e-info.click</span></small>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="window.templateEditorInstance.createProject()">Create Project</button>
+                <div class="editor-card-footer">
+                    <div class="editor-card-actions">
+                        <button class="btn btn-outline btn-glass" onclick="const modal = this.closest('.modern-text-editor-overlay'); modal.classList.add('removing'); setTimeout(() => { modal.remove(); }, 300);">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary" onclick="window.templateEditorInstance.createProject()">
+                            Create Project
+                        </button>
+                    </div>
+                    <canvas class="stars popup-stars" aria-hidden="true"></canvas>
                 </div>
             </div>
         `;
@@ -127,30 +130,111 @@ class TemplateEditor {
             const name = projectNameInput.value.trim() || 'my-project';
             urlPreview.textContent = `${name}.e-info.click`;
         });
+
+        // Add click handler to overlay for canceling
+        modal.addEventListener('click', (e) => {
+            // Only cancel if clicking on the overlay itself, not the card
+            if (e.target === modal) {
+                modal.classList.add('removing');
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }
+        });
+
+        // Prevent click events on the card from bubbling to the overlay
+        const editorCard = modal.querySelector('.modern-text-editor-card');
+        editorCard.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Focus the first input
+        const firstInput = modal.querySelector('#creator-email');
+        setTimeout(() => {
+            firstInput.focus();
+
+            // Reinitialize stars for the popup canvas
+            const starCanvas = modal.querySelector('.stars');
+            if (starCanvas && window.starsAnimationInstance) {
+                window.starsAnimationInstance.reinitializeCanvas(starCanvas);
+            }
+        }, 100);
+
+        // Handle keyboard shortcuts
+        modal.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                modal.classList.add('removing');
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }
+        });
     }
 
     showSaveModal() {
         const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
+        modal.className = 'modern-text-editor-overlay';
         modal.innerHTML = `
-            <div class="modal-content glass-modal">
-                <div class="modal-header">
-                    <h3>Save Changes</h3>
-                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Enter the verification code sent to your email:</p>
+            <div class="modern-text-editor-card">
+                <div class="editor-card-content">
+                    <p style="margin-bottom: 20px; color: #374151;">Enter the verification code sent to your email:</p>
                     <div class="form-group">
                         <input type="text" id="verification-code" placeholder="Enter code" required>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="window.templateEditorInstance.saveWithCode()">Save Changes</button>
+                <div class="editor-card-footer">
+                    <div class="editor-card-actions">
+                        <button class="btn btn-outline btn-glass" onclick="const modal = this.closest('.modern-text-editor-overlay'); modal.classList.add('removing'); setTimeout(() => { modal.remove(); }, 300);">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary" onclick="window.templateEditorInstance.saveWithCode()">
+                            Save Changes
+                        </button>
+                    </div>
+                    <canvas class="stars popup-stars" aria-hidden="true"></canvas>
                 </div>
             </div>
         `;
         document.body.appendChild(modal);
+
+        // Add click handler to overlay for canceling
+        modal.addEventListener('click', (e) => {
+            // Only cancel if clicking on the overlay itself, not the card
+            if (e.target === modal) {
+                modal.classList.add('removing');
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }
+        });
+
+        // Prevent click events on the card from bubbling to the overlay
+        const editorCard = modal.querySelector('.modern-text-editor-card');
+        editorCard.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Focus the input
+        const input = modal.querySelector('#verification-code');
+        setTimeout(() => {
+            input.focus();
+
+            // Reinitialize stars for the popup canvas
+            const starCanvas = modal.querySelector('.stars');
+            if (starCanvas && window.starsAnimationInstance) {
+                window.starsAnimationInstance.reinitializeCanvas(starCanvas);
+            }
+        }, 100);
+
+        // Handle keyboard shortcuts
+        modal.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                modal.classList.add('removing');
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }
+        });
     }
 
     async createProject() {
@@ -198,13 +282,20 @@ class TemplateEditor {
 
             if (response.ok) {
                 this.showStatus(`Project created successfully! URL: ${data.url}`, 'success');
-                document.querySelector('.modal-overlay').remove();
+                const modal = document.querySelector('.modern-text-editor-overlay');
+                modal.classList.add('removing');
+                setTimeout(() => { modal.remove(); }, 300);
             } else {
                 this.showStatus(data.error || 'Failed to create project', 'error');
             }
         } catch (error) {
             console.error('Error creating project:', error);
             this.showStatus('Failed to create project. Please try again.', 'error');
+            const modal = document.querySelector('.modern-text-editor-overlay');
+            if (modal) {
+                modal.classList.add('removing');
+                setTimeout(() => { modal.remove(); }, 300);
+            }
         }
     }
 
@@ -246,7 +337,9 @@ class TemplateEditor {
         // For demo purposes, accept '1234' as valid code
         if (code === '1234') {
             this.saveChanges();
-            document.querySelector('.modal-overlay').remove();
+            const modal = document.querySelector('.modern-text-editor-overlay');
+            modal.classList.add('removing');
+            setTimeout(() => { modal.remove(); }, 300);
         } else {
             this.showStatus('Invalid verification code', 'error');
         }

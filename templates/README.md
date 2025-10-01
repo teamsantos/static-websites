@@ -6,27 +6,34 @@ This directory contains the dynamic template system for the static website gener
 
 ```
 templates/
-├── templates-registry.json    # Central registry of all templates
-├── manage-templates.js       # Utility script for managing templates
+├── buildTemplates.sh         # Script to build all templates
 ├── README.md                 # This file
-├── business/        # Example business template
-│   ├── index.html           # Template HTML structure
-│   ├── lang_en.json         # English translations
-│   ├── lang_pt.json         # Portuguese translations
-│   └── images.json          # Image configuration
-└── portfolio/      # Example portfolio template
+├── businessCard/             # Business card template
+│   ├── index.html            # Template HTML structure
+│   ├── assets/
+│   │   └── images.json       # Image configuration
+│   ├── images/               # Template images
+│   └── langs/
+│       └── en.json           # English translations
+├── bussinessCardTest/        # Test business card template
+│   ├── .commingsoon          # Coming soon marker
+│   ├── index.html
+│   ├── assets/images.json
+│   ├── images/
+│   └── langs/en.json
+└── modern-header/            # Modern header template
     ├── index.html
-    ├── lang_en.json
-    ├── lang_pt.json
-    └── images.json
+    ├── assets/images.json
+    ├── langs/en.json
+    └── README.md
 ```
 
 ## How It Works
 
-1. **Registry System**: `templates-registry.json` contains metadata about all available templates
-2. **Dynamic Loading**: Templates are loaded from their individual folders at runtime
-3. **Language Support**: Each template has its own language files
-4. **Image Management**: Templates can have single images, arrays, or carousels
+1. **Registry System**: `../assets/templates.json` contains metadata about all available templates
+2. **Build Process**: `buildTemplates.sh` processes templates using `../helpers/htmlExtractor.js`
+3. **Language Support**: Each template has its own language files in `langs/` directory
+4. **Image Management**: Templates use `assets/images.json` for image configuration
 
 ## Adding a New Template
 
@@ -44,121 +51,72 @@ mkdir templates/your-template-name
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="title"></title>
-    <link rel="stylesheet" href="../../styles/styles.css">
-    <script type="module" src="../../app/template-loader.js"></script>
-</head>
-<body data-template="your-template-name">
+    <title id="title">Your Template Title</title>
+    <meta id="description" name="description" content="Your template description">
     <!-- Your template content -->
+</head>
+<body>
+    <!-- Template HTML structure -->
 </body>
 </html>
 ```
 
-#### lang_en.json
+#### langs/en.json
 ```json
 {
-  "name": "Your Template Name",
-  "title": "Page Title",
-  "hero": {
-    "title": "Hero Title",
-    "description": "Hero description"
-  }
+  "title": "Your Template Title",
+  "description": "Your template description",
+  "heroTitle": "Hero Title",
+  "heroDescription": "Hero description text"
 }
 ```
 
-#### images.json
+#### assets/images.json
 ```json
 {
-  "hero": {
-    "type": "single",
-    "src": "./templates/your-template-name/hero-image.jpg",
-    "alt": "Hero image description"
-  },
-  "gallery": {
-    "type": "carousel",
-    "images": [
-      {
-        "src": "./templates/your-template-name/image1.jpg",
-        "alt": "Gallery image 1"
-      }
-    ]
-  }
+  "image_1": "./images/hero-image.jpg",
+  "image_2": "./images/about-image.jpg",
+  "image_3": "https://example.com/external-image.jpg"
 }
 ```
 
 ### 3. Update Registry
-Add your template to `templates-registry.json`:
+Add your template to `../assets/templates.json`:
 
 ```json
 {
-  "id": "your-template-name",
-  "name": "Display Name",
-  "subTitle": "Category",
-  "description": "Template description",
-  "imageURL": "./assets/your-template-icon.svg",
-  "url": "./templates/your-template-name/",
-  "template": "your-template-name",
-  "featured": false,
-  "order": 3,
-  "category": "business"
+  "name": "your-template-name",
+  "comingSoon": false,
+  "title": "Display Name",
+  "description": "Template description"
 }
 ```
 
-### 4. Add Placeholder Images
-Create SVG placeholder images in your template folder:
-- `hero-image.svg`
-- `about-image.svg`
-- `gallery1.svg`, `gallery2.svg`, etc.
+### 4. Add Images
+Place your template images in the `images/` directory and reference them in `assets/images.json`.
 
-## Image Types
+## Image Configuration
 
-### Single Image
+Templates use a simple key-value system in `assets/images.json`:
+
 ```json
 {
-  "type": "single",
-  "src": "./templates/template-name/image.jpg",
-  "alt": "Image description",
-  "fallback": "./assets/placeholder.jpg"
+  "image_1": "./images/hero-image.jpg",
+  "image_2": "./images/about-image.jpg",
+  "image_3": "https://external-image-url.com/image.jpg"
 }
 ```
 
-### Image Array
-```json
-{
-  "type": "array",
-  "images": [
-    {
-      "src": "./templates/template-name/image1.jpg",
-      "alt": "Image 1",
-      "fallback": "./assets/placeholder.jpg"
-    }
-  ]
-}
-```
-
-### Carousel
-```json
-{
-  "type": "carousel",
-  "images": [
-    {
-      "src": "./templates/template-name/image1.jpg",
-      "alt": "Carousel image 1"
-    }
-  ],
-  "autoplay": true,
-  "interval": 5000,
-  "showDots": true,
-  "showArrows": true
-}
-```
+Images can be:
+- Local files in the template's `images/` directory
+- External URLs
+- Referenced by key in the template HTML
 
 ## Language Support
 
-Templates support multiple languages through separate language files:
-- `lang_en.json` - English
-- `lang_pt.json` - Portuguese
-- Add more languages by creating additional `lang_xx.json` files
+Templates support multiple languages through language files in the `langs/` directory:
+- `en.json` - English translations
+- Currently only English is supported, but the structure allows for additional languages
 
 ## Template Features
 
@@ -167,36 +125,27 @@ Templates can include:
 - **About sections** with company/team information
 - **Services** or **Projects** grids
 - **Contact forms** with validation
-- **Image galleries** and carousels
+- **Image galleries**
 - **Testimonials** and reviews
 - **Statistics** and metrics
+
+## Build Process
+
+Templates are built using the `buildTemplates.sh` script which:
+1. Processes each template directory
+2. Uses `../helpers/htmlExtractor.js` to extract and process content
+3. Runs `TEMPLATE=name npm run build` for each template
+4. Generates optimized single-file builds
 
 ## Best Practices
 
 1. **Use semantic HTML** with proper headings and structure
-2. **Include data-i18n attributes** for all user-facing text
-3. **Provide fallback images** for better error handling
-4. **Test responsiveness** on different screen sizes
-5. **Use consistent naming** for CSS classes
-6. **Include proper alt text** for accessibility
-
-## Management Script
-
-Use `manage-templates.js` to help manage templates:
-
-```javascript
-const manager = new TemplateManager();
-
-// Add a new template
-await manager.addTemplate(templateData);
-
-// List all templates
-const templates = await manager.listTemplates();
-
-// Validate template structure
-const validation = await manager.validateTemplate('template-id');
-```
+2. **Include proper meta tags** for SEO
+3. **Test responsiveness** on different screen sizes
+4. **Use consistent naming** for CSS classes
+5. **Include proper alt text** for accessibility
+6. **Optimize images** for web delivery
 
 ## Deployment
 
-Templates are served as static files and loaded dynamically. No server-side processing is required. The system works entirely in the browser using JavaScript modules and fetch API.
+Templates are built into single-file HTML bundles using Vite and deployed as static files. The build process inlines all assets and minifies the output for optimal performance.
