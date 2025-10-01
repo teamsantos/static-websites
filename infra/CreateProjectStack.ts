@@ -88,43 +88,18 @@ export class CreateProjectStack extends cdk.Stack {
             integrationResponses: [
                 {
                     statusCode: '200',
-                    responseParameters: {
-                        'method.response.header.Access-Control-Allow-Origin': "'*'",
-                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-                    },
                 },
                 {
                     statusCode: '400',
-                    responseParameters: {
-                        'method.response.header.Access-Control-Allow-Origin': "'*'",
-                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-                    },
                 },
                 {
                     statusCode: '403',
-                    responseParameters: {
-                        'method.response.header.Access-Control-Allow-Origin': "'*'",
-                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-                    },
                 },
                 {
                     statusCode: '409',
-                    responseParameters: {
-                        'method.response.header.Access-Control-Allow-Origin': "'*'",
-                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-                    },
                 },
                 {
                     statusCode: '500',
-                    responseParameters: {
-                        'method.response.header.Access-Control-Allow-Origin': "'*'",
-                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-                    },
                 },
             ],
         }), {
