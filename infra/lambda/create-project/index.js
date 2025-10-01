@@ -19,6 +19,9 @@ export const handler = async (event) => {
 
     // Check origin for security - allow specific origins
     const origin = event.headers?.origin || event.headers?.Origin;
+
+    console.log(`Origin: ${origin}`);
+
     const allowedOrigins = [
         'https://editor.e-info.click',
         'https://ssh.e-info.click',

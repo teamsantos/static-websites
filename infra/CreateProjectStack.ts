@@ -84,7 +84,50 @@ export class CreateProjectStack extends cdk.Stack {
         });
 
         const createProjectResource = api.root.addResource('create-project');
-        createProjectResource.addMethod('POST', new apigateway.LambdaIntegration(createProjectFunction), {
+        createProjectResource.addMethod('POST', new apigateway.LambdaIntegration(createProjectFunction, {
+            integrationResponses: [
+                {
+                    statusCode: '200',
+                    responseParameters: {
+                        'method.response.header.Access-Control-Allow-Origin': "'*'",
+                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+                    },
+                },
+                {
+                    statusCode: '400',
+                    responseParameters: {
+                        'method.response.header.Access-Control-Allow-Origin': "'*'",
+                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+                    },
+                },
+                {
+                    statusCode: '403',
+                    responseParameters: {
+                        'method.response.header.Access-Control-Allow-Origin': "'*'",
+                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+                    },
+                },
+                {
+                    statusCode: '409',
+                    responseParameters: {
+                        'method.response.header.Access-Control-Allow-Origin': "'*'",
+                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+                    },
+                },
+                {
+                    statusCode: '500',
+                    responseParameters: {
+                        'method.response.header.Access-Control-Allow-Origin': "'*'",
+                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+                    },
+                },
+            ],
+        }), {
             methodResponses: [
                 {
                     statusCode: '200',
@@ -97,6 +140,9 @@ export class CreateProjectStack extends cdk.Stack {
                 },
                 {
                     statusCode: '409',
+                },
+                {
+                    statusCode: '500',
                 },
             ],
         });

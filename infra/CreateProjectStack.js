@@ -34,9 +34,9 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateProjectStack = void 0;
-const acm = __importStar(require("aws-cdk-lib/aws-certificatemanager"));
 const cdk = __importStar(require("aws-cdk-lib"));
 const apigateway = __importStar(require("aws-cdk-lib/aws-apigateway"));
+const aws_certificatemanager_1 = require("aws-cdk-lib/aws-certificatemanager");
 const iam = __importStar(require("aws-cdk-lib/aws-iam"));
 const lambda = __importStar(require("aws-cdk-lib/aws-lambda"));
 const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
@@ -46,14 +46,13 @@ class CreateProjectStack extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
         const domain = props?.domain || 'e-info.click';
-        // Hosted Zone
         const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
             domainName: domain,
         });
-        // Certificate for API domain
-        const certificate = new acm.Certificate(this, 'ApiCertificate', {
+        const certificate = new aws_certificatemanager_1.DnsValidatedCertificate(this, 'ApiCertificate', {
             domainName: `api.${domain}`,
-            validation: acm.CertificateValidation.fromDns(hostedZone),
+            hostedZone: hostedZone,
+            region: 'us-east-1',
         });
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
             runtime: lambda.Runtime.NODEJS_18_X,
@@ -102,7 +101,50 @@ class CreateProjectStack extends cdk.Stack {
             target: route53.RecordTarget.fromAlias(new route53Targets.ApiGatewayDomain(apiDomain)),
         });
         const createProjectResource = api.root.addResource('create-project');
-        createProjectResource.addMethod('POST', new apigateway.LambdaIntegration(createProjectFunction), {
+        createProjectResource.addMethod('POST', new apigateway.LambdaIntegration(createProjectFunction, {
+            integrationResponses: [
+                {
+                    statusCode: '200',
+                    responseParameters: {
+                        'method.response.header.Access-Control-Allow-Origin': "'*'",
+                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+                    },
+                },
+                {
+                    statusCode: '400',
+                    responseParameters: {
+                        'method.response.header.Access-Control-Allow-Origin': "'*'",
+                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+                    },
+                },
+                {
+                    statusCode: '403',
+                    responseParameters: {
+                        'method.response.header.Access-Control-Allow-Origin': "'*'",
+                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+                    },
+                },
+                {
+                    statusCode: '409',
+                    responseParameters: {
+                        'method.response.header.Access-Control-Allow-Origin': "'*'",
+                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+                    },
+                },
+                {
+                    statusCode: '500',
+                    responseParameters: {
+                        'method.response.header.Access-Control-Allow-Origin': "'*'",
+                        'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                        'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+                    },
+                },
+            ],
+        }), {
             methodResponses: [
                 {
                     statusCode: '200',
@@ -115,6 +157,9 @@ class CreateProjectStack extends cdk.Stack {
                 },
                 {
                     statusCode: '409',
+                },
+                {
+                    statusCode: '500',
                 },
             ],
         });
