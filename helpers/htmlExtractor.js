@@ -497,19 +497,13 @@ class HTMLExtractor {
             fs.writeFileSync(this.enJsonPath, JSON.stringify(this.enJson, null, 2), 'utf8');
             fs.writeFileSync(this.imagesJsonPath, JSON.stringify(this.imagesJson, null, 2), 'utf8');
 
-            // Create content-loader.js
-            this.createContentLoader();
+            // Inject the content back into the HTML for single-file builds
+            this.injectContentIntoDOM(dom);
 
-            // Add content-loader script to the HTML
-            const scriptElement = dom.window.document.createElement('script');
-            scriptElement.type = 'module';
-            scriptElement.src = 'content-loader.js';
-            dom.window.document.body.appendChild(scriptElement);
-
-            // Write the processed HTML with data attributes
+            // Write the processed HTML with actual content
             fs.writeFileSync(this.htmlPath, dom.serialize(), 'utf8');
 
-            console.log(`✅ Text extracted successfully. HTML saved with data attributes.`);
+            console.log(`✅ Text extracted and injected successfully. HTML saved with content.`);
             console.log(`✅ Original saved as ${newBakFilePath}`);
         } catch (error) {
             console.error('❌ Error processing HTML:', error.message);
@@ -518,28 +512,22 @@ class HTMLExtractor {
     }
 
     createContentLoader() {
-        const loaderContent = `// content-loader.js - Dynamically loads and injects content from JSON files
-(async function() {
+        // Read the JSON files
+        const langData = JSON.parse(fs.readFileSync(this.enJsonPath, 'utf8'));
+        const imageData = JSON.parse(fs.readFileSync(this.imagesJsonPath, 'utf8'));
+
+        const loaderContent = `// content-loader.js - Injects embedded content data
+(function() {
     try {
-        // Load language and image data
-        const [langResponse, imageResponse] = await Promise.all([
-            fetch('./langs/en.json'),
-            fetch('./assets/images.json')
-        ]);
-
-        if (!langResponse.ok || !imageResponse.ok) {
-            console.error('Failed to load content files');
-            return;
-        }
-
-        const langData = await langResponse.json();
-        const imageData = await imageResponse.json();
+        // Embedded language and image data
+        const langData = ${JSON.stringify(langData, null, 2)};
+        const imageData = ${JSON.stringify(imageData, null, 2)};
 
         // Inject text content
         injectTextContent(document.head, langData, imageData);
         injectTextContent(document.body, langData, imageData);
 
-        console.log('✅ Content loaded dynamically');
+        console.log('✅ Content loaded from embedded data');
     } catch (error) {
         console.error('❌ Error loading content:', error);
     }
@@ -589,7 +577,7 @@ class HTMLExtractor {
         // Inject image sources
         const imageSrc = element.getAttribute('data-image-src');
         if (imageSrc && imageData[imageSrc]) {
-            element.setAttribute('src', imageData[imageSrc]);
+            element.setAttribute('src', imageData[imageSrc];
         }
 
         // Inject background images
@@ -610,8 +598,8 @@ class HTMLExtractor {
 })();
 `;
 
-        fs.writeFileSync(this.scriptPath, loaderContent, 'utf8');
-        console.log('✅ content-loader.js created');
+        console.log('✅ content-loader script content generated');
+        return loaderContent;
     }
 }
 
