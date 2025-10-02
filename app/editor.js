@@ -123,13 +123,30 @@ class TemplateEditor {
         `;
         document.body.appendChild(modal);
 
-        // Update URL preview on input
+        // Restore saved values from sessionStorage
+        const savedEmail = sessionStorage.getItem('creator-email');
+        const savedProjectName = sessionStorage.getItem('project-name');
+        const emailInput = modal.querySelector('#creator-email');
         const projectNameInput = modal.querySelector('#project-name');
+
+        if (savedEmail) {
+            emailInput.value = savedEmail;
+        }
+        if (savedProjectName) {
+            projectNameInput.value = savedProjectName;
+        }
+
+        // Update URL preview on input
         const urlPreview = modal.querySelector('#url-preview');
         projectNameInput.addEventListener('input', () => {
             const name = projectNameInput.value.trim() || 'my-project';
             urlPreview.textContent = `${name}.e-info.click`;
         });
+
+        // Update URL preview with saved value if available
+        if (savedProjectName) {
+            urlPreview.textContent = `${savedProjectName}.e-info.click`;
+        }
 
         // Add click handler to overlay for canceling
         modal.addEventListener('click', (e) => {
@@ -148,8 +165,8 @@ class TemplateEditor {
             e.stopPropagation();
         });
 
-        // Focus the first input
-        const firstInput = modal.querySelector('#creator-email');
+        // Focus the first input (or the one without saved value)
+        const firstInput = savedEmail ? (savedProjectName ? emailInput : projectNameInput) : emailInput;
         setTimeout(() => {
             firstInput.focus();
 
@@ -260,6 +277,10 @@ class TemplateEditor {
             return;
         }
 
+        // Save input values to sessionStorage for session-only persistence
+        sessionStorage.setItem('creator-email', email);
+        sessionStorage.setItem('project-name', projectName);
+
         this.showStatus('Creating project...', 'info');
 
         // Get the edited HTML
@@ -281,21 +302,24 @@ class TemplateEditor {
             const data = await response.json();
 
             if (response.ok) {
-                this.showStatus(`Project created successfully! URL: ${data.url}`, 'success');
+                this.showStatus('Project created successfully! Redirecting...', 'success');
+                // Clear saved data on success
+                sessionStorage.removeItem('creator-email');
+                sessionStorage.removeItem('project-name');
+                // Close modal
                 const modal = document.querySelector('.modern-text-editor-overlay');
                 modal.classList.add('removing');
-                setTimeout(() => { modal.remove(); }, 300);
+                setTimeout(() => {
+                    modal.remove();
+                    // Redirect to the created website
+                    window.location.href = data.url;
+                }, 300);
             } else {
                 this.showStatus(data.error || 'Failed to create project', 'error');
             }
         } catch (error) {
             console.error('Error creating project:', error);
             this.showStatus('Failed to create project. Please try again.', 'error');
-            const modal = document.querySelector('.modern-text-editor-overlay');
-            if (modal) {
-                modal.classList.add('removing');
-                setTimeout(() => { modal.remove(); }, 300);
-            }
         }
     }
 
