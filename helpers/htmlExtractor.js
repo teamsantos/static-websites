@@ -466,6 +466,9 @@ class HTMLExtractor {
                 throw new Error(`HTML file not found: ${this.htmlPath}`);
             }
 
+            // Backup the original HTML
+            const newBakFilePath = path.join(this.directoryPath, "index.bak.html");
+            fs.copyFileSync(this.htmlPath, newBakFilePath);
 
             const htmlContent = fs.readFileSync(this.htmlPath, 'utf8');
 
@@ -494,19 +497,121 @@ class HTMLExtractor {
             fs.writeFileSync(this.enJsonPath, JSON.stringify(this.enJson, null, 2), 'utf8');
             fs.writeFileSync(this.imagesJsonPath, JSON.stringify(this.imagesJson, null, 2), 'utf8');
 
-            // Backup the original HTML before processing
-            const newBakFilePath = path.join(this.directoryPath, "index.bak.html");
-            fs.copyFileSync(this.htmlPath, newBakFilePath);
+            // Create content-loader.js
+            this.createContentLoader();
 
-            // Inject content directly into the processed DOM
-            this.injectContentIntoDOM(dom);
+            // Add content-loader script to the HTML
+            const scriptElement = dom.window.document.createElement('script');
+            scriptElement.type = 'module';
+            scriptElement.src = 'content-loader.js';
+            dom.window.document.body.appendChild(scriptElement);
 
-            console.log(`✅ Text extracted successfully. Original saved as ${newBakFilePath}`);
-            console.log('✅ Content injected directly into HTML');
+            // Write the processed HTML with data attributes
+            fs.writeFileSync(this.htmlPath, dom.serialize(), 'utf8');
+
+            console.log(`✅ Text extracted successfully. HTML saved with data attributes.`);
+            console.log(`✅ Original saved as ${newBakFilePath}`);
         } catch (error) {
             console.error('❌ Error processing HTML:', error.message);
             process.exit(1);
         }
+    }
+
+    createContentLoader() {
+        const loaderContent = `// content-loader.js - Dynamically loads and injects content from JSON files
+(async function() {
+    try {
+        // Load language and image data
+        const [langResponse, imageResponse] = await Promise.all([
+            fetch('./langs/en.json'),
+            fetch('./assets/images.json')
+        ]);
+
+        if (!langResponse.ok || !imageResponse.ok) {
+            console.error('Failed to load content files');
+            return;
+        }
+
+        const langData = await langResponse.json();
+        const imageData = await imageResponse.json();
+
+        // Inject text content
+        injectTextContent(document.head, langData, imageData);
+        injectTextContent(document.body, langData, imageData);
+
+        console.log('✅ Content loaded dynamically');
+    } catch (error) {
+        console.error('❌ Error loading content:', error);
+    }
+
+    function injectTextContent(element, langData, imageData) {
+        // Inject text content
+        const textId = element.getAttribute('data-text-id');
+        if (textId && langData[textId]) {
+            if (element.tagName === 'BUTTON') {
+                element.textContent = langData[textId];
+            } else if (element.tagName === 'TEXTAREA') {
+                element.textContent = langData[textId];
+            } else if (element.tagName === 'INPUT') {
+                const inputType = element.getAttribute('type');
+                if (inputType === 'submit' || inputType === 'button') {
+                    element.setAttribute('value', langData[textId]);
+                } else {
+                    element.setAttribute('placeholder', langData[textId]);
+                }
+            } else {
+                element.textContent = langData[textId];
+            }
+        }
+
+        // Inject alt text
+        const altTextId = element.getAttribute('data-alt-text-id');
+        if (altTextId && langData[altTextId]) {
+            element.setAttribute('alt', langData[altTextId]);
+        }
+
+        // Inject title text
+        const titleTextId = element.getAttribute('data-title-text-id');
+        if (titleTextId && langData[titleTextId]) {
+            if (element.tagName === 'TITLE') {
+                element.textContent = langData[titleTextId];
+            } else {
+                element.setAttribute('title', langData[titleTextId]);
+            }
+        }
+
+        // Inject meta content
+        const metaContentId = element.getAttribute('data-meta-content-id');
+        if (metaContentId && langData[metaContentId]) {
+            element.setAttribute('content', langData[metaContentId]);
+        }
+
+        // Inject image sources
+        const imageSrc = element.getAttribute('data-image-src');
+        if (imageSrc && imageData[imageSrc]) {
+            element.setAttribute('src', imageData[imageSrc]);
+        }
+
+        // Inject background images
+        const bgImage = element.getAttribute('data-bg-image');
+        if (bgImage && imageData[bgImage]) {
+            const currentStyle = element.getAttribute('style') || '';
+            const bgImageStyle = \`background-image: url('\${imageData[bgImage]}')\`;
+            const newStyle = currentStyle ? \`\${currentStyle}; \${bgImageStyle}\` : bgImageStyle;
+            element.setAttribute('style', newStyle);
+        }
+
+        // Process children
+        const children = Array.from(element.children);
+        for (let child of children) {
+            injectTextContent(child, langData, imageData);
+        }
+    }
+})();
+`;
+
+        fs.writeFileSync(this.scriptPath, loaderContent, 'utf8');
+        console.log('✅ content-loader.js created');
     }
 }
 
