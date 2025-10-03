@@ -6,6 +6,36 @@ const baseURL = "e-info.click";
 const editorURL = `https://editor.${baseURL}?template=`;
 const templatesURL = `templates.${baseURL}`;
 
+async function createCheckout(plan) {
+    try {
+        const response = await fetch("https://YOUR_LAMBDA_ENDPOINT", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: "test@example.com",           // placeholder email for now
+                name: `Project-${Date.now()}`,      // random project name for testing
+                html: "<p>Some test HTML</p>",      // dummy html
+                priceId: plan.stripe_product_id     // Stripe Price ID
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Checkout creation failed:", error);
+            alert("Failed to create checkout session.");
+            return;
+        }
+
+        const data = await response.json();
+        window.location.href = data.sessionUrl; // Redirect to Stripe checkout
+    } catch (err) {
+        console.error("Error creating checkout:", err);
+        alert("Something went wrong.");
+    }
+}
+
 const injectPlans = (plans) => {
     const container = document.getElementById("plans");
     container.innerHTML = plans.map((plan) => `
@@ -22,7 +52,12 @@ ${plan.description.map(point => `
 <li><p>${point}</p></li>
 `).join("")}
 </ul>
-<button class="btn btn-primary btn-full" onclick="window.location.href='${plan.product_stripe_url}'">Pay Now</button>
+<button 
+class="btn btn-primary btn-full" 
+onclick=`createCheckout(${JSON.stringify(plan)})`
+>
+Pay Now
+</button>
 </div>
 `).join("");
 };
@@ -53,21 +88,21 @@ const injectTemplates = (templates, selectText) => {
         card.innerHTML = `
 <div class="template-frame">
     ${template.comingSoon
-                ? `<div class="frame-placeholder">
-               <div class="placeholder-content">
-                   <span>Preview Coming Soon</span>
-               </div>
-               <div class="coming-soon-badge">Coming Soon</div>
-           </div>`
-                : `<iframe src="${frameURL}" 
-                   title="${template.title} Preview"
-                   frameborder="0"
-                   scrolling="no"
-                   loading="lazy"
-                   sandbox="allow-scripts allow-same-origin allow-forms"
-                   class="template-iframe">
-           </iframe>`
-            }
+    ? `<div class="frame-placeholder">
+        <div class="placeholder-content">
+            <span>Preview Coming Soon</span>
+        </div>
+        <div class="coming-soon-badge">Coming Soon</div>
+    </div>`
+    : `<iframe src="${frameURL}" 
+        title="${template.title} Preview"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        sandbox="allow-scripts allow-same-origin allow-forms"
+        class="template-iframe">
+    </iframe>`
+    }
 </div>
 <div class="template-content">
     <div class="template-header">
