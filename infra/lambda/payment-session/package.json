@@ -1,0 +1,10 @@
+{
+  "name": "create-project-lambda",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "octokit": "^3.1.0",
+    "aws-sdk": "^2.1541.0"
+  }
+}

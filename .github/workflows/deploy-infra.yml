@@ -135,6 +135,13 @@ jobs:
            npm ci
            echo "✅ Lambda dependencies installed"
 
+      - name: Install Lambda dependencies
+        working-directory: infra/lambda/payment-session
+        run: |
+           echo "📦 Installing Lambda dependencies..."
+           npm ci
+           echo "✅ Lambda dependencies installed"
+
       - name: Build CDK project
         working-directory: infra
         run: |
