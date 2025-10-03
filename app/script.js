@@ -6,7 +6,7 @@ const baseURL = "e-info.click";
 const editorURL = `https://editor.${baseURL}?template=`;
 const templatesURL = `templates.${baseURL}`;
 
-async function createCheckout(plan) {
+async function createCheckout(product_id) {
     try {
         const response = await fetch("https://YOUR_LAMBDA_ENDPOINT", {
             method: "POST",
@@ -17,7 +17,7 @@ async function createCheckout(plan) {
                 email: "test@example.com",
                 name: `Project-${Date.now()}`,
                 html: "<p>Filipe is gay</p>",
-                priceId: plan.stripe_product_id     // Stripe Price ID
+                priceId: product_id// Stripe Price ID
             })
         });
 
@@ -54,7 +54,7 @@ ${plan.description.map(point => `
 </ul>
 <button 
 class="btn btn-primary btn-full" 
-onclick='createCheckout(${plan})'
+onclick='createCheckout(${plan.stripe_product_id})'
 >
 Pay Now
 </button>
