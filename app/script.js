@@ -38,28 +38,33 @@ async function createCheckout(product_id) {
 
 const injectPlans = (plans) => {
     const container = document.getElementById("plans");
-    container.innerHTML = plans.map((plan) => `
-<div class="plan-item" redirect-to="${plan["redirect-to"]}" >
-<div class="plan-item-icon">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-${plan.svg}
-</svg>
-</div>
-<h3>${plan.name}</h3>
-<h5 style="padding-bottom: 10px;">${plan.price}</h5>
-<ul>
-${plan.description.map(point => `
-<li><p>${point}</p></li>
-`).join("")}
-</ul>
-<button 
-class="btn btn-primary btn-full" 
-onclick='createCheckout(${plan.stripe_product_id})'
->
-Pay Now
-</button>
-</div>
-`).join("");
+    container.innerHTML = plans.map((plan, idx) => `
+        <div class="plan-item" redirect-to="${plan["redirect-to"]}" >
+            <div class="plan-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    ${plan.svg}
+                </svg>
+            </div>
+            <h3>${plan.name}</h3>
+            <h5 style="padding-bottom: 10px;">${plan.price}</h5>
+            <ul>
+                ${plan.description.map(point => `<li><p>${point}</p></li>`).join("")}
+            </ul>
+            <button 
+              class="btn btn-primary btn-full pay-btn"
+              data-product="${plan.stripe_product_id}">
+              Pay Now
+            </button>
+        </div>
+    `).join("");
+
+    // attach events
+    container.querySelectorAll(".pay-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const productId = btn.getAttribute("data-product");
+            createCheckout(productId);
+        });
+    });
 };
 
 const injectBenifits = (benifits) => {
