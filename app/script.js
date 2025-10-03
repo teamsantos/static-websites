@@ -54,7 +54,7 @@ ${plan.description.map(point => `
 </ul>
 <button 
 class="btn btn-primary btn-full" 
-onclick=`createCheckout(${JSON.stringify(plan)})`
+onclick='createCheckout(${JSON.stringify(plan)})'
 >
 Pay Now
 </button>
