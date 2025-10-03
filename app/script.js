@@ -14,9 +14,9 @@ async function createCheckout(plan) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                email: "test@example.com",           // placeholder email for now
-                name: `Project-${Date.now()}`,      // random project name for testing
-                html: "<p>Some test HTML</p>",      // dummy html
+                email: "test@example.com",
+                name: `Project-${Date.now()}`,
+                html: "<p>Filipe is gay</p>",
                 priceId: plan.stripe_product_id     // Stripe Price ID
             })
         });
@@ -54,7 +54,7 @@ ${plan.description.map(point => `
 </ul>
 <button 
 class="btn btn-primary btn-full" 
-onclick='createCheckout(${JSON.stringify(plan)})'
+onclick='createCheckout(${plan})'
 >
 Pay Now
 </button>
