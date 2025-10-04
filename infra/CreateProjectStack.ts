@@ -114,24 +114,24 @@ export class CreateProjectStack extends cdk.Stack {
                 },
             ],
         }), {
-                methodResponses: [
-                    {
-                        statusCode: '200',
-                    },
-                    {
-                        statusCode: '400',
-                    },
-                    {
-                        statusCode: '403',
-                    },
-                    {
-                        statusCode: '409',
-                    },
-                    {
-                        statusCode: '500',
-                    },
-                ],
-            });
+            methodResponses: [
+                {
+                    statusCode: '200',
+                },
+                {
+                    statusCode: '400',
+                },
+                {
+                    statusCode: '403',
+                },
+                {
+                    statusCode: '409',
+                },
+                {
+                    statusCode: '500',
+                },
+            ],
+        });
 
         const createPaymentSessionResource = api.root.addResource('create-payment-session');
         createPaymentSessionResource.addMethod(
@@ -161,16 +161,16 @@ export class CreateProjectStack extends cdk.Stack {
             value: `https://api.${domain}/create-project`,
             description: 'Custom domain URL for creating projects',
         });
-        
+
         // Outputs for Payment Session API
         new cdk.CfnOutput(this, 'PaymentSessionApiUrl', {
-          value: `${api.url}create-payment-session`,
-          description: 'API Gateway URL for creating Stripe payment sessions',
+            value: `${api.url}create-payment-session`,
+            description: 'API Gateway URL for creating Stripe payment sessions',
         });
 
         new cdk.CfnOutput(this, 'PaymentSessionApiCustomUrl', {
-          value: `https://api.${domain}/create-payment-session`,
-          description: 'Custom domain URL for creating Stripe payment sessions',
+            value: `https://api.${domain}/create-payment-session`,
+            description: 'Custom domain URL for creating Stripe payment sessions',
         });
     }
 }

@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fmpisantos/static-websites.git"
+    "url": "git+https://github.com/teamsantos/static-websites.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/fmpisantos/static-websites/issues"
+    "url": "https://github.com/teamsantos/static-websites/issues"
   },
-  "homepage": "https://github.com/fmpisantos/static-websites#readme",
+  "homepage": "https://github.com/teamsantos/static-websites#readme",
   "devDependencies": {
     "jsdom": "^26.1.0",
     "serve": "^14.2.5",
