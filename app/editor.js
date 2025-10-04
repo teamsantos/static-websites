@@ -313,7 +313,7 @@ class TemplateEditor {
                 setTimeout(() => {
                     modal.remove();
                     // Redirect to the created website
-                    window.location.href = data.url;
+                    window.location.href = `https://${data.url}`;
                 }, 300);
             } else {
                 this.showStatus(data.error || 'Failed to create project', 'error');
