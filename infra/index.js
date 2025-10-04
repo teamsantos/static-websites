@@ -66,7 +66,7 @@ new CreateProjectStack_1.CreateProjectStack(app, "CreateProjectStack", {
     certificateRegion: config.certificateRegion,
     env: {
         account: account,
-        region: config.certificateRegion, // Deploy in us-east-1 for certificate
+        region: config.region,
     },
 });
 const projectsParam = app.node.tryGetContext("projects");

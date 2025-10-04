@@ -48,8 +48,8 @@ export class CreateProjectStack extends cdk.Stack {
             code: lambda.Code.fromAsset('lambda/payment-session'),
             handler: 'index.handler',
             environment: {
-                STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
-                FRONTEND_URL: process.env.FRONTEND_URL
+                STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY!,
+                FRONTEND_URL: process.env.FRONTEND_URL!
             },
             timeout: cdk.Duration.seconds(30),
         });
