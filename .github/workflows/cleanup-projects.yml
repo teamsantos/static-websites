@@ -1,0 +1,168 @@
+name: Cleanup Deleted Projects
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'projects/**'
+  workflow_dispatch:
+    inputs:
+      force_cleanup:
+        description: 'Force cleanup specific projects (comma-separated)'
+        required: false
+        default: ''
+
+env:
+  S3_BUCKET: teamsantos-static-websites
+
+jobs:
+  detect-deletions:
+    runs-on: ubuntu-latest
+    outputs:
+      deleted-projects: ${{ steps.detect.outputs.deleted-projects }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for diff
+
+      - id: detect
+        run: |
+          echo "🔍 Detecting deleted projects..."
+
+          # Handle manual trigger with force cleanup
+          if [ -n "${{ github.event.inputs.force_cleanup }}" ]; then
+            echo "Force cleanup requested for: ${{ github.event.inputs.force_cleanup }}"
+            DELETED_PROJECTS="${{ github.event.inputs.force_cleanup }}"
+          elif [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
+            # First push - no deletions
+            echo "First push detected, no deletions to process"
+            DELETED_PROJECTS=""
+          else
+            # Get deleted project directories
+            DELETED_FILES=$(git diff --name-status "${{ github.event.before }}" "${{ github.sha }}" 2>/dev/null | grep '^D' | grep '^D.*projects/' || echo "")
+
+            if [ -n "$DELETED_FILES" ]; then
+              # Extract project names from deleted paths
+              DELETED_PROJECTS=$(echo "$DELETED_FILES" | sed 's|D.*projects/||' | cut -d'/' -f1 | sort -u | tr '\n' ',' | sed 's/,$//')
+            else
+              DELETED_PROJECTS=""
+            fi
+          fi
+
+          echo "Deleted projects: $DELETED_PROJECTS"
+          echo "deleted-projects=$DELETED_PROJECTS" >> $GITHUB_OUTPUT
+
+  cleanup:
+    needs: detect-deletions
+    if: needs.detect-deletions.outputs.deleted-projects != ''
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'master' && 'production' || 'staging' }}
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/static-websites:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Parse deleted projects
+        id: parse-projects
+        shell: bash
+        run: |
+          # Convert comma-separated to space-separated for easier processing
+          DELETED_PROJECTS="${{ needs.detect-deletions.outputs.deleted-projects }}"
+          PROJECTS_SPACE=$(echo "$DELETED_PROJECTS" | tr ',' ' ')
+          echo "projects-space=$PROJECTS_SPACE" >> $GITHUB_OUTPUT
+          echo "🗑️ Projects to cleanup: $PROJECTS_SPACE"
+
+      - name: Verify stacks exist before cleanup
+        shell: bash
+        run: |
+          echo "🔍 Verifying CloudFormation stacks exist..."
+          IFS=' ' read -ra PROJ_ARR <<< "${{ steps.parse-projects.outputs.projects-space }}"
+          for project in "${PROJ_ARR[@]}"; do
+            if [ -n "$project" ]; then
+              STACK_NAME="Site-$project"
+              echo "Checking stack: $STACK_NAME"
+
+              STACK_EXISTS=$(aws cloudformation describe-stacks \
+                --region us-east-1 \
+                --stack-name "$STACK_NAME" \
+                --query "Stacks[0].StackName" \
+                --output text 2>/dev/null || echo "")
+
+              if [ -n "$STACK_EXISTS" ]; then
+                echo "✅ Stack $STACK_NAME exists and will be deleted"
+              else
+                echo "⚠️ Stack $STACK_NAME does not exist, skipping"
+              fi
+            fi
+          done
+
+      - name: Call cleanup API
+        shell: bash
+        run: |
+          echo "🧹 Starting infrastructure cleanup..."
+
+          # Prepare JSON payload
+          DELETED_PROJECTS="${{ needs.detect-deletions.outputs.deleted-projects }}"
+          PROJECTS_ARRAY=$(echo "$DELETED_PROJECTS" | tr ',' '\n' | jq -R . | jq -s .)
+
+          PAYLOAD=$(jq -n \
+            --argjson projects "$PROJECTS_ARRAY" \
+            '{projects: $projects}')
+
+          echo "Cleanup payload: $PAYLOAD"
+
+          # Call the cleanup API
+          RESPONSE=$(curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            "https://api.e-info.click/cleanup-project")
+
+          echo "API Response: $RESPONSE"
+
+          # Check if cleanup was successful
+          STATUS_CODE=$(echo "$RESPONSE" | jq -r '.statusCode // 200')
+          if [ "$STATUS_CODE" -eq 200 ]; then
+            echo "✅ Cleanup completed successfully"
+          elif [ "$STATUS_CODE" -eq 207 ]; then
+            echo "⚠️ Cleanup completed with some issues"
+            echo "$RESPONSE" | jq -r '.body' | jq .
+          else
+            echo "❌ Cleanup failed"
+            echo "$RESPONSE"
+            exit 1
+          fi
+
+      - name: Cleanup Summary
+        shell: bash
+        run: |
+          echo "🧹 Project Cleanup Summary"
+          echo "=========================="
+          echo "Deleted projects: ${{ needs.detect-deletions.outputs.deleted-projects }}"
+          echo "Total projects cleaned up: $(echo '${{ needs.detect-deletions.outputs.deleted-projects }}' | tr ',' '\n' | wc -l)"
+          echo ""
+          echo "🗑️ The following AWS resources were cleaned up:"
+          IFS=' ' read -ra PROJ_ARR <<< "${{ steps.parse-projects.outputs.projects-space }}"
+          for project in "${PROJ_ARR[@]}"; do
+            if [ -n "$project" ]; then
+              echo "  • CloudFormation Stack: Site-$project"
+              echo "  • CloudFront Distribution for $project.e-info.click"
+              echo "  • Route53 A Record for $project.e-info.click"
+              echo "  • ACM Certificate for $project.e-info.click"
+              echo "  • S3 files in s3://$S3_BUCKET/$project/"
+              echo ""
+            fi
+          done
+          echo "💰 This cleanup helps reduce AWS costs by removing unused resources."

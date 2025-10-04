@@ -108,7 +108,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/e90a94cd97cdff58008933bccdd1e57a0f6c76e6ba3d0bfb75d845a8373b9bd4.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/55f806ce0317ac14066830040528a050f8e2ceb6a4b1ffe983932ce8c0d6d192.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -184,6 +184,24 @@
             "data": "CreatePaymentSessionFunction0B20DCD2"
           }
         ],
+        "/CreateProjectStack/CleanupProjectFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CleanupProjectFunctionServiceRoleA6D77811"
+          }
+        ],
+        "/CreateProjectStack/CleanupProjectFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CleanupProjectFunctionServiceRoleDefaultPolicy51406264"
+          }
+        ],
+        "/CreateProjectStack/CleanupProjectFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CleanupProjectFunctionD6961333"
+          }
+        ],
         "/CreateProjectStack/CreateProjectApi/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -205,7 +223,7 @@
         "/CreateProjectStack/CreateProjectApi/Deployment/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "CreateProjectApiDeployment97BD925211a6b8e4c922c408d7f4543e1ec583c4"
+            "data": "CreateProjectApiDeployment97BD92525b133cdbb85d97230c613f2c17d4a975"
           }
         ],
         "/CreateProjectStack/CreateProjectApi/DeploymentStage.prod/Resource": [
@@ -286,6 +304,36 @@
             "data": "CreateProjectApicreatepaymentsessionPOST27A802A1"
           }
         ],
+        "/CreateProjectStack/CreateProjectApi/Default/cleanup-project/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicleanupprojectCBD6FB96"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/cleanup-project/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicleanupprojectOPTIONS0DF9915F"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/cleanup-project/POST/ApiPermission.CreateProjectStackCreateProjectApi4BA50C0B.POST..cleanup-project": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicleanupprojectPOSTApiPermissionCreateProjectStackCreateProjectApi4BA50C0BPOSTcleanupprojectC967F029"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/cleanup-project/POST/ApiPermission.Test.CreateProjectStackCreateProjectApi4BA50C0B.POST..cleanup-project": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicleanupprojectPOSTApiPermissionTestCreateProjectStackCreateProjectApi4BA50C0BPOSTcleanupprojectB32BA520"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/cleanup-project/POST/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicleanupprojectPOSTC90C5AC9"
+          }
+        ],
         "/CreateProjectStack/ApiDomain/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -326,6 +374,18 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "PaymentSessionApiCustomUrl"
+          }
+        ],
+        "/CreateProjectStack/CleanupProjectApiUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CleanupProjectApiUrl"
+          }
+        ],
+        "/CreateProjectStack/CleanupProjectApiCustomUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CleanupProjectApiCustomUrl"
           }
         ],
         "/CreateProjectStack/CDKMetadata/Default": [
