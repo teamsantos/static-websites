@@ -1,38 +1,59 @@
 import { Octokit } from "octokit";
 import AWS from "aws-sdk";
-import fs from "fs";
-import path from "path";
 import { JSDOM } from "jsdom";
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const ses = new AWS.SES({ region: process.env.AWS_SES_REGION });
 
-async function generateHtmlFromTemplate(templateId, customImages, customLangs) {
+async function generateHtmlFromTemplate(templateId, customImages, customLangs, octokit, owner, repo) {
     try {
         // Load base template HTML (processed version with data attributes)
-        const templatePath = path.join(__dirname, '../../../templates', templateId, 'index.html');
-        if (!fs.existsSync(templatePath)) {
-            throw new Error(`Template not found: ${templatePath}`);
+        const templatePath = `templates/${templateId}/index.html`;
+        let templateHtml;
+        try {
+            const response = await octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path: templatePath,
+            });
+            templateHtml = Buffer.from(response.data.content, 'base64').toString('utf8');
+        } catch (error) {
+            if (error.status === 404) {
+                throw new Error(`Template not found: ${templatePath}`);
+            }
+            throw error;
         }
 
-        const templateHtml = fs.readFileSync(templatePath, 'utf8');
-
         // Load base langs and images
-        const baseLangsPath = path.join(__dirname, '../../../templates', templateId, 'langs', 'en.json');
-        const baseImagesPath = path.join(__dirname, '../../../templates', templateId, 'assets', 'images.json');
+        const baseLangsPath = `templates/${templateId}/langs/en.json`;
+        const baseImagesPath = `templates/${templateId}/assets/images.json`;
 
         let baseLangs = {};
         let baseImages = {};
 
-        if (fs.existsSync(baseLangsPath)) {
-            baseLangs = JSON.parse(fs.readFileSync(baseLangsPath, 'utf8'));
+        try {
+            const response = await octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path: baseLangsPath,
+            });
+            baseLangs = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf8'));
+        } catch (error) {
+            if (error.status !== 404) {
+                throw error;
+            }
         }
 
-        if (fs.existsSync(baseImagesPath)) {
-            baseImages = JSON.parse(fs.readFileSync(baseImagesPath, 'utf8'));
+        try {
+            const response = await octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path: baseImagesPath,
+            });
+            baseImages = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf8'));
+        } catch (error) {
+            if (error.status !== 404) {
+                throw error;
+            }
         }
 
         // Merge custom data with base data (custom overrides base)
@@ -227,7 +248,7 @@ export const handler = async (event) => {
     }
 
     // Generate HTML from template and custom data
-    const html = await generateHtmlFromTemplate(templateId, images, langs);
+    const html = await generateHtmlFromTemplate(templateId, images, langs, octokit, owner, repo);
 
     // Create index.html
     await octokit.rest.repos.createOrUpdateFileContents({
