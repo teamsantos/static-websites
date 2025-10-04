@@ -1,7 +1,126 @@
 import { Octokit } from "octokit";
 import AWS from "aws-sdk";
+import fs from "fs";
+import path from "path";
+import { JSDOM } from "jsdom";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const ses = new AWS.SES({ region: process.env.AWS_SES_REGION });
+
+async function generateHtmlFromTemplate(templateId, customImages, customLangs) {
+    try {
+        // Load base template HTML (processed version with data attributes)
+        const templatePath = path.join(__dirname, '../../../templates', templateId, 'index.html');
+        if (!fs.existsSync(templatePath)) {
+            throw new Error(`Template not found: ${templatePath}`);
+        }
+
+        const templateHtml = fs.readFileSync(templatePath, 'utf8');
+
+        // Load base langs and images
+        const baseLangsPath = path.join(__dirname, '../../../templates', templateId, 'langs', 'en.json');
+        const baseImagesPath = path.join(__dirname, '../../../templates', templateId, 'assets', 'images.json');
+
+        let baseLangs = {};
+        let baseImages = {};
+
+        if (fs.existsSync(baseLangsPath)) {
+            baseLangs = JSON.parse(fs.readFileSync(baseLangsPath, 'utf8'));
+        }
+
+        if (fs.existsSync(baseImagesPath)) {
+            baseImages = JSON.parse(fs.readFileSync(baseImagesPath, 'utf8'));
+        }
+
+        // Merge custom data with base data (custom overrides base)
+        const mergedLangs = { ...baseLangs, ...customLangs };
+        const mergedImages = { ...baseImages, ...customImages };
+
+        // Inject content into HTML
+        const dom = new JSDOM(templateHtml);
+        const document = dom.window.document;
+
+        injectContent(document.head, mergedLangs, mergedImages);
+        injectContent(document.body, mergedLangs, mergedImages);
+
+        return dom.serialize();
+    } catch (error) {
+        console.error('Error generating HTML from template:', error);
+        throw error;
+    }
+}
+
+function injectContent(element, langs, images) {
+    // Skip script and style elements
+    if (element.tagName === 'SCRIPT' || element.tagName === 'STYLE') {
+        return;
+    }
+
+    // Inject text content
+    const textId = element.getAttribute('data-text-id');
+    if (textId && langs[textId]) {
+        if (element.tagName === 'BUTTON') {
+            element.textContent = langs[textId];
+        } else if (element.tagName === 'TEXTAREA') {
+            element.textContent = langs[textId];
+        } else if (element.tagName === 'INPUT') {
+            const inputType = element.getAttribute('type');
+            if (inputType === 'submit' || inputType === 'button') {
+                element.setAttribute('value', langs[textId]);
+            } else {
+                element.setAttribute('placeholder', langs[textId]);
+            }
+        } else {
+            element.textContent = langs[textId];
+        }
+    }
+
+    // Inject alt text
+    const altTextId = element.getAttribute('data-alt-text-id');
+    if (altTextId && langs[altTextId]) {
+        element.setAttribute('alt', langs[altTextId]);
+    }
+
+    // Inject title text
+    const titleTextId = element.getAttribute('data-title-text-id');
+    if (titleTextId && langs[titleTextId]) {
+        if (element.tagName === 'TITLE') {
+            element.textContent = langs[titleTextId];
+        } else {
+            element.setAttribute('title', langs[titleTextId]);
+        }
+    }
+
+    // Inject meta content
+    const metaContentId = element.getAttribute('data-meta-content-id');
+    if (metaContentId && langs[metaContentId]) {
+        element.setAttribute('content', langs[metaContentId]);
+    }
+
+    // Inject image sources
+    const imageSrc = element.getAttribute('data-image-src');
+    if (imageSrc && images[imageSrc]) {
+        element.setAttribute('src', images[imageSrc]);
+    }
+
+    // Inject background images
+    const bgImage = element.getAttribute('data-bg-image');
+    if (bgImage && images[bgImage]) {
+        const currentStyle = element.getAttribute('style') || '';
+        const bgImageStyle = `background-image: url('${images[bgImage]}')`;
+        const newStyle = currentStyle ? `${currentStyle}; ${bgImageStyle}` : bgImageStyle;
+        element.setAttribute('style', newStyle);
+    }
+
+    // Process children
+    const children = Array.from(element.children || []);
+    for (let child of children) {
+        injectContent(child, langs, images);
+    }
+}
 
 export const handler = async (event) => {
     // Handle CORS preflight OPTIONS requests
@@ -60,9 +179,9 @@ export const handler = async (event) => {
         };
     }
 
-    const { html, email, name: projectName } = requestBody;
+    const { images, langs, templateId, email, name: projectName } = requestBody;
 
-    if (!html || !email || !projectName) {
+    if (!images || !langs || !templateId || !email || !projectName) {
         return {
             statusCode: 400,
             headers: {
@@ -70,7 +189,7 @@ export const handler = async (event) => {
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
                 'Access-Control-Allow-Methods': 'POST,OPTIONS',
             },
-            body: JSON.stringify({ error: 'Missing required fields: html, email, name' }),
+            body: JSON.stringify({ error: 'Missing required fields: images, langs, templateId, email, name' }),
         };
     }
 
@@ -106,6 +225,9 @@ export const handler = async (event) => {
         }
         // 404 means not exists, proceed
     }
+
+    // Generate HTML from template and custom data
+    const html = await generateHtmlFromTemplate(templateId, images, langs);
 
     // Create index.html
     await octokit.rest.repos.createOrUpdateFileContents({

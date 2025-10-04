@@ -7,6 +7,7 @@ class TemplateEditor {
         this.currentLanguage = 'en';
         this.currentEditingElement = null;
         this.mode = 'create'; // 'create' or 'save'
+        this.templateId = null; // Template identifier for export
 
         // Support email - change this in one place
         this.supportEmail = 'teamsantos.software+support@gmail.com';
@@ -283,8 +284,8 @@ class TemplateEditor {
 
         this.showStatus('Creating project...', 'info');
 
-        // Get the edited HTML
-        const html = this.getEditedHtml();
+        // Get the export data (images, langs, templateId)
+        const exportData = this.collectExportData();
 
         try {
             const response = await fetch('https://api.e-info.click/create-project', {
@@ -293,7 +294,7 @@ class TemplateEditor {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    html,
+                    ...exportData,
                     email,
                     name: projectName
                 })
@@ -355,6 +356,15 @@ class TemplateEditor {
         return originalDoc.documentElement.outerHTML;
     }
 
+    collectExportData() {
+        // Collect the current state for export: images, translations, and templateId
+        return {
+            images: this.images,
+            langs: this.translations[this.currentLanguage] || {},
+            templateId: this.templateId
+        };
+    }
+
     saveWithCode() {
         const code = document.getElementById('verification-code').value.trim();
 
@@ -387,6 +397,7 @@ class TemplateEditor {
             itemType = 'template';
             itemUrl = `templates/${templateName}/dist/index.html`;
             remoteUrl = `https://${templateName}.templates.e-info.click`;
+            this.templateId = templateName; // Store template ID for export
         } else {
             this.showStatus(`No ${this.mode === 'create' ? 'template' : 'project'} specified. Please check your URL and try again, or contact us at ${this.supportEmail}`, 'info');
             return;
