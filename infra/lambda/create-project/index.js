@@ -12,8 +12,8 @@ let cachedGithubConfig = null;
 async function getSecrets() {
     if (!cachedGithubToken || !cachedGithubConfig) {
         const [tokenSecret, configSecret] = await Promise.all([
-            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_TOKEN_SECRET_ARN }).promise(),
-            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_CONFIG_SECRET_ARN }).promise()
+            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_TOKEN_SECRET_NAME }).promise(),
+            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_CONFIG_SECRET_NAME }).promise()
         ]);
 
         cachedGithubToken = tokenSecret.SecretString;

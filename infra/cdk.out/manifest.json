@@ -11,7 +11,7 @@
     },
     "StaticWebsitesBucket": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://unknown-account/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "StaticWebsitesBucket.template.json",
         "terminationProtection": false,
@@ -21,16 +21,16 @@
           "Purpose": "StaticWebsiteHosting"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-south-2/658fcf72c6a1204c4c07ca3b46bfc1d1014c3146e5827d993b20e4fbacb6844b.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/f10aeb5e1050b1151659c8bded06a9c7d0a8513b3cd6547dc68d27818f29cf5a.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "StaticWebsitesBucket.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -101,21 +101,21 @@
     },
     "CreateProjectStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://unknown-account/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "CreateProjectStack.template.json",
         "terminationProtection": false,
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-eu-south-2/cc9e4562ae4d765785bb1f0eada286c4f2798a868cb24c6380ad20ae182bc98a.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/e90a94cd97cdff58008933bccdd1e57a0f6c76e6ba3d0bfb75d845a8373b9bd4.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "CreateProjectStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -124,6 +124,36 @@
         "CreateProjectStack.assets"
       ],
       "metadata": {
+        "/CreateProjectStack/ApiCertificate/CertificateRequestorFunction": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-runtime-family",
+            "data": 0
+          }
+        ],
+        "/CreateProjectStack/ApiCertificate/CertificateRequestorFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiCertificateCertificateRequestorFunctionServiceRole86B3A678"
+          }
+        ],
+        "/CreateProjectStack/ApiCertificate/CertificateRequestorFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiCertificateCertificateRequestorFunctionServiceRoleDefaultPolicy37D02D57"
+          }
+        ],
+        "/CreateProjectStack/ApiCertificate/CertificateRequestorFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiCertificateCertificateRequestorFunction35B7F4E7"
+          }
+        ],
+        "/CreateProjectStack/ApiCertificate/CertificateRequestorResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiCertificateCertificateRequestorResource57CB3F69"
+          }
+        ],
         "/CreateProjectStack/CreateProjectFunction/ServiceRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -140,6 +170,18 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "CreateProjectFunction0FC649A9"
+          }
+        ],
+        "/CreateProjectStack/CreatePaymentSessionFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreatePaymentSessionFunctionServiceRole3759C448"
+          }
+        ],
+        "/CreateProjectStack/CreatePaymentSessionFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreatePaymentSessionFunction0B20DCD2"
           }
         ],
         "/CreateProjectStack/CreateProjectApi/Resource": [
@@ -163,7 +205,7 @@
         "/CreateProjectStack/CreateProjectApi/Deployment/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "CreateProjectApiDeployment97BD9252f675faa5a59fefe02b1428cf76dd70ae"
+            "data": "CreateProjectApiDeployment97BD925211a6b8e4c922c408d7f4543e1ec583c4"
           }
         ],
         "/CreateProjectStack/CreateProjectApi/DeploymentStage.prod/Resource": [
@@ -214,10 +256,76 @@
             "data": "CreateProjectApicreateprojectPOSTBF2BA3C0"
           }
         ],
+        "/CreateProjectStack/CreateProjectApi/Default/create-payment-session/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicreatepaymentsession5538435F"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/create-payment-session/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicreatepaymentsessionOPTIONSFF8546A7"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/create-payment-session/POST/ApiPermission.CreateProjectStackCreateProjectApi4BA50C0B.POST..create-payment-session": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicreatepaymentsessionPOSTApiPermissionCreateProjectStackCreateProjectApi4BA50C0BPOSTcreatepaymentsession5DF30F58"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/create-payment-session/POST/ApiPermission.Test.CreateProjectStackCreateProjectApi4BA50C0B.POST..create-payment-session": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicreatepaymentsessionPOSTApiPermissionTestCreateProjectStackCreateProjectApi4BA50C0BPOSTcreatepaymentsession95E17598"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectApi/Default/create-payment-session/POST/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectApicreatepaymentsessionPOST27A802A1"
+          }
+        ],
+        "/CreateProjectStack/ApiDomain/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiDomain2D27DFFC"
+          }
+        ],
+        "/CreateProjectStack/ApiMapping/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiMapping8F180979"
+          }
+        ],
+        "/CreateProjectStack/ApiAliasRecord/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiAliasRecordBCE933A3"
+          }
+        ],
         "/CreateProjectStack/ApiUrl": [
           {
             "type": "aws:cdk:logicalId",
             "data": "ApiUrl"
+          }
+        ],
+        "/CreateProjectStack/ApiCustomUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ApiCustomUrl"
+          }
+        ],
+        "/CreateProjectStack/PaymentSessionApiUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PaymentSessionApiUrl"
+          }
+        ],
+        "/CreateProjectStack/PaymentSessionApiCustomUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PaymentSessionApiCustomUrl"
           }
         ],
         "/CreateProjectStack/CDKMetadata/Default": [
