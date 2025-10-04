@@ -620,7 +620,7 @@ body {
     color: white;
     font-weight: 500;
     font-size: 14px;
-    z-index: 1003;
+    z-index: 9999;
     opacity: 0;
     transform: translateY(-8px);
     transition: all 0.2s ease;
