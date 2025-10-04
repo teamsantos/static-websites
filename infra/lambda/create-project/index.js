@@ -3,6 +3,29 @@ import AWS from "aws-sdk";
 import { JSDOM } from "jsdom";
 
 const ses = new AWS.SES({ region: process.env.AWS_SES_REGION });
+const secretsManager = new AWS.SecretsManager();
+
+// Cache secrets to avoid fetching on every invocation
+let cachedGithubToken = null;
+let cachedGithubConfig = null;
+
+async function getSecrets() {
+    if (!cachedGithubToken || !cachedGithubConfig) {
+        const [tokenSecret, configSecret] = await Promise.all([
+            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_TOKEN_SECRET_ARN }).promise(),
+            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_CONFIG_SECRET_ARN }).promise()
+        ]);
+
+        cachedGithubToken = tokenSecret.SecretString;
+        cachedGithubConfig = JSON.parse(configSecret.SecretString);
+    }
+
+    return {
+        githubToken: cachedGithubToken,
+        githubOwner: cachedGithubConfig.owner,
+        githubRepo: cachedGithubConfig.repo
+    };
+}
 
 async function generateHtmlFromTemplate(templateId, customImages, customLangs, octokit, owner, repo) {
     try {
@@ -214,12 +237,17 @@ export const handler = async (event) => {
         };
     }
 
+    // Get secrets from AWS Secrets Manager
+    const { githubToken, githubOwner, githubRepo } = await getSecrets();
+
     const octokit = new Octokit({
-        auth: process.env.GITHUB_TOKEN,
+        auth: githubToken,
     });
 
-    const owner = process.env.GITHUB_OWNER;
-    const repo = process.env.GITHUB_REPO;
+    const owner = githubOwner;
+    const repo = githubRepo;
+
+    console.log(`Using GitHub repo: ${owner}/${repo}`);
 
     try {
         // Check if project exists

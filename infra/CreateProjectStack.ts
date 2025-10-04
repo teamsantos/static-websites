@@ -29,14 +29,17 @@ export class CreateProjectStack extends cdk.Stack {
             region: 'us-east-1',
         });
 
+        // Reference the secrets
+        const githubTokenSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubToken', 'github-token');
+        const githubConfigSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubConfig', 'github-config');
+
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset('lambda/create-project'),
             handler: 'index.handler',
             environment: {
-                GITHUB_TOKEN: `{{resolve:secretsmanager:github-token:SecretString}}`,
-                GITHUB_OWNER: `{{resolve:secretsmanager:github-config:SecretString:owner}}`,
-                GITHUB_REPO: `{{resolve:secretsmanager:github-config:SecretString:repo}}`,
+                GITHUB_TOKEN_SECRET_ARN: githubTokenSecret.secretArn,
+                GITHUB_CONFIG_SECRET_ARN: githubConfigSecret.secretArn,
                 FROM_EMAIL: 'noreply@e-info.click',
                 AWS_SES_REGION: props?.ses_region || "us-east-1"
             },
@@ -54,9 +57,7 @@ export class CreateProjectStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(30),
         });
 
-        const githubTokenSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubToken', 'github-token');
-        const githubConfigSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubConfig', 'github-config');
-
+        // Grant permissions to read the secrets
         githubTokenSecret.grantRead(createProjectFunction);
         githubConfigSecret.grantRead(createProjectFunction);
 
