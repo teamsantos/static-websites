@@ -61,6 +61,12 @@ export class CreateProjectStack extends cdk.Stack {
         githubTokenSecret.grantRead(createProjectFunction);
         githubConfigSecret.grantRead(createProjectFunction);
 
+        // Explicitly add Secrets Manager permissions (in case grantRead doesn't work properly)
+        createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
+            resources: [`${githubTokenSecret.secretArn}-*`, `${githubConfigSecret.secretArn}-*`],
+        }));
+
         createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['ses:SendEmail'],
             resources: ['*'],
