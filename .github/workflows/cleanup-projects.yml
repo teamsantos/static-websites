@@ -114,36 +114,69 @@ jobs:
         run: |
           echo "🧹 Starting infrastructure cleanup..."
 
-          # Prepare JSON payload
-          DELETED_PROJECTS="${{ needs.detect-deletions.outputs.deleted-projects }}"
-          PROJECTS_ARRAY=$(echo "$DELETED_PROJECTS" | tr ',' '\n' | jq -R . | jq -s .)
+          # Use Node.js to handle the entire API call and response processing
+          node -e "
+            const https = require('https');
+            const DELETED_PROJECTS = '${{ needs.detect-deletions.outputs.deleted-projects }}';
+            const projects = DELETED_PROJECTS.split(',');
 
-          PAYLOAD=$(jq -n \
-            --argjson projects "$PROJECTS_ARRAY" \
-            '{projects: $projects}')
+            const payload = JSON.stringify({ projects });
 
-          echo "Cleanup payload: $PAYLOAD"
+            console.log('Cleanup payload:', payload);
 
-          # Call the cleanup API
-          RESPONSE=$(curl -s -X POST \
-            -H "Content-Type: application/json" \
-            -d "$PAYLOAD" \
-            "https://api.e-info.click/cleanup-project")
+            const options = {
+              hostname: 'api.e-info.click',
+              path: '/cleanup-project',
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload)
+              }
+            };
 
-          echo "API Response: $RESPONSE"
+            const req = https.request(options, (res) => {
+              let data = '';
 
-          # Check if cleanup was successful
-          STATUS_CODE=$(echo "$RESPONSE" | jq -r '.statusCode // 200')
-          if [ "$STATUS_CODE" -eq 200 ]; then
-            echo "✅ Cleanup completed successfully"
-          elif [ "$STATUS_CODE" -eq 207 ]; then
-            echo "⚠️ Cleanup completed with some issues"
-            echo "$RESPONSE" | jq -r '.body' | jq .
-          else
-            echo "❌ Cleanup failed"
-            echo "$RESPONSE"
-            exit 1
-          fi
+              res.on('data', (chunk) => {
+                data += chunk;
+              });
+
+              res.on('end', () => {
+                try {
+                  const response = JSON.parse(data);
+                  const statusCode = response.statusCode || res.statusCode;
+
+                  console.log('API Response Status:', statusCode);
+
+                  if (statusCode === 200) {
+                    console.log('✅ Cleanup completed successfully');
+                    const body = JSON.parse(response.body || '{}');
+                    console.log('Results:', JSON.stringify(body, null, 2));
+                  } else if (statusCode === 207) {
+                    console.log('⚠️ Cleanup completed with some issues');
+                    const body = JSON.parse(response.body || '{}');
+                    console.log('Results:', JSON.stringify(body, null, 2));
+                  } else {
+                    console.log('❌ Cleanup failed');
+                    console.log('Response:', JSON.stringify(response, null, 2));
+                    process.exit(1);
+                  }
+                } catch (e) {
+                  console.log('❌ Failed to parse API response');
+                  console.log('Raw response:', data);
+                  process.exit(1);
+                }
+              });
+            });
+
+            req.on('error', (e) => {
+              console.error('❌ API call failed:', e);
+              process.exit(1);
+            });
+
+            req.write(payload);
+            req.end();
+          "
 
       - name: Cleanup Summary
         shell: bash
