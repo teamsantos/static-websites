@@ -57,12 +57,7 @@ export class CreateProjectStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(30),
         });
 
-        const cleanupProjectFunction = new lambda.Function(this, 'CleanupProjectFunction', {
-            runtime: lambda.Runtime.NODEJS_18_X,
-            code: lambda.Code.fromAsset('lambda/cleanup-project'),
-            handler: 'index.handler',
-            timeout: cdk.Duration.minutes(10), // Longer timeout for stack deletion
-        });
+
 
         // Grant permissions to read the secrets
         githubTokenSecret.grantRead(createProjectFunction);
@@ -79,22 +74,7 @@ export class CreateProjectStack extends cdk.Stack {
             resources: ['*'],
         }));
 
-        // Grant permissions for cleanup operations
-        cleanupProjectFunction.addToRolePolicy(new iam.PolicyStatement({
-            actions: [
-                'cloudformation:DeleteStack',
-                'cloudformation:DescribeStacks',
-                'cloudformation:ListStacks',
-                's3:DeleteObject',
-                's3:ListBucket',
-                's3:GetObject'
-            ],
-            resources: [
-                'arn:aws:cloudformation:us-east-1:396913706953:stack/Site-*',
-                'arn:aws:s3:::teamsantos-static-websites/*',
-                'arn:aws:s3:::teamsantos-static-websites'
-            ],
-        }));
+
 
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
@@ -185,38 +165,7 @@ export class CreateProjectStack extends cdk.Stack {
             }
         );
 
-        const cleanupProjectResource = api.root.addResource('cleanup-project');
-        cleanupProjectResource.addMethod('POST', new apigateway.LambdaIntegration(cleanupProjectFunction, {
-            integrationResponses: [
-                {
-                    statusCode: '200',
-                },
-                {
-                    statusCode: '207', // Multi-status for partial success
-                },
-                {
-                    statusCode: '400',
-                },
-                {
-                    statusCode: '500',
-                },
-            ],
-        }), {
-            methodResponses: [
-                {
-                    statusCode: '200',
-                },
-                {
-                    statusCode: '207',
-                },
-                {
-                    statusCode: '400',
-                },
-                {
-                    statusCode: '500',
-                },
-            ],
-        });
+
         new cdk.CfnOutput(this, 'ApiUrl', {
             value: api.url,
             description: 'API Gateway URL for creating projects (restricted to allowed origins)',
@@ -237,14 +186,6 @@ export class CreateProjectStack extends cdk.Stack {
             description: 'Custom domain URL for creating Stripe payment sessions',
         });
 
-        new cdk.CfnOutput(this, 'CleanupProjectApiUrl', {
-            value: `${api.url}cleanup-project`,
-            description: 'API Gateway URL for cleaning up project infrastructure',
-        });
 
-        new cdk.CfnOutput(this, 'CleanupProjectApiCustomUrl', {
-            value: `https://api.${domain}/cleanup-project`,
-            description: 'Custom domain URL for cleaning up project infrastructure',
-        });
     }
 }

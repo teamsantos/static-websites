@@ -109,74 +109,37 @@ jobs:
             fi
           done
 
-      - name: Call cleanup API
-        shell: bash
-        run: |
-          echo "🧹 Starting infrastructure cleanup..."
+       - name: Cleanup S3 files
+         shell: bash
+         run: |
+           echo "🧹 Cleaning up S3 files..."
+           IFS=' ' read -ra PROJ_ARR <<< "${{ steps.parse-projects.outputs.projects-space }}"
+           for project in "${PROJ_ARR[@]}"; do
+             if [ -n "$project" ]; then
+               echo "Deleting S3 files for project: $project"
+               aws s3 rm s3://teamsantos-static-websites/$project/ --recursive --region eu-south-2 || echo "Failed to delete S3 files for $project"
+             fi
+           done
 
-          # Use Node.js to handle the entire API call and response processing
-          node -e "
-            const https = require('https');
-            const DELETED_PROJECTS = '${{ needs.detect-deletions.outputs.deleted-projects }}';
-            const projects = DELETED_PROJECTS.split(',');
-
-            const payload = JSON.stringify({ projects });
-
-            console.log('Cleanup payload:', payload);
-
-            const options = {
-              hostname: 'api.e-info.click',
-              path: '/cleanup-project',
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(payload)
-              }
-            };
-
-            const req = https.request(options, (res) => {
-              let data = '';
-
-              res.on('data', (chunk) => {
-                data += chunk;
-              });
-
-              res.on('end', () => {
-                try {
-                  const response = JSON.parse(data);
-                  const statusCode = response.statusCode || res.statusCode;
-
-                  console.log('API Response Status:', statusCode);
-
-                  if (statusCode === 200) {
-                    console.log('✅ Cleanup completed successfully');
-                    const body = JSON.parse(response.body || '{}');
-                    console.log('Results:', JSON.stringify(body, null, 2));
-                  } else if (statusCode === 207) {
-                    console.log('⚠️ Cleanup completed with some issues');
-                    const body = JSON.parse(response.body || '{}');
-                    console.log('Results:', JSON.stringify(body, null, 2));
-                  } else {
-                    console.log('❌ Cleanup failed');
-                    console.log('Response:', JSON.stringify(response, null, 2));
-                    process.exit(1);
-                  }
-                } catch (e) {
-                  console.log('❌ Failed to parse API response');
-                  console.log('Raw response:', data);
-                  process.exit(1);
-                }
-              });
-            });
-
-            req.on('error', (e) => {
-              console.error('❌ API call failed:', e);
-              process.exit(1);
-            });
-
-            req.write(payload);
-            req.end();
-          "
+       - name: Delete CloudFormation stacks
+         shell: bash
+         run: |
+           echo "🗑️ Deleting CloudFormation stacks..."
+           IFS=' ' read -ra PROJ_ARR <<< "${{ steps.parse-projects.outputs.projects-space }}"
+           for project in "${PROJ_ARR[@]}"; do
+             if [ -n "$project" ]; then
+               STACK_NAME="Site-$project"
+               echo "Checking stack: $STACK_NAME"
+               if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region us-east-1 >/dev/null 2>&1; then
+                 echo "Deleting stack: $STACK_NAME"
+                 aws cloudformation delete-stack --stack-name "$STACK_NAME" --region us-east-1
+                 aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME" --region us-east-1
+                 echo "✅ Stack $STACK_NAME deleted successfully"
+               else
+                 echo "⚠️ Stack $STACK_NAME does not exist, skipping"
+               fi
+             fi
+           done
 
       - name: Cleanup Summary
         shell: bash
