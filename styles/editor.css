@@ -175,7 +175,7 @@ body {
     display: flex;
     flex-direction: column;
     position: relative;
-    border: none;
+    border: 1px solid #6b7280;
     max-width: 480px;
     width: 90vw;
 }
@@ -260,7 +260,7 @@ body {
     font-size: 17px;
     font-weight: 400;
     line-height: 1.7;
-    color: #0f172a;
+    color: #0f172a !important;
     resize: none;
     padding: 0;
     letter-spacing: -0.01em;
@@ -827,7 +827,7 @@ body {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
-    color: #374151;
+    color: #374151 !important;
     font-size: 14px;
 }
 
@@ -840,7 +840,7 @@ body {
     transition: border-color 0.2s ease;
     box-sizing: border-box;
     background: #ffffff;
-    color: #0f172a;
+    color: #0f172a !important;
 }
 
 .form-group input:focus {

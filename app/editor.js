@@ -195,7 +195,7 @@ class TemplateEditor {
         modal.innerHTML = `
             <div class="modern-text-editor-card">
                 <div class="editor-card-content">
-                    <p style="margin-bottom: 20px; color: #374151;">Enter the verification code sent to your email:</p>
+                    <p style="margin-bottom: 20px; color: #374151 !important;">Enter the verification code sent to your email:</p>
                     <div class="form-group">
                         <input type="text" id="verification-code" placeholder="Enter code" required>
                     </div>
