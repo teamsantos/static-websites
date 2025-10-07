@@ -565,10 +565,8 @@ class TemplateEditor {
         event.preventDefault();
         event.stopPropagation();
 
-        // Cancel any current editing
         this.cancelCurrentEdit();
 
-        // Start editing the clicked element
         if (element.hasAttribute('data-text-id')) {
             this.startTextEditing(element);
         } else if (element.hasAttribute('data-image-src')) {
@@ -709,7 +707,7 @@ class TemplateEditor {
         console.log('newText:', newText);
         console.log('currentEditingElement:', this.currentEditingElement);
 
-        if (newText && this.currentEditingElement) {
+        if (this.currentEditingElement) {
             const textId = this.currentEditingElement.getAttribute('data-text-id');
             console.log('textId:', textId);
 
