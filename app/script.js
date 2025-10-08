@@ -8,7 +8,7 @@ const templatesURL = `templates.${baseURL}`;
 
 async function createCheckout(product_id) {
     try {
-        const response = await fetch("https://api.e-info.click/checkout-session", {
+        const response = await fetch("https://pay.e-info.click/checkout-session", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
