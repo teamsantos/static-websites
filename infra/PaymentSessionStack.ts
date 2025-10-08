@@ -101,7 +101,7 @@ export class StripeCheckoutStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, "StripeApiCustomUrl", {
-      value: `https://pay.${domain}/checkout-session`,
+      value: `https://api.${domain}/checkout-session`,
       description: "Custom domain URL for Stripe checkout",
     });
   }
