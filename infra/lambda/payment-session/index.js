@@ -17,13 +17,13 @@ export const handler = async (event) => {
     }
 
     const origin = event.headers?.origin || event.headers?.Origin;
-    const allowedOrigins = [
-        "https://editor.e-info.click",
-        "https://ssh.e-info.click",
-        "http://89.152.33.66",
-        "https://89.152.33.66",
-        "https://e-info.click"
-    ];
+    // const allowedOrigins = [
+    //     "https://editor.e-info.click",
+    //     "https://ssh.e-info.click",
+    //     "http://89.152.33.66",
+    //     "https://89.152.33.66",
+    //     "https://e-info.click"
+    // ];
 
     // const isAllowedOrigin =
     //     !origin ||
