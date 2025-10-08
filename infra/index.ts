@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import { BucketStack } from "./bucketStack";
 import { CreateProjectStack } from "./CreateProjectStack";
 import { ProjectSite } from "./ProjectStack";
+import { StripeCheckoutStack } from "./PaymentSessionStack";
 
 const app = new cdk.App();
 
@@ -43,7 +44,6 @@ new CreateProjectStack(app, "CreateProjectStack", {
 
 new StripeCheckoutStack(app, "StripeCheckoutStack", {
   domain: config.domain,
-  certificateRegion: config.certificateRegion,
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
   frontendUrl: process.env.FRONTEND_URL || "",
   env: {
