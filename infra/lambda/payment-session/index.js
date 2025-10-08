@@ -29,13 +29,13 @@ export const handler = async (event) => {
         !origin ||
         allowedOrigins.some((allowed) => origin === allowed || origin.startsWith(allowed));
 
-    if (!isAllowedOrigin) {
-        return {
-            statusCode: 403,
-            headers: corsHeaders("*"),
-            body: JSON.stringify({ message: "Forbidden" }),
-        };
-    }
+    // if (!isAllowedOrigin) {
+    //     return {
+    //         statusCode: 403,
+    //         headers: corsHeaders("*"),
+    //         body: JSON.stringify({ message: "Forbidden" }),
+    //     };
+    // }
 
     let requestBody;
     try {
