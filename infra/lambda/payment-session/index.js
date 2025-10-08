@@ -63,7 +63,7 @@ export const handler = async (event) => {
     try {
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
-            mode = "subscription",
+            mode: "subscription",
             line_items: [
                 {
                     price: priceId, // ✅ Use existing price from Stripe
