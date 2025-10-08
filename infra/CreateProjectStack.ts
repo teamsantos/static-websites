@@ -129,6 +129,38 @@ export class CreateProjectStack extends cdk.Stack {
             ],
         });
 
+        checkoutResource.addMethod(
+          "OPTIONS",
+          new apigateway.MockIntegration({
+            integrationResponses: [
+              {
+                statusCode: "200",
+                responseParameters: {
+                  "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'",
+                  "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'",
+                  "method.response.header.Access-Control-Allow-Origin": "'*'",
+                },
+              },
+            ],
+            passthroughBehavior: apigateway.PassthroughBehavior.NEVER,
+            requestTemplates: {
+              "application/json": '{"statusCode": 200}',
+            },
+          }),
+          {
+            methodResponses: [
+              {
+                statusCode: "200",
+                responseParameters: {
+                  "method.response.header.Access-Control-Allow-Headers": true,
+                  "method.response.header.Access-Control-Allow-Methods": true,
+                  "method.response.header.Access-Control-Allow-Origin": true,
+                },
+              },
+            ],
+          }
+        );
+
         new cdk.CfnOutput(this, 'ApiUrl', {
             value: api.url,
             description: 'API Gateway URL for creating projects (restricted to allowed origins)',
