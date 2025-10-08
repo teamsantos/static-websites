@@ -53,7 +53,7 @@ const injectPlans = (plans) => {
             <div class="template-content template-button">
                 <button 
                   class="btn btn-primary btn-full pay-btn"
-                  data-product="${plan.stripe_product_id}">
+                  data-product="${plan.stripe_price_id}">
                   Pay Now
                 </button>
             </div>
