@@ -48,15 +48,15 @@ export const handler = async (event) => {
         };
     }
 
-    const { email, name: projectName, html, priceId } = requestBody;
+    //const { email, name: projectName, html, priceId } = requestBody;
 
-    if (!email || !projectName || !html || !priceId) {
-        return {
-            statusCode: 400,
-            headers: corsHeaders(origin),
-            body: JSON.stringify({ error: "Missing required fields: email, name, html, priceId" }),
-        };
-    }
+    // if (!email || !projectName || !html || !priceId) {
+    //     return {
+    //         statusCode: 400,
+    //         headers: corsHeaders(origin),
+    //         body: JSON.stringify({ error: "Missing required fields: email, name, html, priceId" }),
+    //     };
+    // }
 
     const operationKey = uuidv4();
 
@@ -67,7 +67,7 @@ export const handler = async (event) => {
             line_items: [
                 {
                     price: priceId, // ✅ Use existing price from Stripe
-                    quantity: 1,
+                    quantity: 1
                 },
             ],
             success_url: `${process.env.FRONTEND_URL}/success?key=${operationKey}`,
@@ -79,7 +79,7 @@ export const handler = async (event) => {
             headers: corsHeaders(origin),
             body: JSON.stringify({
                 sessionId: session.id,
-                sessionUrl: session.url,
+                sessionUrl: session.url
             }),
         };
     } catch (error) {
