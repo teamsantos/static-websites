@@ -532,6 +532,17 @@ class TemplateEditor {
         });
     }
 
+    createPlusDivider() {
+        const divider = document.createElement('div');
+        divider.className = 'plus-divider';
+        divider.innerHTML = `
+        <div class="divider-line"></div>
+        <span class="plus-icon">+</span>
+        <div class="divider-line"></div>
+    `;
+        return divider;
+    }
+
     loadImageFiles(doc) {
         // Try to load image files from the template
         const imageElements = doc.querySelectorAll('[data-image-src]');
