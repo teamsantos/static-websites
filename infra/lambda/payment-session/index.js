@@ -17,46 +17,46 @@ export const handler = async (event) => {
     }
 
     const origin = event.headers?.origin || event.headers?.Origin;
-    // const allowedOrigins = [
-    //     "https://editor.e-info.click",
-    //     "https://ssh.e-info.click",
-    //     "http://89.152.33.66",
-    //     "https://89.152.33.66",
-    //     "https://e-info.click"
-    // ];
+    const allowedOrigins = [
+        "https://editor.e-info.click",
+        "https://ssh.e-info.click",
+        "http://89.152.33.66",
+        "https://89.152.33.66",
+        "https://e-info.click"
+    ];
 
-    // const isAllowedOrigin =
-    //     !origin ||
-    //     allowedOrigins.some((allowed) => origin === allowed || origin.startsWith(allowed));
+    const isAllowedOrigin =
+        !origin ||
+        allowedOrigins.some((allowed) => origin === allowed || origin.startsWith(allowed));
 
-    // if (!isAllowedOrigin) {
-    //     return {
-    //         statusCode: 403,
-    //         headers: corsHeaders("*"),
-    //         body: JSON.stringify({ message: "Forbidden" }),
-    //     };
-    // }
+    if (!isAllowedOrigin) {
+        return {
+            statusCode: 403,
+            headers: corsHeaders("*"),
+            body: JSON.stringify({ message: "Forbidden" }),
+        };
+    }
 
-    // let requestBody;
-    // try {
-    //     requestBody = JSON.parse(event.body);
-    // } catch (error) {
-    //     return {
-    //         statusCode: 400,
-    //         headers: corsHeaders(origin),
-    //         body: JSON.stringify({ error: "Invalid JSON in request body" }),
-    //     };
-    // }
+    let requestBody;
+    try {
+        requestBody = JSON.parse(event.body);
+    } catch (error) {
+        return {
+            statusCode: 400,
+            headers: corsHeaders(origin),
+            body: JSON.stringify({ error: "Invalid JSON in request body" }),
+        };
+    }
 
-    //const { email, name: projectName, html, priceId } = requestBody;
+    const { email, name: projectName, html, priceId } = requestBody;
 
-    // if (!email || !projectName || !html || !priceId) {
-    //     return {
-    //         statusCode: 400,
-    //         headers: corsHeaders(origin),
-    //         body: JSON.stringify({ error: "Missing required fields: email, name, html, priceId" }),
-    //     };
-    // }
+    if (!email || !projectName || !html || !priceId) {
+        return {
+            statusCode: 400,
+            headers: corsHeaders(origin),
+            body: JSON.stringify({ error: "Missing required fields: email, name, html, priceId" }),
+        };
+    }
 
     const operationKey = uuidv4();
 
