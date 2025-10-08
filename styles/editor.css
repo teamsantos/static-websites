@@ -872,3 +872,29 @@ body {
     border-top: 1px solid rgba(14, 165, 233, 0.1);
     background: rgba(248, 250, 252, 0.5);
 }
+
+.plus-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+    opacity: 0.2;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+}
+
+.plus-divider:hover {
+    opacity: 1;
+}
+
+.divider-line {
+    flex: 1;
+    height: 1px;
+    background-color: currentColor;
+}
+
+.plus-icon {
+    font-size: 18px;
+    font-weight: 300;
+    user-select: none;
+}

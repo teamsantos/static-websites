@@ -517,6 +517,17 @@ class TemplateEditor {
         });
     }
 
+    createPlusDivider() {
+        const divider = document.createElement('div');
+        divider.className = 'plus-divider';
+        divider.innerHTML = `
+        <div class="divider-line"></div>
+        <span class="plus-icon">+</span>
+        <div class="divider-line"></div>
+    `;
+        return divider;
+    }
+
     loadTranslationFiles(doc) {
         // Try to load translation files from the template
         // This is a simplified version - in a real implementation,
@@ -528,19 +539,22 @@ class TemplateEditor {
             const textId = element.getAttribute('data-text-id');
             if (textId) {
                 this.translations[this.currentLanguage][textId] = element.textContent.trim();
+
+                // Create wrapper div
+                const wrapper = document.createElement('div');
+                wrapper.className = 'lang-element-wrapper';
+
+                // Insert wrapper before the element
+                element.parentNode.insertBefore(wrapper, element);
+
+                // Move element into wrapper
+                wrapper.appendChild(element);
+
+                // Create and add plus divider
+                const divider = this.createPlusDivider();
+                wrapper.appendChild(divider);
             }
         });
-    }
-
-    createPlusDivider() {
-        const divider = document.createElement('div');
-        divider.className = 'plus-divider';
-        divider.innerHTML = `
-        <div class="divider-line"></div>
-        <span class="plus-icon">+</span>
-        <div class="divider-line"></div>
-    `;
-        return divider;
     }
 
     loadImageFiles(doc) {
