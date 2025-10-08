@@ -41,6 +41,17 @@ new CreateProjectStack(app, "CreateProjectStack", {
     },
 });
 
+new StripeCheckoutStack(app, "StripeCheckoutStack", {
+  domain: config.domain,
+  certificateRegion: config.certificateRegion,
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
+  frontendUrl: process.env.FRONTEND_URL || "",
+  env: {
+    account: account,
+    region: config.region,
+  },
+});
+
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
 const templatesParam = app.node.tryGetContext("templates") as string | undefined;
 

@@ -46,19 +46,6 @@ export class CreateProjectStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(30),
         });
 
-        const createPaymentSesionFunction = new lambda.Function(this, 'CreatePaymentSessionFunction', {
-            runtime: lambda.Runtime.NODEJS_18_X,
-            code: lambda.Code.fromAsset('lambda/payment-session'),
-            handler: 'index.handler',
-            environment: {
-                STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY!,
-                FRONTEND_URL: process.env.FRONTEND_URL!
-            },
-            timeout: cdk.Duration.seconds(30),
-        });
-
-
-
         // Grant permissions to read the secrets
         githubTokenSecret.grantRead(createProjectFunction);
         githubConfigSecret.grantRead(createProjectFunction);
@@ -73,8 +60,6 @@ export class CreateProjectStack extends cdk.Stack {
             actions: ['ses:SendEmail'],
             resources: ['*'],
         }));
-
-
 
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
@@ -144,28 +129,6 @@ export class CreateProjectStack extends cdk.Stack {
             ],
         });
 
-        const createPaymentSessionResource = api.root.addResource('create-payment-session');
-        createPaymentSessionResource.addMethod(
-            'POST',
-            new apigateway.LambdaIntegration(createPaymentSesionFunction, {
-                integrationResponses: [
-                    { statusCode: '200' },
-                    { statusCode: '400' },
-                    { statusCode: '403' },
-                    { statusCode: '500' },
-                ],
-            }),
-            {
-                methodResponses: [
-                    { statusCode: '200' },
-                    { statusCode: '400' },
-                    { statusCode: '403' },
-                    { statusCode: '500' },
-                ],
-            }
-        );
-
-
         new cdk.CfnOutput(this, 'ApiUrl', {
             value: api.url,
             description: 'API Gateway URL for creating projects (restricted to allowed origins)',
@@ -174,18 +137,6 @@ export class CreateProjectStack extends cdk.Stack {
             value: `https://api.${domain}/create-project`,
             description: 'Custom domain URL for creating projects',
         });
-
-        // Outputs for Payment Session API
-        new cdk.CfnOutput(this, 'PaymentSessionApiUrl', {
-            value: `${api.url}create-payment-session`,
-            description: 'API Gateway URL for creating Stripe payment sessions',
-        });
-
-        new cdk.CfnOutput(this, 'PaymentSessionApiCustomUrl', {
-            value: `https://api.${domain}/create-payment-session`,
-            description: 'Custom domain URL for creating Stripe payment sessions',
-        });
-
 
     }
 }
