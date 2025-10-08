@@ -70,13 +70,6 @@ export const handler = async (event) => {
                     quantity: 1,
                 },
             ],
-            metadata: {
-                operationKey,
-                email,
-                projectName,
-                html,
-            },
-            customer_email: email,
             success_url: `${process.env.FRONTEND_URL}/success?key=${operationKey}`,
             cancel_url: `${process.env.FRONTEND_URL}/cancel?key=${operationKey}`,
         });
