@@ -22,6 +22,7 @@ export const handler = async (event) => {
         "https://ssh.e-info.click",
         "http://89.152.33.66",
         "https://89.152.33.66",
+        "https://e-info.click",
     ];
 
     const isAllowedOrigin =

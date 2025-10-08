@@ -50,11 +50,13 @@ const injectPlans = (plans) => {
             <ul>
                 ${plan.description.map(point => `<li><p>${point}</p></li>`).join("")}
             </ul>
-            <button 
-              class="btn btn-primary btn-full pay-btn"
-              data-product="${plan.stripe_product_id}">
-              Pay Now
-            </button>
+            <div class="template-content template-button">
+                <button 
+                  class="btn btn-primary btn-full pay-btn"
+                  data-product="${plan.stripe_product_id}">
+                  Pay Now
+                </button>
+            </div>
         </div>
     `).join("");
 
