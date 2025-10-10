@@ -5,6 +5,7 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import { CertificateManager } from "./CertificateManager";
 
 interface MineProjectSiteProps extends cdk.StackProps {
     projectName: string;
@@ -23,10 +24,12 @@ export class ProjectSite extends cdk.Stack {
             domainName: props.hostedZoneDomainName
         });
 
-        const certificate = new acm.Certificate(this, 'Certificate', {
+        const certManager = new CertificateManager(this, 'CertManager', {
             domainName: props.domainName,
-            validation: acm.CertificateValidation.fromDns(hostedZone),
+            hostedZone: hostedZone,
         });
+
+        const certificate = certManager.certificate;
 
         const siteBucket = s3.Bucket.fromBucketAttributes(
             this,
