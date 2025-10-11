@@ -539,18 +539,10 @@ class TemplateEditor {
             const textId = element.getAttribute('data-text-id');
             if (textId) {
                 this.translations[this.currentLanguage][textId] = element.textContent.trim();
-
-                // Create wrapper div
                 const wrapper = document.createElement('div');
                 wrapper.className = 'lang-element-wrapper';
-
-                // Insert wrapper before the element
                 element.parentNode.insertBefore(wrapper, element);
-
-                // Move element into wrapper
                 wrapper.appendChild(element);
-
-                // Create and add plus divider
                 const divider = this.createPlusDivider();
                 wrapper.appendChild(divider);
             }
@@ -561,6 +553,19 @@ class TemplateEditor {
         // Try to load image files from the template
         const imageElements = doc.querySelectorAll('[data-image-src]');
         this.images = {};
+
+        imageElements.forEach(element => {
+            const textId = element.getAttribute('data-image-src');
+            if (textId) {
+                this.translations[this.currentLanguage][textId] = element.textContent.trim();
+                const wrapper = document.createElement('div');
+                wrapper.className = 'lang-element-wrapper';
+                element.parentNode.insertBefore(wrapper, element);
+                wrapper.appendChild(element);
+                const divider = this.createPlusDivider();
+                wrapper.appendChild(divider);
+            }
+        });
 
         imageElements.forEach(element => {
             const imageId = element.getAttribute('data-image-src');
