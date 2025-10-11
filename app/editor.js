@@ -568,6 +568,14 @@ class TemplateEditor {
                     subtree: true          // Watch all descendants
                     // NOTE: We're NOT watching attributes, so classes are safe
                 });
+
+                // Add click handler to plusDivider to open text editing modal
+                divider.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.startTextEditing(element);
+                });
+
                 wrapper.appendChild(divider);
             }
         });
