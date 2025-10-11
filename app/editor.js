@@ -529,21 +529,45 @@ class TemplateEditor {
     }
 
     loadTranslationFiles(doc) {
-        // Try to load translation files from the template
-        // This is a simplified version - in a real implementation,
-        // you'd need to handle file paths properly
         const langElements = doc.querySelectorAll('[data-text-id]');
         this.translations[this.currentLanguage] = {};
-
         langElements.forEach(element => {
             const textId = element.getAttribute('data-text-id');
             if (textId) {
                 this.translations[this.currentLanguage][textId] = element.textContent.trim();
                 const wrapper = document.createElement('div');
                 wrapper.className = 'lang-element-wrapper';
+
+                // Make wrapper inherit display and layout properties
+                wrapper.style.display = 'contents';
+
                 element.parentNode.insertBefore(wrapper, element);
                 wrapper.appendChild(element);
                 const divider = this.createPlusDivider();
+                // Function to update divider visibility based on text content
+                const updateDividerVisibility = () => {
+                    const hasText = element.textContent.trim().length > 0;
+                    divider.style.display = hasText ? 'none' : 'flex';
+                };
+                // Set initial visibility
+                updateDividerVisibility();
+                // Create MutationObserver to watch for text changes ONLY
+                const observer = new MutationObserver((mutations) => {
+                    // Only update if the mutation affected text content, not attributes
+                    const hasContentChange = mutations.some(mutation =>
+                        mutation.type === 'characterData' || mutation.type === 'childList'
+                    );
+                    if (hasContentChange) {
+                        updateDividerVisibility();
+                    }
+                });
+                // Start observing the element for changes
+                observer.observe(element, {
+                    childList: true,        // Watch for added/removed children
+                    characterData: true,    // Watch for text content changes
+                    subtree: true          // Watch all descendants
+                    // NOTE: We're NOT watching attributes, so classes are safe
+                });
                 wrapper.appendChild(divider);
             }
         });
@@ -553,20 +577,38 @@ class TemplateEditor {
         // Try to load image files from the template
         const imageElements = doc.querySelectorAll('[data-image-src]');
         this.images = {};
-
         imageElements.forEach(element => {
-            const textId = element.getAttribute('data-image-src');
-            if (textId) {
-                this.translations[this.currentLanguage][textId] = element.textContent.trim();
+            const imageSrc = element.getAttribute('data-image-src');
+            if (imageSrc) {
+                this.translations[this.currentLanguage][imageSrc] = element.textContent.trim();
                 const wrapper = document.createElement('div');
                 wrapper.className = 'lang-element-wrapper';
+
+                // Make wrapper inherit display and layout properties
+                wrapper.style.display = 'contents';
+
                 element.parentNode.insertBefore(wrapper, element);
                 wrapper.appendChild(element);
                 const divider = this.createPlusDivider();
+                // Function to update divider visibility based on src attribute
+                const updateDividerVisibility = () => {
+                    const hasSrc = element.getAttribute('src') && element.getAttribute('src').trim().length > 0;
+                    divider.style.display = hasSrc ? 'none' : 'flex';
+                };
+                // Set initial visibility
+                updateDividerVisibility();
+                // Create MutationObserver to watch for attribute changes
+                const observer = new MutationObserver(() => {
+                    updateDividerVisibility();
+                });
+                // Start observing the element for attribute changes
+                observer.observe(element, {
+                    attributes: true,           // Watch for attribute changes
+                    attributeFilter: ['src']    // Only watch the 'src' attribute
+                });
                 wrapper.appendChild(divider);
             }
         });
-
         imageElements.forEach(element => {
             const imageId = element.getAttribute('data-image-src');
             if (imageId) {

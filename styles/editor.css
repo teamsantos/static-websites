@@ -898,3 +898,7 @@ body {
     font-weight: 300;
     user-select: none;
 }
+
+.lang-element-wrapper {
+    display: contents;
+}

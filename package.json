@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build && EDITOR_BUILD=true vite build",
     "preview": "vite preview",
-    "editor": "serve . -s -l 3000"
+    "editor": "npx http-server . -p 3000 -c-1"
   },
   "repository": {
     "type": "git",
