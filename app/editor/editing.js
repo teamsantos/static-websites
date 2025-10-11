@@ -186,10 +186,8 @@ export class EditingManager {
         this.currentModal = null; // Store modal reference
         this.selectedImageSrc = null; // Store selected image temporarily
         element.classList.add('editing');
-
         const imageId = element.getAttribute('data-image-src');
         const currentSrc = this.editor.images[imageId] || element.getAttribute('src');
-
         // Create image editor modal
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -200,7 +198,16 @@ export class EditingManager {
         <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
     </div>
     <div class="image-editor-content">
-        ${currentSrc ? `<img src="${currentSrc}" alt="Current image" class="current-image" id="image-preview">` : '<div id="image-preview" style="display: none;"></div>'}
+        <div style="position: relative; display: inline-block;">
+            ${currentSrc ? `<img src="${currentSrc}" alt="Current image" class="current-image" id="image-preview">` : '<div id="image-preview" style="display: none;"></div>'}
+            ${currentSrc ? `
+            <button class="image-remove-btn" onclick="window.templateEditorInstance.removeImage('${imageId}', this)" title="Remove image">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>` : ''}
+        </div>
         <div class="image-upload-area" onclick="document.getElementById('image-file-input').click()">
             <div style="font-size: 2rem; margin-bottom: 0.5rem;">📁</div>
             <div>Click to upload new image</div>
@@ -213,10 +220,8 @@ export class EditingManager {
     </div>
 </div>
 `;
-
         this.currentModal = modal;
         document.body.appendChild(modal);
-
         // Handle drag and drop
         const uploadArea = modal.querySelector('.image-upload-area');
         uploadArea.addEventListener('dragover', (e) => {
@@ -234,6 +239,25 @@ export class EditingManager {
                 this.handleDroppedImage(files[0], imageId, modal);
             }
         });
+    }
+
+    removeImage(button) {
+        const modal = button.closest('.modal');
+        const preview = modal.querySelector('#image-preview');
+        const removeBtn = modal.querySelector('.image-remove-btn');
+
+        // Clear the image
+        this.selectedImageSrc = '';
+
+        // Update preview
+        if (preview.tagName === 'IMG') {
+            preview.style.display = 'none';
+        }
+
+        // Hide remove button
+        if (removeBtn) {
+            removeBtn.style.display = 'none';
+        }
     }
 
     handleImageFile(event) {

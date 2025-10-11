@@ -902,3 +902,35 @@ body {
 .lang-element-wrapper {
     display: contents;
 }
+
+.image-remove-btn {
+    position: absolute;
+    top: 2rem;
+    right: 0.5rem;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+    z-index: 10;
+}
+
+.image-remove-btn:hover {
+    background: rgba(220, 38, 38, 1);
+    transform: scale(1.05);
+}
+
+.image-remove-btn:active {
+    transform: scale(0.95);
+}
+
+.image-remove-btn svg {
+    pointer-events: none;
+}
