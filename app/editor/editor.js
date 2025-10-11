@@ -63,6 +63,10 @@ class TemplateEditor {
         document.addEventListener('keydown', (e) => this.handleKeydown(e));
     }
 
+    handleImageFile(event) {
+        this.editing.handleImageFile(event);
+    }
+
     // Delegate to managers
     openModal() {
         this.modals.openModal();
@@ -97,6 +101,10 @@ class TemplateEditor {
 
     saveModernTextEdit(saveBtn) {
         this.editing.saveModernTextEdit(saveBtn);
+    }
+
+    saveImageEdit(imageId, saveBtn) {
+        this.editing.saveImageEdit(imageId, saveBtn);
     }
 
     // Utility methods delegated to UtilsManager

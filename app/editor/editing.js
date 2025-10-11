@@ -183,6 +183,8 @@ export class EditingManager {
 
     startImageEditing(element) {
         this.editor.currentEditingElement = element;
+        this.currentModal = null; // Store modal reference
+        this.selectedImageSrc = null; // Store selected image temporarily
         element.classList.add('editing');
 
         const imageId = element.getAttribute('data-image-src');
@@ -198,7 +200,7 @@ export class EditingManager {
         <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
     </div>
     <div class="image-editor-content">
-        ${currentSrc ? `<img src="${currentSrc}" alt="Current image" class="current-image">` : ''}
+        ${currentSrc ? `<img src="${currentSrc}" alt="Current image" class="current-image" id="image-preview">` : '<div id="image-preview" style="display: none;"></div>'}
         <div class="image-upload-area" onclick="document.getElementById('image-file-input').click()">
             <div style="font-size: 2rem; margin-bottom: 0.5rem;">📁</div>
             <div>Click to upload new image</div>
@@ -206,12 +208,13 @@ export class EditingManager {
         </div>
         <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 2rem;">
             <button class="modal-btn modal-btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-            <button class="modal-btn modal-btn-primary" onclick="templateEditor.saveImageEdit('${imageId}', this)">Save Changes</button>
+            <button class="modal-btn modal-btn-primary" onclick="window.templateEditorInstance.saveImageEdit('${imageId}', this)">Save Changes</button>
         </div>
     </div>
 </div>
 `;
 
+        this.currentModal = modal;
         document.body.appendChild(modal);
 
         // Handle drag and drop
@@ -241,34 +244,51 @@ export class EditingManager {
         }
     }
 
-    handleDroppedImage(file, imageId, modal) {
+    handleDroppedImage(file, imageId) {
         this.processNewImage(file, imageId);
-        modal.remove();
+        // Don't remove modal - let user preview and save
     }
 
-    processNewImage(file, imageId) {
+    processNewImage(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
             const newSrc = e.target.result;
+            this.selectedImageSrc = newSrc;
 
-            // Update element
-            if (this.editor.currentEditingElement) {
-                this.editor.currentEditingElement.setAttribute('src', newSrc);
+            // Update modal preview instead of actual element
+            if (this.currentModal) {
+                const previewImg = this.currentModal.querySelector('#image-preview');
+                if (previewImg) {
+                    if (previewImg.tagName === 'IMG') {
+                        previewImg.src = newSrc;
+                    } else {
+                        // Replace the placeholder div with an img element
+                        const imgElement = document.createElement('img');
+                        imgElement.src = newSrc;
+                        imgElement.alt = "New image";
+                        imgElement.className = "current-image";
+                        imgElement.id = "image-preview";
+                        previewImg.parentNode.replaceChild(imgElement, previewImg);
+                    }
+                }
             }
-
-            // Update images object
-            this.editor.images[imageId] = newSrc;
-
-            this.editor.ui.showStatus('Image updated successfully', 'success');
-            this.editor.cancelCurrentEdit();
         };
         reader.readAsDataURL(file);
     }
 
     saveImageEdit(imageId, saveBtn) {
-        // This would be called from the modal
+        // Apply the selected image to the actual element
+        if (this.selectedImageSrc && this.editor.currentEditingElement) {
+            this.editor.currentEditingElement.setAttribute('src', this.selectedImageSrc);
+            this.editor.images[imageId] = this.selectedImageSrc;
+            this.editor.ui.showStatus('Image updated successfully', 'success');
+        }
+
+        // Close modal and reset editing state
         const modal = saveBtn.closest('.modal');
         modal.remove();
         this.editor.cancelCurrentEdit();
+        this.currentModal = null;
+        this.selectedImageSrc = null;
     }
 }
