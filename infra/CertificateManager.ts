@@ -31,8 +31,8 @@ export class CertificateManager extends Construct {
         super(scope, id);
         function getBaseDomain(domain: string): string {
             const parts = domain.split('.');
-            if (parts.length <= 2) return domain; 
-            parts.shift(); 
+            if (parts.length <= 2) return domain;
+            parts.shift();
             return parts.join('.');
         }
         const baseDomain = getBaseDomain(props.domainName);
