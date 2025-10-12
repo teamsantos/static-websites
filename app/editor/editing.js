@@ -26,6 +26,7 @@ export class EditingManager {
 
         const textId = element.getAttribute('data-text-id');
         const currentText = this.editor.translations[this.editor.currentLanguage]?.[textId] || element.textContent;
+        const currentColor = this.editor.textColors[textId] || getComputedStyle(element).color || '#000000';
 
         // Create modern floating editor modal (like image editor)
         const editorModal = document.createElement('div');
@@ -33,6 +34,12 @@ export class EditingManager {
         editorModal.innerHTML = `
             <div class="modern-text-editor-card">
                 <div class="editor-card-content">
+                    <div class="text-editor-controls">
+                        <div class="color-picker-group">
+                            <label for="text-color-picker">Text Color:</label>
+                            <input type="color" id="text-color-picker" value="${currentColor}" class="color-picker">
+                        </div>
+                    </div>
                     <textarea class="modern-text-input" placeholder="Enter your text here...">${currentText}</textarea>
                 </div>
                 <div class="editor-card-footer">
@@ -52,12 +59,12 @@ export class EditingManager {
         // Calculate optimal dimensions for the card
         const rect = element.getBoundingClientRect();
         const minWidth = 440; // Minimum readable width for modern card
-        const minHeight = 340; // Minimum readable height for modern card
+        const minHeight = 380; // Minimum readable height for modern card (increased for color picker)
         const maxWidth = Math.min(window.innerWidth - 48, 520);
         const maxHeight = Math.min(window.innerHeight - 160, 640);
 
         const optimalWidth = Math.max(minWidth, Math.min(rect.width + 100, maxWidth));
-        const optimalHeight = Math.max(minHeight, Math.min(rect.height + 180, maxHeight));
+        const optimalHeight = Math.max(minHeight, Math.min(rect.height + 220, maxHeight)); // Increased for color picker
 
         const editorCard = editorModal.querySelector('.modern-text-editor-card');
         editorCard.style.width = optimalWidth + 'px';
@@ -147,10 +154,14 @@ export class EditingManager {
         console.log('modal found:', modal);
 
         const textarea = modal.querySelector('.modern-text-input');
+        const colorPicker = modal.querySelector('#text-color-picker');
         console.log('textarea found:', textarea);
+        console.log('colorPicker found:', colorPicker);
 
         const newText = textarea.value.trim();
+        const newColor = colorPicker.value;
         console.log('newText:', newText);
+        console.log('newColor:', newColor);
         console.log('currentEditingElement:', this.editor.currentEditingElement);
 
         if (this.editor.currentEditingElement) {
@@ -161,12 +172,20 @@ export class EditingManager {
             this.editor.currentEditingElement.textContent = newText;
             console.log('Element text updated');
 
+            // Update element color
+            this.editor.currentEditingElement.style.color = newColor;
+            console.log('Element color updated');
+
             // Update translations
             if (!this.editor.translations[this.editor.currentLanguage]) {
                 this.editor.translations[this.editor.currentLanguage] = {};
             }
             this.editor.translations[this.editor.currentLanguage][textId] = newText;
             console.log('Translations updated');
+
+            // Update text colors
+            this.editor.textColors[textId] = newColor;
+            console.log('Text colors updated');
 
             this.editor.ui.showStatus('Text updated successfully', 'success');
         } else {

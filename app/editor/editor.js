@@ -13,6 +13,7 @@ class TemplateEditor {
         this.templateContent = null;
         this.translations = {};
         this.images = {};
+        this.textColors = {};
         this.currentLanguage = 'en';
         this.currentEditingElement = null;
         this.mode = 'create'; // 'create' or 'save'

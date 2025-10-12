@@ -37,10 +37,11 @@ export class UtilsManager {
     }
 
     collectExportData() {
-        // Collect the current state for export: images, translations, and templateId
+        // Collect the current state for export: images, translations, textColors, and templateId
         return {
             images: this.editor.images,
             langs: this.editor.translations[this.editor.currentLanguage] || {},
+            textColors: this.editor.textColors,
             templateId: this.editor.templateId
         };
     }

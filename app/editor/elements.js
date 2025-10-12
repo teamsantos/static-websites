@@ -18,10 +18,14 @@ export class ElementManager {
     loadTranslationFiles(doc) {
         const langElements = doc.querySelectorAll('[data-text-id]');
         this.editor.translations[this.editor.currentLanguage] = {};
+        this.editor.textColors = {};
         langElements.forEach(element => {
             const textId = element.getAttribute('data-text-id');
             if (textId) {
                 this.editor.translations[this.editor.currentLanguage][textId] = element.textContent.trim();
+                // Store the current text color
+                const computedStyle = getComputedStyle(element);
+                this.editor.textColors[textId] = element.style.color || computedStyle.color || '#000000';
                 const wrapper = document.createElement('div');
                 wrapper.className = 'lang-element-wrapper';
 
@@ -125,6 +129,15 @@ export class ElementManager {
 
         editableElements.forEach(element => {
             element.classList.add('editable-element');
+
+            // Apply stored text colors to text elements
+            if (element.hasAttribute('data-text-id')) {
+                const textId = element.getAttribute('data-text-id');
+                if (this.editor.textColors[textId]) {
+                    element.style.color = this.editor.textColors[textId];
+                }
+            }
+
             // Always enable editing - no conditional logic needed
         });
     }
