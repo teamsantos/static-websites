@@ -52,7 +52,6 @@ class TemplateEditor {
 
     bindEvents() {
         // Editor controls
-        document.getElementById('manage-sections-btn').addEventListener('click', () => this.showSectionManager());
         document.getElementById('change-template-btn').addEventListener('click', () => {
             window.location.href = `https://${baseURL}/#templates`;
         });
@@ -74,10 +73,6 @@ class TemplateEditor {
     // Delegate to managers
     openModal() {
         this.modals.openModal();
-    }
-
-    showSectionManager() {
-        this.sections.showSectionManager();
     }
 
     async createProject() {

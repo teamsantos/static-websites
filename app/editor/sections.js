@@ -302,62 +302,6 @@ export class SectionManager {
     }
 
     /**
-     * Show the section manager modal
-     */
-    showSectionManager() {
-        // Create modal overlay
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-content section-manager-modal">
-                <div class="modal-header">
-                    <h3>Manage Sections</h3>
-                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="section-manager-content">
-                        <div class="add-section-section">
-                            <h4>Add New Section</h4>
-                            <div class="available-sections">
-                                ${this.getAvailableSections().map(section => `
-                                    <div class="section-option" onclick="window.templateEditorInstance.sections.addNewSection('${section.id}')">
-                                        <div class="section-icon">${this.getSectionIcon(section.id)}</div>
-                                        <div class="section-info">
-                                            <h5>${section.name}</h5>
-                                            <p>Add a ${section.name.toLowerCase()} to your template</p>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        ${this.removedSections.size > 0 ? `
-                        <div class="removed-sections-section">
-                            <h4>Restore Hidden Sections</h4>
-                            <div class="removed-sections-grid">
-                                ${Array.from(this.removedSections.entries()).map(([id, data]) => `
-                                    <div class="removed-section-option" onclick="window.templateEditorInstance.sections.reAddSection('${id}')">
-                                        <div class="section-icon">↺</div>
-                                        <div class="section-info">
-                                            <h5>${this.getSectionLabel(data.element, id)}</h5>
-                                            <p>Click to restore this section</p>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        ` : ''}
-                    </div>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-
-        // Add modal styles
-        this.addSectionManagerStyles();
-    }
-
-    /**
      * Get icon for section type
      */
     getSectionIcon(sectionType) {
