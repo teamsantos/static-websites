@@ -984,14 +984,14 @@ body {
     right: 10px;
     background: rgba(0, 0, 0, 0.8);
     color: white;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 4px;
     font-size: 12px;
     z-index: 1000;
     display: flex;
     align-items: center;
-    gap: 8px;
-    opacity: 0;
+    gap: 6px;
+    opacity: 0.7 !important;
     transition: opacity 0.2s;
     backdrop-filter: blur(4px);
 }
@@ -1031,6 +1031,20 @@ body {
 
 .section-hide-btn:hover {
     background: rgba(107, 114, 128, 0.8);
+}
+
+.section-bg-color-picker {
+    width: 24px;
+    height: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    cursor: pointer;
+    background: none;
+    margin-right: 4px;
+}
+
+.section-bg-color-picker:hover {
+    border-color: rgba(255, 255, 255, 0.6);
 }
 
 /* Re-add sections panel */

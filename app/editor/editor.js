@@ -14,6 +14,7 @@ class TemplateEditor {
         this.translations = {};
         this.images = {};
         this.textColors = {};
+        this.sectionBackgrounds = {};
         this.currentLanguage = 'en';
         this.currentEditingElement = null;
         this.mode = 'create'; // 'create' or 'save'

@@ -16,6 +16,7 @@ export class SectionManager {
         // Find all sections in the template
         const sections = templateContainer.querySelectorAll('section, header, footer, main');
         sections.forEach(section => {
+            this.applyStoredBackground(section);
             this.addSectionControls(section);
         });
 
@@ -24,9 +25,20 @@ export class SectionManager {
         potentialSections.forEach(div => {
             // Only add controls to divs that look like sections (have meaningful content)
             if (this.isSectionLike(div)) {
+                this.applyStoredBackground(div);
                 this.addSectionControls(div);
             }
         });
+    }
+
+    /**
+     * Apply stored background color to a section
+     */
+    applyStoredBackground(section) {
+        const sectionId = section.id;
+        if (sectionId && this.editor.sectionBackgrounds[sectionId]) {
+            section.style.backgroundColor = this.editor.sectionBackgrounds[sectionId];
+        }
     }
 
     /**
@@ -66,12 +78,21 @@ export class SectionManager {
         hideBtn.innerHTML = '×';
         hideBtn.onclick = () => this.removeSection(sectionId);
 
+        // Create background color picker
+        const bgColorBtn = document.createElement('input');
+        bgColorBtn.type = 'color';
+        bgColorBtn.className = 'section-bg-color-picker';
+        bgColorBtn.title = 'Change background color';
+        bgColorBtn.value = this.getSectionBackgroundColor(section);
+        bgColorBtn.onchange = (e) => this.changeSectionBackground(sectionId, e.target.value);
+
         // Create section label
         const sectionLabel = document.createElement('span');
         sectionLabel.className = 'section-label';
         sectionLabel.textContent = this.getSectionLabel(section, sectionId);
 
         controlContainer.appendChild(sectionLabel);
+        controlContainer.appendChild(bgColorBtn);
         controlContainer.appendChild(hideBtn);
 
         // Position the controls - always visible for easier access
@@ -227,6 +248,11 @@ export class SectionManager {
         // Show the section (it's already in its original position)
         sectionData.element.style.display = '';
 
+        // Re-apply stored background color
+        if (this.editor.sectionBackgrounds[sectionId]) {
+            sectionData.element.style.backgroundColor = this.editor.sectionBackgrounds[sectionId];
+        }
+
         // Remove from removed sections
         this.removedSections.delete(sectionId);
 
@@ -299,6 +325,59 @@ export class SectionManager {
         this.addSectionControls(sectionElement);
 
         this.editor.ui.showStatus(`New ${sectionTemplate.name} added!`, 'success');
+    }
+
+    /**
+     * Get the current background color of a section
+     */
+    getSectionBackgroundColor(section) {
+        const computedStyle = getComputedStyle(section);
+        const backgroundColor = section.style.backgroundColor || computedStyle.backgroundColor;
+
+        // If it's transparent or default, return a default color
+        if (!backgroundColor || backgroundColor === 'transparent' || backgroundColor === 'rgba(0, 0, 0, 0)') {
+            return '#ffffff'; // Default to white
+        }
+
+        // Convert RGB/RGBA to hex for the color picker
+        return this.rgbToHex(backgroundColor);
+    }
+
+    /**
+     * Convert RGB/RGBA color to hex
+     */
+    rgbToHex(color) {
+        // If it's already a hex color, return it
+        if (color.startsWith('#')) {
+            return color;
+        }
+
+        // Handle RGB/RGBA colors
+        const rgbMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
+        if (rgbMatch) {
+            const r = parseInt(rgbMatch[1]);
+            const g = parseInt(rgbMatch[2]);
+            const b = parseInt(rgbMatch[3]);
+            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+        }
+
+        return '#ffffff'; // Fallback
+    }
+
+    /**
+     * Change the background color of a section
+     */
+    changeSectionBackground(sectionId, color) {
+        const section = document.getElementById(sectionId) || document.querySelector(`[data-section-id="${sectionId}"]`)?.parentElement;
+        if (!section) return;
+
+        // Apply the background color
+        section.style.backgroundColor = color;
+
+        // Store the color for export
+        this.editor.sectionBackgrounds[sectionId] = color;
+
+        this.editor.ui.showStatus(`Section background changed to ${color}`, 'success');
     }
 
     /**

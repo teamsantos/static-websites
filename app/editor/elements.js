@@ -19,6 +19,7 @@ export class ElementManager {
         const langElements = doc.querySelectorAll('[data-text-id]');
         this.editor.translations[this.editor.currentLanguage] = {};
         this.editor.textColors = {};
+        this.editor.sectionBackgrounds = {};
         langElements.forEach(element => {
             const textId = element.getAttribute('data-text-id');
             if (textId) {
@@ -26,6 +27,52 @@ export class ElementManager {
                 // Store the current text color
                 const computedStyle = getComputedStyle(element);
                 this.editor.textColors[textId] = element.style.color || computedStyle.color || '#000000';
+            }
+        });
+
+        // Load section backgrounds
+        const sections = doc.querySelectorAll('section, header, footer, main, div[id]');
+        sections.forEach(section => {
+            const sectionId = section.id;
+            if (sectionId) {
+                const computedStyle = getComputedStyle(section);
+                const backgroundColor = section.style.backgroundColor || computedStyle.backgroundColor;
+                if (backgroundColor && backgroundColor !== 'transparent' && backgroundColor !== 'rgba(0, 0, 0, 0)') {
+                    this.editor.sectionBackgrounds[sectionId] = this.rgbToHex(backgroundColor);
+                }
+            }
+        });
+    }
+
+    /**
+     * Convert RGB/RGBA color to hex
+     */
+    rgbToHex(color) {
+        // If it's already a hex color, return it
+        if (color.startsWith('#')) {
+            return color;
+        }
+
+        // Handle RGB/RGBA colors
+        const rgbMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
+        if (rgbMatch) {
+            const r = parseInt(rgbMatch[1]);
+            const g = parseInt(rgbMatch[2]);
+            const b = parseInt(rgbMatch[3]);
+            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+        }
+
+        return '#ffffff'; // Fallback
+    }
+
+    loadImageFiles(doc) {
+        // Try to load image files from the template
+        const imageElements = doc.querySelectorAll('[data-image-src]');
+        this.editor.images = {};
+        imageElements.forEach(element => {
+            const imageSrc = element.getAttribute('data-image-src');
+            if (imageSrc) {
+                this.editor.translations[this.editor.currentLanguage][imageSrc] = element.textContent.trim();
                 const wrapper = document.createElement('div');
                 wrapper.className = 'lang-element-wrapper';
 
