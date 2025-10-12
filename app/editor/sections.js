@@ -59,12 +59,12 @@ export class SectionManager {
         controlContainer.className = 'section-controls';
         controlContainer.setAttribute('data-section-id', sectionId);
 
-        // Create remove button
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'section-control-btn section-remove-btn';
-        removeBtn.title = 'Hide section';
-        removeBtn.innerHTML = '🙈';
-        removeBtn.onclick = () => this.removeSection(sectionId);
+        // Create hide button
+        const hideBtn = document.createElement('button');
+        hideBtn.className = 'section-control-btn section-hide-btn';
+        hideBtn.title = 'Hide section';
+        hideBtn.innerHTML = '×';
+        hideBtn.onclick = () => this.removeSection(sectionId);
 
         // Create section label
         const sectionLabel = document.createElement('span');
@@ -72,7 +72,7 @@ export class SectionManager {
         sectionLabel.textContent = this.getSectionLabel(section, sectionId);
 
         controlContainer.appendChild(sectionLabel);
-        controlContainer.appendChild(removeBtn);
+        controlContainer.appendChild(hideBtn);
 
         // Position the controls
         controlContainer.style.cssText = `
@@ -334,7 +334,7 @@ export class SectionManager {
                             <div class="removed-sections-grid">
                                 ${Array.from(this.removedSections.entries()).map(([id, data]) => `
                                     <div class="removed-section-option" onclick="window.templateEditorInstance.sections.reAddSection('${id}')">
-                                        <div class="section-icon">🔄</div>
+                                        <div class="section-icon">↺</div>
                                         <div class="section-info">
                                             <h5>${this.getSectionLabel(data.element, id)}</h5>
                                             <p>Click to restore this section</p>
@@ -360,13 +360,13 @@ export class SectionManager {
      */
     getSectionIcon(sectionType) {
         const icons = {
-            hero: '🎯',
-            services: '🛠️',
-            about: 'ℹ️',
-            testimonials: '💬',
-            contact: '📧'
+            hero: '⊡',
+            services: '⚙',
+            about: 'ℹ',
+            testimonials: '❝',
+            contact: '✉'
         };
-        return icons[sectionType] || '📄';
+        return icons[sectionType] || '□';
     }
 
     /**
@@ -427,15 +427,17 @@ export class SectionManager {
             }
 
             .section-icon {
-                font-size: 24px;
+                font-size: 18px;
                 margin-right: 16px;
-                width: 40px;
-                height: 40px;
+                width: 36px;
+                height: 36px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 background: #f3f4f6;
-                border-radius: 8px;
+                border-radius: 6px;
+                color: #6b7280;
+                font-weight: bold;
             }
 
             .section-info h5 {
@@ -453,6 +455,7 @@ export class SectionManager {
 
             .removed-section-option .section-icon {
                 background: #fef3c7;
+                color: #92400e;
             }
 
             .removed-section-option .section-info h5 {
@@ -471,9 +474,9 @@ export class SectionManager {
                 }
 
                 .section-icon {
-                    width: 32px;
-                    height: 32px;
-                    font-size: 18px;
+                    width: 30px;
+                    height: 30px;
+                    font-size: 16px;
                 }
             }
         `;
