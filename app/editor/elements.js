@@ -101,6 +101,12 @@ export class ElementManager {
                     attributes: true,           // Watch for attribute changes
                     attributeFilter: ['src']    // Only watch the 'src' attribute
                 });
+
+                divider.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.editor.editing.startImageEditing(element);
+                });
                 wrapper.appendChild(divider);
             }
         });
