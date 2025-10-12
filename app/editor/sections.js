@@ -74,7 +74,7 @@ export class SectionManager {
         controlContainer.appendChild(sectionLabel);
         controlContainer.appendChild(hideBtn);
 
-        // Position the controls
+        // Position the controls - always visible for easier access
         controlContainer.style.cssText = `
             position: absolute;
             top: 10px;
@@ -88,17 +88,19 @@ export class SectionManager {
             display: flex;
             align-items: center;
             gap: 8px;
-            opacity: 0;
+            opacity: 0.7;
             transition: opacity 0.2s;
         `;
 
-        // Show controls on hover
+        // Make section position relative for absolute positioning
         section.style.position = section.style.position || 'relative';
+
+        // Show controls on hover for better UX
         section.addEventListener('mouseenter', () => {
             controlContainer.style.opacity = '1';
         });
         section.addEventListener('mouseleave', () => {
-            controlContainer.style.opacity = '0';
+            controlContainer.style.opacity = '0.7';
         });
 
         section.appendChild(controlContainer);

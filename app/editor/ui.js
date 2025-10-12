@@ -49,7 +49,7 @@ export class UIManager {
         statusEl.className = `status-message status-${type}`;
 
         // Show the message
-        setTimeout(() => statusEl.classList.add('show'), 100);
+        statusEl.classList.add('show');
 
         // Hide after 3 seconds
         setTimeout(() => {
