@@ -109,6 +109,9 @@ export class TemplateManager {
         // Add padding to prevent editor overlay from blocking content
         templateContainer.style.paddingTop = '56px';
 
+        // Initialize section management
+        this.editor.sections.initializeSections();
+
         this.editor.ui.showStatus('Template ready for editing!', 'success');
     }
 

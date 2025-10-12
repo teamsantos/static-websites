@@ -934,3 +934,137 @@ body {
 .image-remove-btn svg {
     pointer-events: none;
 }
+
+/* Section Management Styles */
+.section-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    backdrop-filter: blur(4px);
+}
+
+.section-controls:hover {
+    opacity: 1 !important;
+}
+
+.section-label {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.section-control-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section-control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.section-remove-btn:hover {
+    background: rgba(220, 38, 38, 0.8);
+}
+
+/* Re-add sections panel */
+.re-add-sections-panel {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+    min-width: 250px;
+    display: none;
+}
+
+.re-add-sections-panel h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.removed-sections-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.removed-section-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.removed-section-item span {
+    flex: 1;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.re-add-btn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.re-add-btn:hover {
+    background: #059669;
+    transform: scale(1.05);
+}
+
+/* Section hover effects */
+#template-content section:hover,
+#template-content header:hover,
+#template-content footer:hover,
+#template-content main:hover,
+#template-content div[id]:hover {
+    outline: 2px solid rgba(59, 130, 246, 0.3);
+    outline-offset: 2px;
+}
+
+/* Ensure section controls are always visible in edit mode */
+.editor-container.edit-mode .section-controls {
+    opacity: 0.7;
+}
+
+.editor-container.edit-mode .section-controls:hover {
+    opacity: 1;
+}

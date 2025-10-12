@@ -6,6 +6,7 @@ import { TemplateManager } from './template.js';
 import { ElementManager } from './elements.js';
 import { EditingManager } from './editing.js';
 import { UtilsManager } from './utils.js';
+import { SectionManager } from './sections.js';
 
 class TemplateEditor {
     constructor() {
@@ -28,6 +29,7 @@ class TemplateEditor {
         this.elements = new ElementManager(this);
         this.editing = new EditingManager(this);
         this.utils = new UtilsManager(this);
+        this.sections = new SectionManager(this);
 
         this.init();
     }
@@ -49,6 +51,7 @@ class TemplateEditor {
 
     bindEvents() {
         // Editor controls
+        document.getElementById('manage-sections-btn').addEventListener('click', () => this.showSectionManager());
         document.getElementById('change-template-btn').addEventListener('click', () => {
             window.location.href = `https://${baseURL}/#templates`;
         });
@@ -70,6 +73,10 @@ class TemplateEditor {
     // Delegate to managers
     openModal() {
         this.modals.openModal();
+    }
+
+    showSectionManager() {
+        this.sections.showSectionManager();
     }
 
     async createProject() {
