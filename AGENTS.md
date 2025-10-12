@@ -4,6 +4,7 @@
 - **Dev**: `npm run dev` (Vite), `npm run editor` (port 3000), `npm run preview`, `cd infra && npm run watch` (TS)
 - **Build**: `npm run build`, `PROJECT=name npm run build`, `TEMPLATE=name npm run build`, `EDITOR_BUILD=true npm run build`
 - **Test**: `cd infra && npm run test` (Jest), `cd infra && npx jest path/to/test.js` (single test)
+- **Lint**: No linting configured
 - **CDK**: `cd infra && npm run diff/synth/list/bootstrap/bootstrap-all` (deploy handled by GitHub Actions)
 
 ## Code Style Guidelines

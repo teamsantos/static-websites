@@ -217,7 +217,7 @@ class TemplateLoader {
         const projectsHTML = this.translations.projects.map(project => `
             <div class="project-card ${project.featured ? 'featured' : ''} reveal">
                 <div class="project-image">
-                    <img data-template-image="projects" data-image-index="${this.translations.projects.indexOf(project)}" alt="${project.title}">
+                    <img data-template-image="projects" data-image-index="${this.translations.projects.indexOf(project)}">
                     <div class="project-overlay">
                         <a href="${project.link}" class="project-link">View Project</a>
                     </div>
