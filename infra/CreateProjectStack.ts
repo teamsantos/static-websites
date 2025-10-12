@@ -11,6 +11,7 @@ interface CreateProjectProps extends cdk.StackProps {
     ses_region: string;
     domain?: string;
     certificateRegion?: string;
+    s3Bucket?: string;
 }
 
 export class CreateProjectStack extends cdk.Stack {
@@ -41,7 +42,8 @@ export class CreateProjectStack extends cdk.Stack {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
                 FROM_EMAIL: 'noreply@e-info.click',
-                AWS_SES_REGION: props?.ses_region || "us-east-1"
+                AWS_SES_REGION: props?.ses_region || "us-east-1",
+                S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites"
             },
             timeout: cdk.Duration.seconds(30),
         });
@@ -59,6 +61,11 @@ export class CreateProjectStack extends cdk.Stack {
         createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['ses:SendEmail'],
             resources: ['*'],
+        }));
+
+        createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['s3:PutObject', 's3:GetObject'],
+            resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
         }));
 
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {

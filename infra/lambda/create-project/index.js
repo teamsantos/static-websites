@@ -3,6 +3,7 @@ import AWS from "aws-sdk";
 import { JSDOM } from "jsdom";
 
 const ses = new AWS.SES({ region: process.env.AWS_SES_REGION });
+const s3 = new AWS.S3();
 const secretsManager = new AWS.SecretsManager();
 
 // Cache secrets to avoid fetching on every invocation
@@ -25,6 +26,46 @@ async function getSecrets() {
         githubOwner: cachedGithubConfig.owner,
         githubRepo: cachedGithubConfig.repo
     };
+}
+
+async function processImages(images, projectName) {
+    const updatedImages = {};
+    const bucketName = process.env.S3_BUCKET_NAME;
+
+    for (const [key, value] of Object.entries(images)) {
+        // Check if it's a URL (starts with http/https) or a data URL (base64 image content)
+        if (typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://'))) {
+            // It's already a URL, keep as is
+            updatedImages[key] = value;
+        } else if (typeof value === 'string' && value.startsWith('data:image/')) {
+            // It's base64 image data, upload to S3
+            const matches = value.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/);
+            if (!matches) {
+                throw new Error(`Invalid image data for ${key}`);
+            }
+            const imageFormat = matches[1];
+            const imageData = matches[2];
+            const imageName = `${key}.${imageFormat}`;
+            const s3Key = `projects/${projectName}/images/${imageName}`;
+
+            const buffer = Buffer.from(imageData, 'base64');
+
+            await s3.putObject({
+                Bucket: bucketName,
+                Key: s3Key,
+                Body: buffer,
+                ContentType: `image/${imageFormat}`,
+                ACL: 'public-read'
+            }).promise();
+
+            updatedImages[key] = `/images/${imageName}`;
+        } else {
+            // Assume it's already a path or other valid value
+            updatedImages[key] = value;
+        }
+    }
+
+    return updatedImages;
 }
 
 async function generateHtmlFromTemplate(templateId, customImages, customLangs, octokit, owner, repo) {
@@ -237,6 +278,9 @@ export const handler = async (event) => {
         };
     }
 
+    // Process images: upload new ones to S3 and update paths
+    const processedImages = await processImages(images, projectName);
+
     // Get secrets from AWS Secrets Manager
     const { githubToken, githubOwner, githubRepo } = await getSecrets();
 
@@ -249,6 +293,7 @@ export const handler = async (event) => {
 
     console.log(`Using GitHub repo: ${owner}/${repo}`);
 
+    let isUpdate = false;
     try {
         // Check if project exists
         const path = `projects/${projectName}`;
@@ -258,57 +303,53 @@ export const handler = async (event) => {
             path,
         });
 
-        // If no error, project exists
-        return {
-            statusCode: 409,
-            headers: {
-                'Access-Control-Allow-Origin': origin || '*',
-                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                'Access-Control-Allow-Methods': 'POST,OPTIONS',
-            },
-            body: JSON.stringify({ error: 'Project already exists' }),
-        };
+        // If no error, project exists, this is an update
+        isUpdate = true;
     } catch (error) {
         if (error.status !== 404) {
             throw error;
         }
-        // 404 means not exists, proceed
+        // 404 means not exists, this is a create
     }
 
     // Generate HTML from template and custom data
-    const html = await generateHtmlFromTemplate(templateId, images, langs, octokit, owner, repo);
+    const html = await generateHtmlFromTemplate(templateId, processedImages, langs, octokit, owner, repo);
 
-    // Create index.html
+    // Create or update index.html
+    const commitMessage = isUpdate ? `Update ${projectName} project` : `Add ${projectName} project`;
     await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
         path: `projects/${projectName}/index.html`,
-        message: `Add ${projectName} project`,
+        message: commitMessage,
         content: Buffer.from(html).toString('base64'),
     });
 
-    // Create .email file
-    await octokit.rest.repos.createOrUpdateFileContents({
-        owner,
-        repo,
-        path: `projects/${projectName}/.email`,
-        message: `Add email for ${projectName}`,
-        content: Buffer.from(email).toString('base64'),
-    });
+    // Create .email file if new project
+    if (!isUpdate) {
+        await octokit.rest.repos.createOrUpdateFileContents({
+            owner,
+            repo,
+            path: `projects/${projectName}/.email`,
+            message: `Add email for ${projectName}`,
+            content: Buffer.from(email).toString('base64'),
+        });
+    }
 
-    // Send email
-    const params = {
-        Source: process.env.FROM_EMAIL,
-        Destination: {
-            ToAddresses: [email],
-        },
-        Message: {
-            Subject: {
-                Data: 'Your website is ready',
+    // Send email only for new projects
+    if (!isUpdate) {
+        const params = {
+            Source: process.env.FROM_EMAIL,
+            Destination: {
+                ToAddresses: [email],
             },
-            Body: {
-                Text: {
-                    Data: ` Your website has been successfully deployed and is now ready to use.
+            Message: {
+                Subject: {
+                    Data: 'Your website is ready',
+                },
+                Body: {
+                    Text: {
+                        Data: ` Your website has been successfully deployed and is now ready to use.
 
 You can access your website at the following URL:
 https://${projectName}.e-info.click
@@ -319,12 +360,13 @@ If you have any questions or need assistance, please don't hesitate to contact u
 
 Best regards,
 E-info team.`
+                    },
                 },
             },
-        },
-    };
+        };
 
-    await ses.sendEmail(params).promise();
+        await ses.sendEmail(params).promise();
+    }
 
     return {
         statusCode: 200,

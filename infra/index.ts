@@ -36,6 +36,7 @@ new CreateProjectStack(app, "CreateProjectStack", {
     ses_region: config.certificateRegion,
     domain: config.domain,
     certificateRegion: config.certificateRegion,
+    s3Bucket: config.s3Bucket,
     env: {
         account: account,
         region: config.region,

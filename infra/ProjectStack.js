@@ -35,22 +35,23 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProjectSite = void 0;
 const cdk = __importStar(require("aws-cdk-lib"));
-const acm = __importStar(require("aws-cdk-lib/aws-certificatemanager"));
 const cloudfront = __importStar(require("aws-cdk-lib/aws-cloudfront"));
 const origins = __importStar(require("aws-cdk-lib/aws-cloudfront-origins"));
 const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
 const route53Targets = __importStar(require("aws-cdk-lib/aws-route53-targets"));
 const s3 = __importStar(require("aws-cdk-lib/aws-s3"));
+const CertificateManager_1 = require("./CertificateManager");
 class ProjectSite extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
         const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
             domainName: props.hostedZoneDomainName
         });
-        const certificate = new acm.Certificate(this, 'Certificate', {
+        const certManager = new CertificateManager_1.CertificateManager(this, 'CertManager', {
             domainName: props.domainName,
-            validation: acm.CertificateValidation.fromDns(hostedZone),
+            hostedZone: hostedZone,
         });
+        const certificate = certManager.certificate;
         const siteBucket = s3.Bucket.fromBucketAttributes(this, "StaticWebSitesBucket", {
             bucketName: props.s3Bucket,
             region: props.region
