@@ -15,35 +15,6 @@ export class ElementManager {
         return divider;
     }
 
-    loadTranslationFiles(doc) {
-        const langElements = doc.querySelectorAll('[data-text-id]');
-        this.editor.translations[this.editor.currentLanguage] = {};
-        this.editor.textColors = {};
-        this.editor.sectionBackgrounds = {};
-        langElements.forEach(element => {
-            const textId = element.getAttribute('data-text-id');
-            if (textId) {
-                this.editor.translations[this.editor.currentLanguage][textId] = element.textContent.trim();
-                // Store the current text color
-                const computedStyle = getComputedStyle(element);
-                this.editor.textColors[textId] = element.style.color || computedStyle.color || '#000000';
-            }
-        });
-
-        // Load section backgrounds
-        const sections = doc.querySelectorAll('section, header, footer, main, div[id]');
-        sections.forEach(section => {
-            const sectionId = section.id;
-            if (sectionId) {
-                const computedStyle = getComputedStyle(section);
-                const backgroundColor = section.style.backgroundColor || computedStyle.backgroundColor;
-                if (backgroundColor && backgroundColor !== 'transparent' && backgroundColor !== 'rgba(0, 0, 0, 0)') {
-                    this.editor.sectionBackgrounds[sectionId] = this.rgbToHex(backgroundColor);
-                }
-            }
-        });
-    }
-
     /**
      * Convert RGB/RGBA color to hex
      */
@@ -65,14 +36,19 @@ export class ElementManager {
         return '#ffffff'; // Fallback
     }
 
-    loadImageFiles(doc) {
+    loadTranslationFiles(doc) {
         // Try to load image files from the template
-        const imageElements = doc.querySelectorAll('[data-image-src]');
-        this.editor.images = {};
-        imageElements.forEach(element => {
-            const imageSrc = element.getAttribute('data-image-src');
-            if (imageSrc) {
-                this.editor.translations[this.editor.currentLanguage][imageSrc] = element.textContent.trim();
+        const langElements = doc.querySelectorAll('[data-text-id]');
+        this.editor.translations[this.editor.currentLanguage] = {};
+        this.editor.textColors = {};
+        this.editor.sectionBackgrounds = {};
+        langElements.forEach(element => {
+            const textId = element.getAttribute('data-text-id');
+            if (textId) {
+                this.editor.translations[this.editor.currentLanguage][textId] = element.textContent.trim();
+                // Store the current text color
+                const computedStyle = getComputedStyle(element);
+                this.editor.textColors[textId] = element.style.color || computedStyle.color || '#000000';
                 const wrapper = document.createElement('div');
                 wrapper.className = 'lang-element-wrapper';
 
@@ -115,6 +91,19 @@ export class ElementManager {
                 });
 
                 wrapper.appendChild(divider);
+            }
+        });
+
+        // Load section backgrounds
+        const sections = doc.querySelectorAll('section, header, footer, main, div[id]');
+        sections.forEach(section => {
+            const sectionId = section.id;
+            if (sectionId) {
+                const computedStyle = getComputedStyle(section);
+                const backgroundColor = section.style.backgroundColor || computedStyle.backgroundColor;
+                if (backgroundColor && backgroundColor !== 'transparent' && backgroundColor !== 'rgba(0, 0, 0, 0)') {
+                    this.editor.sectionBackgrounds[sectionId] = this.rgbToHex(backgroundColor);
+                }
             }
         });
     }
