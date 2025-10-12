@@ -21,7 +21,7 @@ body {
 
 /* Ensure template headers don't overlap with editor navbar */
 #template-content header {
-    top: 56px !important;
+    /* top: 56px !important; */
 }
 
 /* Editor overlay */
