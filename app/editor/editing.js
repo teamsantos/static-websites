@@ -148,44 +148,30 @@ export class EditingManager {
     }
 
     saveModernTextEdit(saveBtn) {
-        console.log('saveModernTextEdit called', saveBtn);
-
         const modal = saveBtn.closest('.modern-text-editor-overlay');
-        console.log('modal found:', modal);
-
         const textarea = modal.querySelector('.modern-text-input');
         const colorPicker = modal.querySelector('#text-color-picker');
-        console.log('textarea found:', textarea);
-        console.log('colorPicker found:', colorPicker);
 
         const newText = textarea.value.trim();
         const newColor = colorPicker.value;
-        console.log('newText:', newText);
-        console.log('newColor:', newColor);
-        console.log('currentEditingElement:', this.editor.currentEditingElement);
 
         if (this.editor.currentEditingElement) {
             const textId = this.editor.currentEditingElement.getAttribute('data-text-id');
-            console.log('textId:', textId);
 
             // Update element content
             this.editor.currentEditingElement.textContent = newText;
-            console.log('Element text updated');
 
             // Update element color
             this.editor.currentEditingElement.style.color = newColor;
-            console.log('Element color updated');
 
             // Update translations
             if (!this.editor.translations[this.editor.currentLanguage]) {
                 this.editor.translations[this.editor.currentLanguage] = {};
             }
             this.editor.translations[this.editor.currentLanguage][textId] = newText;
-            console.log('Translations updated');
 
             // Update text colors
             this.editor.textColors[textId] = newColor;
-            console.log('Text colors updated');
 
             this.editor.ui.showStatus('Text updated successfully', 'success');
         } else {
@@ -196,7 +182,6 @@ export class EditingManager {
         setTimeout(() => {
             modal.remove();
             this.editor.cancelCurrentEdit();
-            console.log('Modal closed and editing cancelled');
         }, 300);
     }
 

@@ -342,8 +342,6 @@ class HTMLExtractor {
 
             const injectedHtmlPath = path.join(this.directoryPath, 'index.processed.html');
             fs.writeFileSync(injectedHtmlPath, dom.serialize(), 'utf8');
-
-            console.log(`✅ Text injected successfully into ${injectedHtmlPath}`);
         } catch (error) {
             console.error('❌ Error injecting text:', error.message);
             process.exit(1);
@@ -377,8 +375,6 @@ class HTMLExtractor {
 
             // Write back the modified HTML
             fs.writeFileSync(this.htmlPath, dom.serialize(), 'utf8');
-
-            console.log('✅ Content injected directly into HTML');
         } catch (error) {
             console.error('❌ Error injecting content into DOM:', error.message);
             throw error;
@@ -503,8 +499,6 @@ class HTMLExtractor {
             // Write the processed HTML with actual content
             fs.writeFileSync(this.htmlPath, dom.serialize(), 'utf8');
 
-            console.log(`✅ Text extracted and injected successfully. HTML saved with content.`);
-            console.log(`✅ Original saved as ${newBakFilePath}`);
         } catch (error) {
             console.error('❌ Error processing HTML:', error.message);
             process.exit(1);
@@ -527,7 +521,6 @@ class HTMLExtractor {
         injectTextContent(document.head, langData, imageData);
         injectTextContent(document.body, langData, imageData);
 
-        console.log('✅ Content loaded from embedded data');
     } catch (error) {
         console.error('❌ Error loading content:', error);
     }
@@ -598,7 +591,6 @@ class HTMLExtractor {
 })();
 `;
 
-        console.log('✅ content-loader script content generated');
         return loaderContent;
     }
 }
@@ -606,9 +598,6 @@ class HTMLExtractor {
 const args = process.argv.slice(2);
 
 if (args.length === 0) {
-    console.log('Usage:');
-    console.log('  node htmlExtractor.js <directory> extract    # Extract text from HTML');
-    console.log('  node htmlExtractor.js <directory> inject [lang]  # Inject text back into HTML');
     process.exit(1);
 }
 
@@ -629,6 +618,5 @@ if (command === 'extract') {
     extractor.inject(lang);
 } else {
     console.error(`❌ Unknown command: ${command}`);
-    console.log('Available commands: extract, inject');
     process.exit(1);
 }

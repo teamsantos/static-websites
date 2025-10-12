@@ -53,7 +53,6 @@ async function main() {
         const templates = await getTemplates();
         const json = JSON.stringify(templates, null, 2);
         await fs.writeFile(outputFile, json);
-        console.log('templates.json generated successfully');
     } catch (error) {
         console.error('Error generating templates.json:', error);
     }
