@@ -54,8 +54,7 @@ async function processImages(images, projectName) {
                 Bucket: bucketName,
                 Key: s3Key,
                 Body: buffer,
-                ContentType: `image/${imageFormat}`,
-                ACL: 'public-read'
+                ContentType: `image/${imageFormat}`
             }).promise();
 
             updatedImages[key] = `/images/${imageName}`;
