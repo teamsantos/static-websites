@@ -3,9 +3,9 @@
 ## Build/Test Commands
 - **Dev**: `npm run dev` (Vite), `npm run editor` (port 3000), `npm run preview`, `cd infra && npm run watch` (TS)
 - **Build**: `npm run build`, `PROJECT=name npm run build`, `TEMPLATE=name npm run build`, `EDITOR_BUILD=true npm run build`
-- **Test**: No testing framework configured
+- **Test**: `cd infra && npm test` (Jest), no tests in main project
 - **Lint**: No linting configured
-- **CDK**: `cd infra && npm run diff/synth/list/bootstrap/bootstrap-all` (deploy handled by GitHub Actions)
+- **CDK**: `cd infra && npm run diff/synth/list/bootstrap/bootstrap-all` (deploy via GitHub Actions)
 
 ## Code Style Guidelines
 - **JavaScript**: camelCase, 4 spaces, semicolons, single quotes, ES6+, arrow functions, async/await, classes

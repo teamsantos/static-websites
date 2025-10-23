@@ -314,24 +314,88 @@ export const handler = async (event) => {
     // Generate HTML from template and custom data
     const html = await generateHtmlFromTemplate(templateId, processedImages, langs, octokit, owner, repo);
 
-    // Create or update index.html
-    const commitMessage = isUpdate ? `Update ${projectName} project` : `Add ${projectName} project`;
-    await octokit.rest.repos.createOrUpdateFileContents({
-        owner,
-        repo,
-        path: `projects/${projectName}/index.html`,
-        message: commitMessage,
-        content: Buffer.from(html).toString('base64'),
-    });
-
-    // Create .email file if new project
-    if (!isUpdate) {
+    if (isUpdate) {
+        // For updates, just update the index.html file
+        const commitMessage = `Update ${projectName} project`;
         await octokit.rest.repos.createOrUpdateFileContents({
             owner,
             repo,
-            path: `projects/${projectName}/.email`,
-            message: `Add email for ${projectName}`,
-            content: Buffer.from(email).toString('base64'),
+            path: `projects/${projectName}/index.html`,
+            message: commitMessage,
+            content: Buffer.from(html).toString('base64'),
+        });
+    } else {
+        // For new projects, create both files in a single commit
+        const commitMessage = `Add ${projectName} project`;
+
+        // Get the current branch reference
+        const { data: ref } = await octokit.rest.git.getRef({
+            owner,
+            repo,
+            ref: 'heads/master',
+        });
+
+        const baseSha = ref.object.sha;
+
+        // Get the base commit
+        const { data: baseCommit } = await octokit.rest.git.getCommit({
+            owner,
+            repo,
+            commit_sha: baseSha,
+        });
+
+        // Create blobs for both files
+        const [htmlBlob, emailBlob] = await Promise.all([
+            octokit.rest.git.createBlob({
+                owner,
+                repo,
+                content: Buffer.from(html).toString('base64'),
+                encoding: 'base64',
+            }),
+            octokit.rest.git.createBlob({
+                owner,
+                repo,
+                content: Buffer.from(email).toString('base64'),
+                encoding: 'base64',
+            }),
+        ]);
+
+        // Create tree with both files
+        const { data: tree } = await octokit.rest.git.createTree({
+            owner,
+            repo,
+            base_tree: baseCommit.tree.sha,
+            tree: [
+                {
+                    path: `projects/${projectName}/index.html`,
+                    mode: '100644',
+                    type: 'blob',
+                    sha: htmlBlob.data.sha,
+                },
+                {
+                    path: `projects/${projectName}/.email`,
+                    mode: '100644',
+                    type: 'blob',
+                    sha: emailBlob.data.sha,
+                },
+            ],
+        });
+
+        // Create commit
+        const { data: commit } = await octokit.rest.git.createCommit({
+            owner,
+            repo,
+            message: commitMessage,
+            tree: tree.sha,
+            parents: [baseSha],
+        });
+
+        // Update branch reference
+        await octokit.rest.git.updateRef({
+            owner,
+            repo,
+            ref: 'heads/master',
+            sha: commit.sha,
         });
     }
 
