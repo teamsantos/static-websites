@@ -66,7 +66,7 @@ export const handler = async (event) => {
             mode: "subscription",
             line_items: [
                 {
-                    price: priceId, // ✅ Use existing price from Stripe
+                    price: priceId,
                     quantity: 1
                 },
             ],
