@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 
@@ -9,6 +10,7 @@ interface StripeCheckoutProps extends cdk.StackProps {
   domain?: string;
   stripeSecretKey: string;
   frontendUrl: string;
+  s3Bucket?: string;
 }
 
 export class StripeCheckoutStack extends cdk.Stack {
@@ -35,10 +37,23 @@ export class StripeCheckoutStack extends cdk.Stack {
       environment: {
         STRIPE_SECRET_KEY: props.stripeSecretKey,
         FRONTEND_URL: props.frontendUrl,
+        S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
       },
       timeout: cdk.Duration.seconds(30),
     });
 
+    if (props.s3Bucket) {
+      checkoutFunction.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ["s3:GetObject", "s3:PutObject"],
+          resources: [
+            `arn:aws:s3:::${props.s3Bucket}/metadata.json`,
+          ],
+        })
+      );
+    }
+
+    // API Gateway setup
     const api = new apigateway.RestApi(this, "StripeApi", {
       restApiName: "stripe-checkout-api",
       defaultCorsPreflightOptions: {
@@ -70,7 +85,9 @@ export class StripeCheckoutStack extends cdk.Stack {
     new route53.ARecord(this, "StripeApiAliasRecord", {
       zone: hostedZone,
       recordName: `pay.${domain}`,
-      target: route53.RecordTarget.fromAlias(new route53Targets.ApiGatewayDomain(apiDomain)),
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.ApiGatewayDomain(apiDomain)
+      ),
     });
 
     // /checkout-session endpoint

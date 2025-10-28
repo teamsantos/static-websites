@@ -47,6 +47,7 @@ new StripeCheckoutStack(app, "StripeCheckoutStack", {
   domain: config.domain,
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
   frontendUrl: process.env.FRONTEND_URL || "",
+  s3Bucket: config.s3Bucket,
   env: {
     account: account,
     region: config.region,

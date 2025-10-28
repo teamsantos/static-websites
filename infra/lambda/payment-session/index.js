@@ -1,7 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 import Stripe from "stripe";
+import AWS from "aws-sdk";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const s3 = new AWS.S3();
+const BUCKET_NAME = process.env.S3_BUCKET_NAME || "teamsantos-static-websites";
+const METADATA_KEY = "metadata.json";
 
 export const handler = async (event) => {
     if (event.httpMethod === "OPTIONS") {
@@ -67,11 +71,21 @@ export const handler = async (event) => {
             line_items: [
                 {
                     price: priceId,
-                    quantity: 1
+                    quantity: 1,
                 },
             ],
-            success_url: `${process.env.FRONTEND_URL}/success?key=${operationKey}`,
-            cancel_url: `${process.env.FRONTEND_URL}/cancel?key=${operationKey}`,
+            success_url: `${process.env.FRONTEND_URL}/success?operation_id=${operationKey}`,
+            cancel_url: `${process.env.FRONTEND_URL}/cancel?operation_id=${operationKey}`,
+        });
+
+        // ✅ Save metadata to S3
+        await saveMetadata(operationKey, {
+            email,
+            projectName,
+            html,
+            createdAt: new Date().toISOString(),
+            paymentSessionId: session.id,
+            status: "pending",
         });
 
         return {
@@ -79,7 +93,7 @@ export const handler = async (event) => {
             headers: corsHeaders(origin),
             body: JSON.stringify({
                 sessionId: session.id,
-                sessionUrl: session.url
+                sessionUrl: session.url,
             }),
         };
     } catch (error) {
@@ -91,6 +105,38 @@ export const handler = async (event) => {
         };
     }
 };
+
+async function saveMetadata(operationKey, entry) {
+    try {
+        // Try to fetch existing metadata.json
+        let metadata = {};
+        try {
+            const existing = await s3.getObject({ Bucket: BUCKET_NAME, Key: METADATA_KEY }).promise();
+            metadata = JSON.parse(existing.Body.toString("utf-8"));
+        } catch (err) {
+            if (err.code !== "NoSuchKey") {
+                console.error("Error reading metadata.json:", err);
+                throw err;
+            }
+        }
+
+        // Add or update the new entry
+        metadata[operationKey] = entry;
+
+        // Upload updated JSON file
+        await s3.putObject({
+            Bucket: BUCKET_NAME,
+            Key: METADATA_KEY,
+            Body: JSON.stringify(metadata, null, 2),
+            ContentType: "application/json",
+        }).promise();
+
+        console.log(`Stored metadata for operationKey: ${operationKey}`);
+    } catch (error) {
+        console.error("Failed to store metadata:", error);
+        throw error;
+    }
+}
 
 const corsHeaders = (origin) => ({
     "Access-Control-Allow-Origin": origin || "*",
