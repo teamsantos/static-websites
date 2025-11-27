@@ -43,6 +43,15 @@ export class StripeCheckoutStack extends cdk.Stack {
     });
 
     if (props.s3Bucket) {
+      // Allow ListBucket on the bucket
+      checkoutFunction.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ["s3:ListBucket"],
+          resources: [`arn:aws:s3:::${props.s3Bucket}`],
+        })
+      );
+
+      // Allow GetObject and PutObject on metadata.json
       checkoutFunction.addToRolePolicy(
         new iam.PolicyStatement({
           actions: ["s3:GetObject", "s3:PutObject"],
