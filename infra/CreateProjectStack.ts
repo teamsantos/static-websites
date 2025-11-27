@@ -15,6 +15,8 @@ interface CreateProjectProps extends cdk.StackProps {
 }
 
 export class CreateProjectStack extends cdk.Stack {
+    public readonly apiGateway: apigateway.RestApi;
+
     constructor(scope: cdk.App, id: string, props: CreateProjectProps) {
         super(scope, id, props);
 
@@ -76,6 +78,9 @@ export class CreateProjectStack extends cdk.Stack {
                 allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'Origin'],
             },
         });
+
+        // Store API reference for other stacks to use
+        this.apiGateway = api;
 
         // Custom domain for API
         const apiDomain = new apigateway.DomainName(this, 'ApiDomain', {
