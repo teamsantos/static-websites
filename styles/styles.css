@@ -861,3 +861,21 @@ p {
     text-align: center;
     color: #666;
 }
+
+.plan-item.coming-soon {
+    opacity: 0.6;
+    filter: grayscale(40%);
+    position: relative;
+}
+
+.coming-soon-btn {
+    background: #ccc !important;
+    color: #555 !important;
+    cursor: not-allowed !important;
+    border: none;
+    font-weight: 600;
+}
+
+.plan-item.coming-soon:hover {
+    transform: none !important;
+}

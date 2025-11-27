@@ -8,6 +8,7 @@ const BUCKET_NAME = process.env.S3_BUCKET_NAME || "teamsantos-static-websites";
 const METADATA_KEY = "metadata.json";
 
 export const handler = async (event) => {
+    console.log(process.env.STRIPE_SECRET_KEY);
     if (event.httpMethod === "OPTIONS") {
         return {
             statusCode: 200,
