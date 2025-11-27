@@ -162,6 +162,9 @@ jobs:
       - name: Deploy infrastructure
         working-directory: infra
         shell: bash
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
         run: |
           echo "🚀 Deploying infrastructure..."
           ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
