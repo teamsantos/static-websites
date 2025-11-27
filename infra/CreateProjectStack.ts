@@ -24,14 +24,10 @@ export class CreateProjectStack extends cdk.Stack {
             domainName: domain,
         });
 
-        const certificate = new Certificate(this, 'ApiCertificate', {
+        const certificate = new DnsValidatedCertificate(this, 'ApiCertificate', {
             domainName: `api.${domain}`,
-            validation: {
-                method: ValidationMethod.DNS,
-                props: {
-                    hostedZone: hostedZone,
-                },
-            },
+            hostedZone: hostedZone,
+            region: 'us-east-1',
         });
 
         // Reference the secrets
