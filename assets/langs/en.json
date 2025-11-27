@@ -122,7 +122,8 @@
       "price": "€4.99/month",
       "svg": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>\n<path d='M9 12l2 2 4-4'/>\n<circle cx='12' cy='12' r='10'/>\n</svg>",
       "redirect-to": "_templates",
-      "stripe_price_id": "price_1S5P4zHSl67hemuh5NUTtsRg"
+      "stripe_price_id": "price_1S5P4zHSl67hemuh5NUTtsRg",
+      "coming_soon": false
     },
     {
       "name": "Premium",
@@ -133,7 +134,8 @@
       "price": "€8.99/month (domain price not included)",
       "svg": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>\n<path d='M12 2l2.92 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 7.08-1.01L12 2z'/>\n</svg>",
       "redirect-to": "_templates",
-      "stripe_price_id": "price_1SBCtTHSl67hemuhBmaTO6TK"
+      "stripe_price_id": "price_1SBCtTHSl67hemuhBmaTO6TK",
+      "coming_soon": true
     },
     {
       "name": "Custom",
@@ -144,7 +146,8 @@
       "price": "€14.99 (domain price not included)",
       "svg": "<svg viewBox='0 0 24 24' fill='currentColor'>\n<path d='M12 2l2.92 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 7.08-1.01L12 2z'/>\n</svg>",
       "redirect-to": "_get-started",
-      "stripe_price_id": "price_1SBD0fHSl67hemuhGssShfiu"
+      "stripe_price_id": "price_1SBD0fHSl67hemuhGssShfiu",
+      "coming_soon": true
     }
    ],
    "templates": [
