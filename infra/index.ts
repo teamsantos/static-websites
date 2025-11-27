@@ -1,7 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { BucketStack } from "./bucketStack";
 import { CreateProjectStack } from "./CreateProjectStack";
-import { GenerateWebsiteStack } from "./GenerateWebsiteStack";
 import { ProjectSite } from "./ProjectStack";
 import { StripeCheckoutStack } from "./PaymentSessionStack";
 
@@ -38,16 +37,6 @@ const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
     domain: config.domain,
     certificateRegion: config.certificateRegion,
     s3Bucket: config.s3Bucket,
-    env: {
-        account: account,
-        region: config.region,
-    },
-});
-
-new GenerateWebsiteStack(app, "GenerateWebsiteStack", {
-    ses_region: config.certificateRegion,
-    s3Bucket: config.s3Bucket,
-    apiGateway: createProjectStack.apiGateway,
     env: {
         account: account,
         region: config.region,

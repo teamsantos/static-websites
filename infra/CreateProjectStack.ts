@@ -1,6 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
-import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
+import { Certificate, ValidationMethod } from "aws-cdk-lib/aws-certificatemanager";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as route53 from "aws-cdk-lib/aws-route53";
@@ -15,8 +15,6 @@ interface CreateProjectProps extends cdk.StackProps {
 }
 
 export class CreateProjectStack extends cdk.Stack {
-    public readonly apiGateway: apigateway.RestApi;
-
     constructor(scope: cdk.App, id: string, props: CreateProjectProps) {
         super(scope, id, props);
 
@@ -70,6 +68,39 @@ export class CreateProjectStack extends cdk.Stack {
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
         }));
 
+        const generateWebsiteFunction = new lambda.Function(this, 'GenerateWebsiteFunction', {
+            runtime: lambda.Runtime.NODEJS_18_X,
+            code: lambda.Code.fromAsset('lambda/generate-website'),
+            handler: 'index.handler',
+            environment: {
+                GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
+                GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
+                FROM_EMAIL: 'noreply@e-info.click',
+                AWS_SES_REGION: props?.ses_region || "us-east-1",
+                S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites"
+            },
+            timeout: cdk.Duration.seconds(60),
+        });
+
+        // Grant permissions to generate-website Lambda
+        githubTokenSecret.grantRead(generateWebsiteFunction);
+        githubConfigSecret.grantRead(generateWebsiteFunction);
+
+        generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
+            resources: [`${githubTokenSecret.secretArn}-*`, `${githubConfigSecret.secretArn}-*`],
+        }));
+
+        generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['ses:SendEmail'],
+            resources: ['*'],
+        }));
+
+        generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['s3:GetObject', 's3:PutObject'],
+            resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
+        }));
+
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
             defaultCorsPreflightOptions: {
@@ -78,9 +109,6 @@ export class CreateProjectStack extends cdk.Stack {
                 allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'Origin'],
             },
         });
-
-        // Store API reference for other stacks to use
-        this.apiGateway = api;
 
         // Custom domain for API
         const apiDomain = new apigateway.DomainName(this, 'ApiDomain', {
@@ -141,6 +169,39 @@ export class CreateProjectStack extends cdk.Stack {
             ],
         });
 
+        const generateWebsiteResource = api.root.addResource('generate-website');
+        generateWebsiteResource.addMethod('POST', new apigateway.LambdaIntegration(generateWebsiteFunction, {
+            integrationResponses: [
+                {
+                    statusCode: '200',
+                },
+                {
+                    statusCode: '400',
+                },
+                {
+                    statusCode: '403',
+                },
+                {
+                    statusCode: '500',
+                },
+            ],
+        }), {
+            methodResponses: [
+                {
+                    statusCode: '200',
+                },
+                {
+                    statusCode: '400',
+                },
+                {
+                    statusCode: '403',
+                },
+                {
+                    statusCode: '500',
+                },
+            ],
+        });
+
         new cdk.CfnOutput(this, 'ApiUrl', {
             value: api.url,
             description: 'API Gateway URL for creating projects (restricted to allowed origins)',
@@ -148,6 +209,10 @@ export class CreateProjectStack extends cdk.Stack {
         new cdk.CfnOutput(this, 'ApiCustomUrl', {
             value: `https://api.${domain}/create-project`,
             description: 'Custom domain URL for creating projects',
+        });
+        new cdk.CfnOutput(this, 'GenerateWebsiteUrl', {
+            value: `https://api.${domain}/generate-website`,
+            description: 'Custom domain URL for generating websites from S3 metadata',
         });
 
     }
