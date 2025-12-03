@@ -251,11 +251,12 @@ export const handler = async (event) => {
         'https://editor.e-info.click',
         'https://ssh.e-info.click',
         'http://89.152.33.66',
-        'https://89.152.33.66'
+        'https://89.152.33.66',
+        'e-info.click'
     ];
 
     const isAllowedOrigin = !origin || allowedOrigins.some(allowed =>
-        origin === allowed || origin.startsWith(allowed)
+        origin === allowed || origin.startsWith(allowed) || origin.endsWith(allowed)
     );
 
     if (!isAllowedOrigin) {
