@@ -128,27 +128,34 @@ jobs:
             fi
           done
 
-      - name: Install Lambda dependencies
+      - name: Install Lambda dependencies (create-project)
         working-directory: infra/lambda/create-project
         run: |
-           echo "📦 Installing Lambda dependencies..."
-           npm ci
-           echo "✅ Lambda dependencies installed"
+          echo "📦 Installing Lambda dependencies..."
+          npm ci
+          echo "✅ Lambda dependencies installed"
 
-      - name: Install Lambda dependencies
+      - name: Install Lambda dependencies (payment-session)
         working-directory: infra/lambda/payment-session
         run: |
-           echo "📦 Installing Lambda dependencies..."
-           npm ci
-           echo "✅ Lambda dependencies installed"
+          echo "📦 Installing Lambda dependencies..."
+          npm ci
+          echo "✅ Lambda dependencies installed"
+
+      - name: Install Lambda dependencies (generate-website)
+        working-directory: infra/lambda/generate-website
+        run: |
+          echo "📦 Installing Lambda dependencies..."
+          npm ci
+          echo "✅ Lambda dependencies installed"
 
       - name: Build CDK project
         working-directory: infra
         run: |
-            echo "🔨 Building CDK project..."
-            # Use npx to ensure we use the local typescript
-            npx tsc
-            echo "✅ CDK project built successfully"
+          echo "🔨 Building CDK project..."
+          # Use npx to ensure we use the local typescript
+          npx tsc
+          echo "✅ CDK project built successfully"
 
       - name: Preview infrastructure changes
         working-directory: infra
@@ -176,6 +183,19 @@ jobs:
             --verbose
           
           echo "✅ Successfully deployed infrastructure"
+
+      - name: Clean up Lambda node_modules
+        shell: bash
+        run: |
+          echo "🧹 Cleaning up Lambda node_modules directories..."
+          for lambda_dir in infra/lambda/*/; do
+            if [ -d "$lambda_dir/node_modules" ]; then
+              echo "Removing node_modules from $(basename "$lambda_dir")"
+              rm -rf "$lambda_dir/node_modules"
+              rm -f "$lambda_dir/package-lock.json"
+            fi
+          done
+          echo "✅ Lambda cleanup completed"
 
       - name: Deployment Summary
         shell: bash
