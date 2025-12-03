@@ -45,7 +45,7 @@ export class ProjectManager {
                 body: JSON.stringify({
                     ...exportData,
                     email,
-                    name: projectName,
+                    projectName,
                     priceId: "price_1S5P4zHSl67hemuh5NUTtsRg"
                 })
             });

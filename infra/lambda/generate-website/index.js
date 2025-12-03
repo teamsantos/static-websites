@@ -305,7 +305,7 @@ export const handler = async (event) => {
         const metadata = await getMetadataFromS3(operationId);
 
         console.log(`Retrieved metadata for operation ${operationId}`);
-
+        console.log(metadata);
         const { images, langs, templateId, email, name: projectName } = metadata;
 
         // Validate metadata
