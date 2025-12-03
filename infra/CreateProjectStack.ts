@@ -6,7 +6,6 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
-import * as s3 from "aws-cdk-lib/aws-s3";
 
 interface CreateProjectProps extends cdk.StackProps {
     ses_region: string;
@@ -101,27 +100,6 @@ export class CreateProjectStack extends cdk.Stack {
             actions: ['s3:GetObject', 's3:PutObject'],
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
         }));
-
-        // Reference the existing S3 bucket and add bucket policy to allow Lambda functions
-        const bucket = s3.Bucket.fromBucketName(this, 'StaticWebsitesBucket', props?.s3Bucket || "teamsantos-static-websites");
-        
-        // Add bucket policy statement to allow Lambda functions to read and write
-        const bucketPolicy = new s3.BucketPolicy(this, "LambdaAccessPolicy", {
-            bucket: bucket,
-        });
-
-        bucketPolicy.document.addStatements(
-            new iam.PolicyStatement({
-                sid: "AllowLambdaFunctionsReadWrite",
-                effect: iam.Effect.ALLOW,
-                principals: [
-                    createProjectFunction.role!,
-                    generateWebsiteFunction.role!,
-                ],
-                actions: ["s3:GetObject", "s3:PutObject"],
-                resources: [`${bucket.bucketArn}/*`],
-            })
-        );
 
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',

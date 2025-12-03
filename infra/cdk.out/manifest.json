@@ -108,7 +108,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/4c98f81312745ac75f5175aae1fb4285a4507519457f2f11856ae3540b609923.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/b28f6e7922f21e00333623b33484e1791b37c2b4655348f788d42ce3806afa3c.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -219,12 +219,6 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "GenerateWebsiteFunctionE00554AA"
-          }
-        ],
-        "/CreateProjectStack/LambdaAccessPolicy/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "LambdaAccessPolicy81EC5D5F"
           }
         ],
         "/CreateProjectStack/CreateProjectApi/Resource": [
