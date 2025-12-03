@@ -306,7 +306,7 @@ export const handler = async (event) => {
 
         console.log(`Retrieved metadata for operation ${operationId}`);
         console.log(metadata);
-        const { images, langs, templateId, email, name: projectName } = metadata;
+        const { images, langs, templateId, email, projectName } = metadata;
 
         // Validate metadata
         // if (!images || !langs || !templateId || !email || !projectName || !sections) {
