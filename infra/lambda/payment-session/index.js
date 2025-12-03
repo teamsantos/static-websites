@@ -53,9 +53,9 @@ export const handler = async (event) => {
         };
     }
 
-    const { email, name: projectName, html, priceId } = requestBody;
+    const { email, projectName, images, priceId, langs, textColors, sectionBackgrounds, templateId } = requestBody;
 
-    if (!email || !projectName || !html || !priceId) {
+    if (!email || !projectName || !images || !priceId, !langs || !textColors || !sectionBackgrounds || !templateId) {
         return {
             statusCode: 400,
             headers: corsHeaders(origin),
@@ -83,7 +83,11 @@ export const handler = async (event) => {
         await saveMetadata(operationKey, {
             email,
             projectName,
-            html,
+            images,
+            langs,
+            textColors,
+            sectionBackgrounds,
+            templateId, 
             createdAt: new Date().toISOString(),
             paymentSessionId: session.id,
             status: "pending",
