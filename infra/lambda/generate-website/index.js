@@ -1,6 +1,6 @@
-import { Octokit } from "octokit";
 import AWS from "aws-sdk";
 import { JSDOM } from "jsdom";
+import { Octokit } from "octokit";
 
 const ses = new AWS.SES({ region: process.env.AWS_SES_REGION });
 const s3 = new AWS.S3();
@@ -309,6 +309,7 @@ export const handler = async (event) => {
         const { images, langs, templateId, email, name: projectName } = metadata;
 
         // Validate metadata
+        // if (!images || !langs || !templateId || !email || !projectName || !sections) {
         if (!images || !langs || !templateId || !email || !projectName) {
             return {
                 statusCode: 400,
@@ -482,7 +483,7 @@ E-info team.`
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
                 'Access-Control-Allow-Methods': 'POST,OPTIONS',
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 success: true,
                 websiteUrl: `https://${projectName}.e-info.click`
             }),
@@ -497,7 +498,7 @@ E-info team.`
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
                 'Access-Control-Allow-Methods': 'POST,OPTIONS',
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 success: false,
                 error: error.message || 'Internal server error'
             }),

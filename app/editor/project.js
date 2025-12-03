@@ -27,6 +27,15 @@ export class ProjectManager {
             return;
         }
 
+        // Save input values to sessionStorage for session-only persistence
+        sessionStorage.setItem('creator-email', email);
+        sessionStorage.setItem('project-name', projectName);
+
+        this.editor.ui.showStatus('Creating project...', 'info');
+
+        // Get the export data (images, langs, templateId)
+        const exportData = this.editor.collectExportData();
+
         try {
             const response = await fetch("https://pay.e-info.click/checkout-session", {
                 method: "POST",
@@ -34,9 +43,7 @@ export class ProjectManager {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    email: "test@example.com",
-                    name: `Project-${Date.now()}`,
-                    html: "<p>Filipe is gay</p>",
+                    ...exportData,
                     priceId: "price_1S5P4zHSl67hemuh5NUTtsRg"
                 })
             });
