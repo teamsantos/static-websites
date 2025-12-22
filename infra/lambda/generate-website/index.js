@@ -92,7 +92,7 @@ async function processImages(images, projectName) {
 async function generateHtmlFromTemplate(templateId, customImages, customLangs, octokit, owner, repo) {
     try {
         // Load base template HTML (processed version with data attributes)
-        const templatePath = `templates/${templateId}/index.html`;
+        const templatePath = `templates/${templateId}/dist/index.html`;
         let templateHtml;
         try {
             const response = await octokit.rest.repos.getContent({
@@ -334,8 +334,6 @@ export const handler = async (event) => {
 
         const owner = githubOwner;
         const repo = githubRepo;
-
-        console.log(`Using GitHub repo: ${owner}/${repo}`);
 
         let isUpdate = false;
         try {
