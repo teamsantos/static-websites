@@ -38,7 +38,6 @@ const cdk = __importStar(require("aws-cdk-lib"));
 const cloudfront = __importStar(require("aws-cdk-lib/aws-cloudfront"));
 const origins = __importStar(require("aws-cdk-lib/aws-cloudfront-origins"));
 const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
-const route53Targets = __importStar(require("aws-cdk-lib/aws-route53-targets"));
 const s3 = __importStar(require("aws-cdk-lib/aws-s3"));
 const CertificateManager_1 = require("./CertificateManager");
 class ProjectSite extends cdk.Stack {
@@ -105,10 +104,17 @@ class ProjectSite extends cdk.Stack {
             comment: `CloudFront distribution for ${props.type || 'project'} ${props.projectName}`,
         });
         // No need for individual bucket policies since the bucket stack handles access for all distributions
-        new route53.ARecord(this, "AliasRecord", {
-            zone: hostedZone,
-            recordName: props.domainName,
-            target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(distribution)),
+        // Use CfnRecordSet directly to avoid waiting for CloudFront distribution to be fully ready
+        // This allows Route53 record to be created immediately while CloudFront propagates in the background
+        new route53.CfnRecordSet(this, "AliasRecord", {
+            hostedZoneId: hostedZone.hostedZoneId,
+            name: props.domainName,
+            type: "A",
+            aliasTarget: {
+                hostedZoneId: "Z2FDTNDATAQYW2", // CloudFront's global hosted zone ID
+                dnsName: distribution.distributionDomainName,
+                evaluateTargetHealth: false,
+            },
         });
         // Output the distribution details
         new cdk.CfnOutput(this, "DistributionId", {

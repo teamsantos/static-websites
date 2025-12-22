@@ -64,26 +64,13 @@ class CreateProjectStack extends cdk.Stack {
             environment: {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
+                // GITHUB_TOKEN_SECRET_ARN: githubTokenSecret.secretArn,
+                // GITHUB_CONFIG_SECRET_ARN: githubConfigSecret.secretArn,
                 FROM_EMAIL: 'noreply@e-info.click',
-                AWS_SES_REGION: props?.ses_region || "us-east-1"
+                AWS_SES_REGION: props?.ses_region || "us-east-1",
+                S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites"
             },
             timeout: cdk.Duration.seconds(30),
-        });
-        const createPaymentSesionFunction = new lambda.Function(this, 'CreatePaymentSessionFunction', {
-            runtime: lambda.Runtime.NODEJS_18_X,
-            code: lambda.Code.fromAsset('lambda/payment-session'),
-            handler: 'index.handler',
-            environment: {
-                STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
-                FRONTEND_URL: process.env.FRONTEND_URL
-            },
-            timeout: cdk.Duration.seconds(30),
-        });
-        const cleanupProjectFunction = new lambda.Function(this, 'CleanupProjectFunction', {
-            runtime: lambda.Runtime.NODEJS_18_X,
-            code: lambda.Code.fromAsset('lambda/cleanup-project'),
-            handler: 'index.handler',
-            timeout: cdk.Duration.minutes(10), // Longer timeout for stack deletion
         });
         // Grant permissions to read the secrets
         githubTokenSecret.grantRead(createProjectFunction);
@@ -97,21 +84,37 @@ class CreateProjectStack extends cdk.Stack {
             actions: ['ses:SendEmail'],
             resources: ['*'],
         }));
-        // Grant permissions for cleanup operations
-        cleanupProjectFunction.addToRolePolicy(new iam.PolicyStatement({
-            actions: [
-                'cloudformation:DeleteStack',
-                'cloudformation:DescribeStacks',
-                'cloudformation:ListStacks',
-                's3:DeleteObject',
-                's3:ListBucket',
-                's3:GetObject'
-            ],
-            resources: [
-                'arn:aws:cloudformation:us-east-1:396913706953:stack/Site-*',
-                'arn:aws:s3:::teamsantos-static-websites/*',
-                'arn:aws:s3:::teamsantos-static-websites'
-            ],
+        createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['s3:PutObject', 's3:GetObject'],
+            resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
+        }));
+        const generateWebsiteFunction = new lambda.Function(this, 'GenerateWebsiteFunction', {
+            runtime: lambda.Runtime.NODEJS_18_X,
+            code: lambda.Code.fromAsset('lambda/generate-website'),
+            handler: 'index.handler',
+            environment: {
+                GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
+                GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
+                FROM_EMAIL: 'noreply@e-info.click',
+                AWS_SES_REGION: props?.ses_region || "us-east-1",
+                S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites"
+            },
+            timeout: cdk.Duration.seconds(60),
+        });
+        // Grant permissions to generate-website Lambda
+        githubTokenSecret.grantRead(generateWebsiteFunction);
+        githubConfigSecret.grantRead(generateWebsiteFunction);
+        generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
+            resources: [`${githubTokenSecret.secretArn}-*`, `${githubConfigSecret.secretArn}-*`],
+        }));
+        generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['ses:SendEmail'],
+            resources: ['*'],
+        }));
+        generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['s3:GetObject', 's3:PutObject'],
+            resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
         }));
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
@@ -176,33 +179,17 @@ class CreateProjectStack extends cdk.Stack {
                 },
             ],
         });
-        const createPaymentSessionResource = api.root.addResource('create-payment-session');
-        createPaymentSessionResource.addMethod('POST', new apigateway.LambdaIntegration(createPaymentSesionFunction, {
-            integrationResponses: [
-                { statusCode: '200' },
-                { statusCode: '400' },
-                { statusCode: '403' },
-                { statusCode: '500' },
-            ],
-        }), {
-            methodResponses: [
-                { statusCode: '200' },
-                { statusCode: '400' },
-                { statusCode: '403' },
-                { statusCode: '500' },
-            ],
-        });
-        const cleanupProjectResource = api.root.addResource('cleanup-project');
-        cleanupProjectResource.addMethod('POST', new apigateway.LambdaIntegration(cleanupProjectFunction, {
+        const generateWebsiteResource = api.root.addResource('generate-website');
+        generateWebsiteResource.addMethod('POST', new apigateway.LambdaIntegration(generateWebsiteFunction, {
             integrationResponses: [
                 {
                     statusCode: '200',
                 },
                 {
-                    statusCode: '207', // Multi-status for partial success
+                    statusCode: '400',
                 },
                 {
-                    statusCode: '400',
+                    statusCode: '403',
                 },
                 {
                     statusCode: '500',
@@ -214,10 +201,10 @@ class CreateProjectStack extends cdk.Stack {
                     statusCode: '200',
                 },
                 {
-                    statusCode: '207',
+                    statusCode: '400',
                 },
                 {
-                    statusCode: '400',
+                    statusCode: '403',
                 },
                 {
                     statusCode: '500',
@@ -232,22 +219,9 @@ class CreateProjectStack extends cdk.Stack {
             value: `https://api.${domain}/create-project`,
             description: 'Custom domain URL for creating projects',
         });
-        // Outputs for Payment Session API
-        new cdk.CfnOutput(this, 'PaymentSessionApiUrl', {
-            value: `${api.url}create-payment-session`,
-            description: 'API Gateway URL for creating Stripe payment sessions',
-        });
-        new cdk.CfnOutput(this, 'PaymentSessionApiCustomUrl', {
-            value: `https://api.${domain}/create-payment-session`,
-            description: 'Custom domain URL for creating Stripe payment sessions',
-        });
-        new cdk.CfnOutput(this, 'CleanupProjectApiUrl', {
-            value: `${api.url}cleanup-project`,
-            description: 'API Gateway URL for cleaning up project infrastructure',
-        });
-        new cdk.CfnOutput(this, 'CleanupProjectApiCustomUrl', {
-            value: `https://api.${domain}/cleanup-project`,
-            description: 'Custom domain URL for cleaning up project infrastructure',
+        new cdk.CfnOutput(this, 'GenerateWebsiteUrl', {
+            value: `https://api.${domain}/generate-website`,
+            description: 'Custom domain URL for generating websites from S3 metadata',
         });
     }
 }

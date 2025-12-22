@@ -37,6 +37,7 @@ const cdk = __importStar(require("aws-cdk-lib"));
 const bucketStack_1 = require("./bucketStack");
 const CreateProjectStack_1 = require("./CreateProjectStack");
 const ProjectStack_1 = require("./ProjectStack");
+const PaymentSessionStack_1 = require("./PaymentSessionStack");
 const app = new cdk.App();
 const config = {
     region: "eu-south-2",
@@ -60,10 +61,21 @@ new bucketStack_1.BucketStack(app, "StaticWebsitesBucket", {
         Purpose: "StaticWebsiteHosting",
     },
 });
-new CreateProjectStack_1.CreateProjectStack(app, "CreateProjectStack", {
+const createProjectStack = new CreateProjectStack_1.CreateProjectStack(app, "CreateProjectStack", {
     ses_region: config.certificateRegion,
     domain: config.domain,
     certificateRegion: config.certificateRegion,
+    s3Bucket: config.s3Bucket,
+    env: {
+        account: account,
+        region: config.region,
+    },
+});
+new PaymentSessionStack_1.StripeCheckoutStack(app, "StripeCheckoutStack", {
+    domain: config.domain,
+    stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
+    frontendUrl: process.env.FRONTEND_URL || "",
+    s3Bucket: config.s3Bucket,
     env: {
         account: account,
         region: config.region,
