@@ -20,13 +20,16 @@ export class EditingManager {
         }
     }
 
-    startTextEditing(element) {
+     startTextEditing(element) {
         this.editor.currentEditingElement = element;
         element.classList.add('editing');
 
         const textId = element.getAttribute('data-text-id');
         const currentText = this.editor.translations[this.editor.currentLanguage]?.[textId] || element.textContent;
-        const currentColor = this.editor.textColors[textId] || getComputedStyle(element).color || '#000000';
+        // Ensure color is in hex format for Safari compatibility with color picker
+        let currentColor = this.editor.textColors[textId] || getComputedStyle(element).color || '#000000';
+        // Convert RGB/RGBA to hex if needed
+        currentColor = this.editor.elements.rgbToHex(currentColor);
 
         // Create modern floating editor modal (like image editor)
         const editorModal = document.createElement('div');

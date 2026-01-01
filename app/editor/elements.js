@@ -46,9 +46,10 @@ export class ElementManager {
             const textId = element.getAttribute('data-text-id');
             if (textId) {
                 this.editor.translations[this.editor.currentLanguage][textId] = element.textContent.trim();
-                // Store the current text color
+                // Store the current text color (convert RGB to hex for Safari compatibility)
                 const computedStyle = getComputedStyle(element);
-                this.editor.textColors[textId] = element.style.color || computedStyle.color || '#000000';
+                const colorValue = element.style.color || computedStyle.color || '#000000';
+                this.editor.textColors[textId] = this.rgbToHex(colorValue);
                 const wrapper = document.createElement('div');
                 wrapper.className = 'lang-element-wrapper';
 
@@ -94,7 +95,7 @@ export class ElementManager {
             }
         });
 
-        // Load section backgrounds
+        // Load section backgrounds (convert to hex for Safari compatibility)
         const sections = doc.querySelectorAll('section, header, footer, main, div[id]');
         sections.forEach(section => {
             const sectionId = section.id;
@@ -102,7 +103,8 @@ export class ElementManager {
                 const computedStyle = getComputedStyle(section);
                 const backgroundColor = section.style.backgroundColor || computedStyle.backgroundColor;
                 if (backgroundColor && backgroundColor !== 'transparent' && backgroundColor !== 'rgba(0, 0, 0, 0)') {
-                    this.editor.sectionBackgrounds[sectionId] = this.rgbToHex(backgroundColor);
+                    const hexColor = this.rgbToHex(backgroundColor);
+                    this.editor.sectionBackgrounds[sectionId] = hexColor;
                 }
             }
         });
