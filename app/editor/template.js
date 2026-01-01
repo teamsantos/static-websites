@@ -79,41 +79,43 @@ export class TemplateManager {
     }
 
     processTemplate() {
-        // Clear any existing template styles first
-        this.clearTemplateStyles();
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(this.editor.templateContent, 'text/html');
-
-        // Remove the e-info footer if present
-        const footerToRemove = doc.getElementById('modernFooter');
-        if (footerToRemove) {
-            footerToRemove.remove();
-        }
-
-        // Extract and apply CSS styles from the template
-        this.extractAndApplyStyles(doc);
-
-        // Load associated JSON files if they exist
-        this.editor.elements.loadTranslationFiles(doc);
-        this.editor.elements.loadImageFiles(doc);
-
-        // Process editable elements
-        this.editor.elements.processEditableElements(doc);
-
-        // Display the template
-        const templateContainer = document.getElementById('template-content');
-        templateContainer.innerHTML = '';
-        templateContainer.appendChild(doc.body);
-
-        // Add padding to prevent editor overlay from blocking content
-        templateContainer.style.paddingTop = '56px';
-
-        // Initialize section management
-        this.editor.sections.initializeSections();
-
-        this.editor.ui.showStatus('Template ready for editing!', 'success');
-    }
+         // Clear any existing template styles first
+         this.clearTemplateStyles();
+ 
+         const parser = new DOMParser();
+         const doc = parser.parseFromString(this.editor.templateContent, 'text/html');
+ 
+         // Remove the e-info footer if present
+         const footerToRemove = doc.getElementById('modernFooter');
+         if (footerToRemove) {
+             footerToRemove.remove();
+         }
+ 
+         // Extract and apply CSS styles from the template
+         this.extractAndApplyStyles(doc);
+ 
+         // Display the template in the DOM first so CSS styles are applied
+         const templateContainer = document.getElementById('template-content');
+         templateContainer.innerHTML = '';
+         templateContainer.appendChild(doc.body);
+ 
+         // Add padding to prevent editor overlay from blocking content
+         templateContainer.style.paddingTop = '56px';
+ 
+         // Now that the template is in the live DOM and CSS styles are applied,
+         // load text/image files and process editable elements
+         // This must happen AFTER appendChild so getComputedStyle() works correctly
+         this.editor.elements.loadTranslationFiles(templateContainer);
+         this.editor.elements.loadImageFiles(templateContainer);
+ 
+         // Process editable elements
+         this.editor.elements.processEditableElements(templateContainer);
+ 
+         // Initialize section management
+         this.editor.sections.initializeSections();
+ 
+         this.editor.ui.showStatus('Template ready for editing!', 'success');
+     }
 
     extractAndApplyStyles(doc) {
         // Extract styles from template head

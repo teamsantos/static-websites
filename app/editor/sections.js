@@ -345,23 +345,33 @@ export class SectionManager {
 
     /**
      * Convert RGB/RGBA color to hex
+     * Handles hex, rgb, rgba, and edge cases like transparent colors
      */
     rgbToHex(color) {
+        if (!color) return '#ffffff';
+        
         // If it's already a hex color, return it
-        if (color.startsWith('#')) {
+        if (typeof color === 'string' && color.startsWith('#')) {
             return color;
         }
 
-        // Handle RGB/RGBA colors
-        const rgbMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
+        // Handle transparent and special values
+        if (color === 'transparent' || color === 'rgba(0, 0, 0, 0)' || color === 'inherit' || color === 'initial') {
+            return '#ffffff'; // Default to white for transparent/unset colors
+        }
+
+        // Handle RGB/RGBA colors - with flexible spacing
+        const rgbMatch = color.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*[\d.]+)?\s*\)$/);
         if (rgbMatch) {
             const r = parseInt(rgbMatch[1]);
             const g = parseInt(rgbMatch[2]);
             const b = parseInt(rgbMatch[3]);
-            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+            const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+            return hex.toLowerCase();
         }
 
-        return '#ffffff'; // Fallback
+        // Default fallback
+        return '#ffffff';
     }
 
     /**

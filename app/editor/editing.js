@@ -27,7 +27,14 @@ export class EditingManager {
         const textId = element.getAttribute('data-text-id');
         const currentText = this.editor.translations[this.editor.currentLanguage]?.[textId] || element.textContent;
         // Ensure color is in hex format for Safari compatibility with color picker
-        let currentColor = this.editor.textColors[textId] || getComputedStyle(element).color || '#000000';
+        let currentColor = this.editor.textColors[textId];
+        
+        // If no stored color, try to get it from element
+        if (!currentColor) {
+            const computedStyle = getComputedStyle(element);
+            currentColor = element.style.color || computedStyle.color || '#1f2937';
+        }
+        
         // Convert RGB/RGBA to hex if needed
         currentColor = this.editor.elements.rgbToHex(currentColor);
 
@@ -165,7 +172,8 @@ export class EditingManager {
             this.editor.currentEditingElement.textContent = newText;
 
             // Update element color
-            this.editor.currentEditingElement.style.color = newColor;
+            this.editor.currentEditingElement.style.setProperty('color', newColor, 'important');
+            console.debug(`Set color on element: ${newColor}`);
 
             // Update translations
             if (!this.editor.translations[this.editor.currentLanguage]) {
