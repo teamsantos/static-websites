@@ -329,4 +329,4 @@ jobs:
           done
           echo ""
           echo "📊 S3 bucket: $S3_BUCKET"
-          echo "🌍 CloudFront: multi-tenant distribution"
+          echo "🌍 CloudFront: d27y4ufegjw8rd.cloudfront.net"

@@ -3,6 +3,7 @@ import { BucketStack } from "./bucketStack";
 import { CreateProjectStack } from "./CreateProjectStack";
 import { ProjectSite } from "./ProjectStack";
 import { StripeCheckoutStack } from "./PaymentSessionStack";
+import { MultiTenantDistributionStack } from "./MultiTenantDistributionStack";
 
 const app = new cdk.App();
 
@@ -19,6 +20,7 @@ if (!account) {
     console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
 }
 
+// Create the shared S3 bucket
 new BucketStack(app, "StaticWebsitesBucket", {
     bucketName: config.s3Bucket,
     env: {
@@ -32,6 +34,28 @@ new BucketStack(app, "StaticWebsitesBucket", {
     },
 });
 
+// Create the shared multi-tenant CloudFront distribution (only once)
+const multiTenantDistribution = new MultiTenantDistributionStack(
+    app,
+    "MultiTenantDistribution",
+    {
+        domainName: config.domain,
+        hostedZoneDomainName: config.domain,
+        s3Bucket: config.s3Bucket,
+        region: config.region,
+        env: {
+            account: account,
+            region: config.certificateRegion,
+        },
+        tags: {
+            ManagedBy: "CDK",
+            Environment: "production",
+            Purpose: "MultiTenantDistribution",
+        },
+    }
+);
+
+// Create other infrastructure stacks
 const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
     ses_region: config.certificateRegion,
     domain: config.domain,
@@ -44,14 +68,14 @@ const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
 });
 
 new StripeCheckoutStack(app, "StripeCheckoutStack", {
-  domain: config.domain,
-  stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
-  frontendUrl: process.env.FRONTEND_URL || "",
-  s3Bucket: config.s3Bucket,
-  env: {
-    account: account,
-    region: config.region,
-  },
+    domain: config.domain,
+    stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
+    frontendUrl: process.env.FRONTEND_URL || "",
+    s3Bucket: config.s3Bucket,
+    env: {
+        account: account,
+        region: config.region,
+    },
 });
 
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
@@ -79,11 +103,10 @@ if (!projectsParam && !templatesParam) {
                 console.log(`Creating stack for project: ${project}.${config.domain}`);
 
                 new ProjectSite(app, `Site-${project}`, {
-                    s3Bucket: config.s3Bucket,
-                    region: config.region,
                     projectName: project,
                     domainName: `${project}.${config.domain}`,
                     hostedZoneDomainName: config.domain,
+                    multiTenantDistribution: multiTenantDistribution,
                     type: 'project',
                     env: {
                         account: account,
@@ -118,11 +141,10 @@ if (!projectsParam && !templatesParam) {
                 console.log(`Creating stack for template: ${template}.${config.domain}`);
 
                 new ProjectSite(app, `Site-template-${template}`, {
-                    s3Bucket: config.s3Bucket,
-                    region: config.region,
                     projectName: template,
                     domainName: `${template}.templates.${config.domain}`,
                     hostedZoneDomainName: config.domain,
+                    multiTenantDistribution: multiTenantDistribution,
                     type: 'template',
                     env: {
                         account: account,
