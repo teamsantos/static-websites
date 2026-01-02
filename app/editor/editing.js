@@ -40,7 +40,7 @@ export class EditingManager {
 
          // Store initial state for cancel functionality
          const initialColor = currentColor;
-         const initialComputedColor = getComputedStyle(element).color;
+         const initialText = currentText;
 
          // Create modern floating editor modal (like image editor)
          const editorModal = document.createElement('div');
@@ -58,20 +58,20 @@ export class EditingManager {
                          <div id="color-picker"></div>
                      </div>
                      <textarea class="modern-text-input" placeholder="Enter your text here...">${currentText}</textarea>
-                 </div>
-                 <div class="editor-card-footer">
-                     <div class="editor-card-actions">
-                         <button class="btn btn-outline btn-glass" onclick="const modal = this.closest('.modern-text-editor-overlay'); modal.classList.add('removing'); setTimeout(() => { modal.remove(); if(window.templateEditorInstance) { window.templateEditorInstance.cancelTextEdit(); } }, 300);">
-                             Cancel
-                         </button>
-                         <button class="btn btn-primary" onclick="if(window.templateEditorInstance) { window.templateEditorInstance.saveModernTextEdit.call(window.templateEditorInstance, this); } else { console.error('Template editor instance not found'); }">
-                             Save Changes
-                         </button>
-                     </div>
-                 <canvas class="stars popup-stars" aria-hidden="true"></canvas>
-                 </div>
-             </div>
-         `;
+                  </div>
+                  <div class="editor-card-footer">
+                      <div class="editor-card-actions">
+                          <button class="btn btn-outline btn-glass" onclick="const modal = this.closest('.modern-text-editor-overlay'); if(window.templateEditorInstance) { window.templateEditorInstance.cancelTextEdit(modal); } modal.classList.add('removing'); setTimeout(() => { modal.remove(); }, 300);">
+                              Cancel
+                          </button>
+                          <button class="btn btn-primary" onclick="if(window.templateEditorInstance) { window.templateEditorInstance.saveModernTextEdit.call(window.templateEditorInstance, this); } else { console.error('Template editor instance not found'); }">
+                              Save Changes
+                          </button>
+                      </div>
+                  <canvas class="stars popup-stars" aria-hidden="true"></canvas>
+                  </div>
+              </div>
+          `;
 
          // Calculate optimal dimensions for the card
          const rect = element.getBoundingClientRect();
@@ -94,12 +94,12 @@ export class EditingManager {
          editorModal.addEventListener('click', (e) => {
              // Only cancel if clicking on the overlay itself, not the card
              if (e.target === editorModal) {
+                 if (window.templateEditorInstance) {
+                     window.templateEditorInstance.cancelTextEdit(editorModal);
+                 }
                  editorModal.classList.add('removing');
                  setTimeout(() => {
                      editorModal.remove();
-                     if (window.templateEditorInstance) {
-                         window.templateEditorInstance.cancelTextEdit();
-                     }
                  }, 300);
              }
          });
@@ -123,8 +123,18 @@ export class EditingManager {
              }
          }, 100);
 
+         // Add real-time text preview while editing
+         textarea.addEventListener('input', (e) => {
+             element.textContent = e.target.value;
+         });
+
          // Initialize iro.js color picker
          this.setupIroColorPicker(editorModal, currentColor, element, initialColor);
+
+         // Store initial state on modal for cancel functionality
+         editorModal.originalText = initialText;
+         editorModal.originalColor = initialColor;
+         editorModal.editingElement = element;
 
          // Handle keyboard shortcuts
          textarea.addEventListener('keydown', (e) => {
@@ -134,12 +144,12 @@ export class EditingManager {
                      window.templateEditorInstance.saveModernTextEdit.call(window.templateEditorInstance, editorModal.querySelector('.btn-primary'));
                  }
              } else if (e.key === 'Escape') {
+                 if (window.templateEditorInstance) {
+                     window.templateEditorInstance.cancelTextEdit(editorModal);
+                 }
                  editorModal.classList.add('removing');
                  setTimeout(() => {
                      editorModal.remove();
-                     if (window.templateEditorInstance) {
-                         window.templateEditorInstance.cancelTextEdit();
-                     }
                  }, 300);
              }
          });
@@ -183,19 +193,18 @@ export class EditingManager {
               }
           });
 
-          // Real-time color preview: update the element's color as user changes it
-          picker.on('color:change', (color) => {
-              swatch.style.backgroundColor = color.hexString;
-              // Update the element on the page in real-time
-              if (element) {
-                  element.style.setProperty('color', color.hexString, 'important');
-              }
-          });
+           // Real-time color preview: update the element's color as user changes it
+           picker.on('color:change', (color) => {
+               swatch.style.backgroundColor = color.hexString;
+               // Update the element on the page in real-time
+               if (element) {
+                   element.style.setProperty('color', color.hexString, 'important');
+               }
+           });
 
-          // Store original color for cancel functionality
-          modal.originalColor = originalColor;
-          modal.editingElement = element;
-      }
+           // Store picker instance on modal for later use
+           modal.colorPickerInstance = picker;
+       }
 
        positionColorPickerPopover(swatch, popover, modal) {
            const modalRect = modal.querySelector('.modern-text-editor-card').getBoundingClientRect();
@@ -260,14 +269,20 @@ export class EditingManager {
          this.editor.cancelCurrentEdit();
      }
 
-     cancelTextEdit() {
-         // Restore the original color of the element
-         const modal = document.querySelector('.modern-text-editor-overlay');
-         if (modal && modal.originalColor && modal.editingElement) {
-             modal.editingElement.style.setProperty('color', modal.originalColor, 'important');
-         }
-         this.editor.cancelCurrentEdit();
-     }
+      cancelTextEdit(modal) {
+          // Restore the original text and color of the element before closing the modal
+          if (modal && modal.editingElement) {
+              // Restore text
+              if (modal.originalText !== undefined) {
+                  modal.editingElement.textContent = modal.originalText;
+              }
+              // Restore color
+              if (modal.originalColor) {
+                  modal.editingElement.style.setProperty('color', modal.originalColor, 'important');
+              }
+          }
+          this.editor.cancelCurrentEdit();
+      }
 
      saveModernTextEdit(saveBtn) {
          const modal = saveBtn.closest('.modern-text-editor-overlay');

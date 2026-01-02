@@ -103,13 +103,17 @@ class TemplateEditor {
         this.editing.handleElementClick(event);
     }
 
-    saveModernTextEdit(saveBtn) {
-        this.editing.saveModernTextEdit(saveBtn);
-    }
+     saveModernTextEdit(saveBtn) {
+         this.editing.saveModernTextEdit(saveBtn);
+     }
 
-    saveImageEdit(imageId, saveBtn) {
-        this.editing.saveImageEdit(imageId, saveBtn);
-    }
+     cancelTextEdit(modal) {
+         this.editing.cancelTextEdit(modal);
+     }
+
+     saveImageEdit(imageId, saveBtn) {
+         this.editing.saveImageEdit(imageId, saveBtn);
+     }
 
     // Utility methods delegated to UtilsManager
     cancelCurrentEdit() {
