@@ -56,10 +56,9 @@ export class MultiTenantDistributionStack extends cdk.Stack {
                 throw new Error("Invalid certificate ARN in Parameter Store");
             }
         } catch (error) {
-            // Create new wildcard certificate with both wildcard and base domain
+            // Create new wildcard certificate
             const newCertificate = new acm.Certificate(this, "WildcardCertificate", {
-                domainName: baseDomain,
-                subjectAlternativeNames: [wildcardDomain],
+                domainName: wildcardDomain,
                 validation: acm.CertificateValidation.fromDns(hostedZone),
             });
 
@@ -67,7 +66,7 @@ export class MultiTenantDistributionStack extends cdk.Stack {
             new ssm.StringParameter(this, "CertificateParameter", {
                 parameterName: certificateParameterPath,
                 stringValue: newCertificate.certificateArn,
-                description: `ACM Certificate ARN for ${baseDomain} and ${wildcardDomain}`,
+                description: `ACM Certificate ARN for ${wildcardDomain}`,
                 tier: ssm.ParameterTier.STANDARD,
             });
 
@@ -159,7 +158,7 @@ function handler(event) {
                 ),
                 cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
             },
-            domainNames: [baseDomain, wildcardDomain],
+            domainNames: [wildcardDomain],
             defaultRootObject: "index.html",
             certificate: certificate,
             minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
