@@ -240,15 +240,15 @@ jobs:
           echo "templates-comma=$TEMPLATES_COMMA" >> $GITHUB_OUTPUT
           echo "📦 Templates to deploy (comma-separated): $TEMPLATES_COMMA"
 
-      - name: Preview infrastructure changes
-        working-directory: infra
-        shell: bash
-        run: |
-          echo "🔍 Previewing changes for templates: ${{ steps.format-templates.outputs.templates-comma }}"
-          ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
-          CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
-          npx cdk diff --all \
-            --context "templates=${{ steps.format-templates.outputs.templates-comma }}" || true
+      # - name: Preview infrastructure changes
+      #   working-directory: infra
+      #   shell: bash
+      #   run: |
+      #     echo "🔍 Previewing changes for templates: ${{ steps.format-templates.outputs.templates-comma }}"
+      #     ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
+      #     CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
+      #     npx cdk diff --all \
+      #       --context "templates=${{ steps.format-templates.outputs.templates-comma }}" || true
 
       - name: Deploy infrastructure
         working-directory: infra

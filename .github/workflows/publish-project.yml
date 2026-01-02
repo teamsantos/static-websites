@@ -241,15 +241,15 @@ jobs:
           echo "projects-comma=$PROJECTS_COMMA" >> $GITHUB_OUTPUT
           echo "📦 Projects to deploy (comma-separated): $PROJECTS_COMMA"
 
-      - name: Preview infrastructure changes
-        working-directory: infra
-        shell: bash
-        run: |
-          echo "🔍 Previewing changes for projects: ${{ steps.format-projects.outputs.projects-comma }}"
-          ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
-          CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
-          npx cdk diff --all \
-            --context "projects=${{ steps.format-projects.outputs.projects-comma }}" || true
+      # - name: Preview infrastructure changes
+      #   working-directory: infra
+      #   shell: bash
+      #   run: |
+      #     echo "🔍 Previewing changes for projects: ${{ steps.format-projects.outputs.projects-comma }}"
+      #     ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
+      #     CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
+      #     npx cdk diff --all \
+      #       --context "projects=${{ steps.format-projects.outputs.projects-comma }}" || true
 
       - name: Deploy infrastructure
         working-directory: infra

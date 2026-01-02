@@ -157,14 +157,14 @@ jobs:
           npx tsc
           echo "✅ CDK project built successfully"
 
-      - name: Preview infrastructure changes
-        working-directory: infra
-        shell: bash
-        run: |
-          echo "🔍 Previewing infrastructure changes..."
-          ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
-          CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
-          npx cdk diff --all || true
+      # - name: Preview infrastructure changes
+      #   working-directory: infra
+      #   shell: bash
+      #   run: |
+      #     echo "🔍 Previewing infrastructure changes..."
+      #     ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
+      #     CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
+      #     npx cdk diff --all || true
 
       - name: Deploy infrastructure
         working-directory: infra
