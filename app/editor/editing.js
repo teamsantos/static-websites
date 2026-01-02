@@ -141,36 +141,81 @@ export class EditingManager {
          });
      }
 
-     setupIroColorPicker(modal, initialColor) {
-         const swatch = modal.querySelector('#text-color-swatch');
-         const popover = modal.querySelector('#color-picker-popover');
+      setupIroColorPicker(modal, initialColor) {
+          const swatch = modal.querySelector('#text-color-swatch');
+          const popover = modal.querySelector('#color-picker-popover');
 
-         const picker = new iro.ColorPicker('#color-picker', {
-             width: 180,
-             color: initialColor
-         });
+          const picker = new iro.ColorPicker('#color-picker', {
+              width: 180,
+              color: initialColor
+          });
 
-         // Store picker instance for later use
-         modal.colorPickerInstance = picker;
+          // Store picker instance for later use
+          modal.colorPickerInstance = picker;
 
-         swatch.addEventListener('click', () => {
-             const rect = swatch.getBoundingClientRect();
-             const cardRect = modal.querySelector('.modern-text-editor-card').getBoundingClientRect();
-             popover.style.left = (rect.left - cardRect.left) + 'px';
-             popover.style.top = (rect.bottom - cardRect.top) + 'px';
-             popover.style.display = popover.style.display === 'block' ? 'none' : 'block';
-         });
+          swatch.addEventListener('click', () => {
+              const isVisible = popover.style.display === 'block';
+              if (isVisible) {
+                  popover.style.display = 'none';
+              } else {
+                  this.positionColorPickerPopover(swatch, popover, modal);
+                  popover.style.display = 'block';
+              }
+          });
 
-         document.addEventListener('click', (e) => {
-             if (!popover.contains(e.target) && e.target !== swatch) {
-                 popover.style.display = 'none';
-             }
-         });
+          document.addEventListener('click', (e) => {
+              if (!popover.contains(e.target) && e.target !== swatch) {
+                  popover.style.display = 'none';
+              }
+          });
 
-         picker.on('color:change', (color) => {
-             swatch.style.backgroundColor = color.hexString;
-         });
-     }
+          picker.on('color:change', (color) => {
+              swatch.style.backgroundColor = color.hexString;
+          });
+      }
+
+       positionColorPickerPopover(swatch, popover, modal) {
+           const modalRect = modal.querySelector('.modern-text-editor-card').getBoundingClientRect();
+           const swatchRect = swatch.getBoundingClientRect();
+           const popoverWidth = 206; // 180px picker + 12px padding on each side + borders
+           const popoverHeight = 206; // Approximate height for the picker
+           const gap = 8; // Space between swatch and popover
+
+           // Calculate available space
+           const spaceAbove = swatchRect.top - gap - popoverHeight;
+           const spaceBelow = window.innerHeight - swatchRect.bottom - gap - popoverHeight;
+           const spaceLeft = swatchRect.left - gap - popoverWidth;
+           const spaceRight = window.innerWidth - swatchRect.right - gap - popoverWidth;
+
+           // Determine vertical position: prefer below, fallback to above
+           let top;
+           if (spaceBelow >= 0) {
+               // Position below the swatch
+               top = swatchRect.top - modalRect.top + swatchRect.height + gap;
+           } else if (spaceAbove >= 0) {
+               // Position above the swatch
+               top = swatchRect.top - modalRect.top - popoverHeight - gap;
+           } else {
+               // Not enough space either way, center vertically but prefer below
+               top = swatchRect.top - modalRect.top + swatchRect.height + gap;
+           }
+
+           // Determine horizontal position: prefer right, fallback to left
+           let left;
+           if (spaceRight >= 0) {
+               // Position to the right of the swatch
+               left = swatchRect.left - modalRect.left + swatchRect.width + gap;
+           } else if (spaceLeft >= 0) {
+               // Position to the left of the swatch
+               left = swatchRect.left - modalRect.left - popoverWidth - gap;
+           } else {
+               // Not enough space either way, try to center within modal bounds
+               left = Math.max(gap, Math.min(swatchRect.left - modalRect.left - popoverWidth / 2, modalRect.width - popoverWidth - gap));
+           }
+
+           popover.style.left = left + 'px';
+           popover.style.top = top + 'px';
+       }
 
     saveTextEdit(editor, element) {
         const newText = editor.value.trim();

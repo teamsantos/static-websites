@@ -170,30 +170,73 @@ export class SectionManager {
          });
      }
 
-     /**
-      * Toggle section color picker visibility
-      */
-     toggleSectionColorPicker(sectionId, swatchElement) {
-         const popover = swatchElement.parentElement.querySelector('.section-color-picker-popover');
-         if (!popover) return;
+      /**
+       * Toggle section color picker visibility
+       */
+      toggleSectionColorPicker(sectionId, swatchElement) {
+          const popover = swatchElement.parentElement.querySelector('.section-color-picker-popover');
+          if (!popover) return;
 
-         const isVisible = popover.style.display === 'block';
-         popover.style.display = isVisible ? 'none' : 'block';
+          const isVisible = popover.style.display === 'block';
+          popover.style.display = isVisible ? 'none' : 'block';
 
-         if (!isVisible) {
-             const rect = swatchElement.getBoundingClientRect();
-             const controlsRect = swatchElement.closest('.section-controls').getBoundingClientRect();
-             popover.style.left = (rect.left - controlsRect.left) + 'px';
-             popover.style.top = (rect.bottom - controlsRect.top + 5) + 'px';
-         }
+          if (!isVisible) {
+              this.positionSectionColorPickerPopover(swatchElement, popover);
+          }
 
-         // Close picker when clicking outside
-         document.addEventListener('click', (e) => {
-             if (!popover.contains(e.target) && e.target !== swatchElement) {
-                 popover.style.display = 'none';
-             }
-         });
-     }
+          // Close picker when clicking outside
+          document.addEventListener('click', (e) => {
+              if (!popover.contains(e.target) && e.target !== swatchElement) {
+                  popover.style.display = 'none';
+              }
+          });
+      }
+
+       /**
+        * Position section color picker popover with viewport awareness
+        */
+       positionSectionColorPickerPopover(swatchElement, popover) {
+           const swatchRect = swatchElement.getBoundingClientRect();
+           const controlsRect = swatchElement.closest('.section-controls').getBoundingClientRect();
+           const popoverWidth = 206; // 180px picker + 12px padding on each side + borders
+           const popoverHeight = 206; // Approximate height for the picker
+           const gap = 8; // Space between swatch and popover
+
+           // Calculate available space in viewport
+           const spaceAbove = swatchRect.top - gap - popoverHeight;
+           const spaceBelow = window.innerHeight - swatchRect.bottom - gap - popoverHeight;
+           const spaceLeft = swatchRect.left - gap - popoverWidth;
+           const spaceRight = window.innerWidth - swatchRect.right - gap - popoverWidth;
+
+           // Determine vertical position: prefer below, fallback to above
+           let top;
+           if (spaceBelow >= 0) {
+               // Position below the swatch
+               top = swatchRect.top - controlsRect.top + swatchRect.height + gap;
+           } else if (spaceAbove >= 0) {
+               // Position above the swatch
+               top = swatchRect.top - controlsRect.top - popoverHeight - gap;
+           } else {
+               // Not enough space either way, prefer below
+               top = swatchRect.top - controlsRect.top + swatchRect.height + gap;
+           }
+
+           // Determine horizontal position: prefer right, fallback to left
+           let left;
+           if (spaceRight >= 0) {
+               // Position to the right of the swatch
+               left = swatchRect.left - controlsRect.left + swatchRect.width + gap;
+           } else if (spaceLeft >= 0) {
+               // Position to the left of the swatch
+               left = swatchRect.left - controlsRect.left - popoverWidth - gap;
+           } else {
+               // Not enough space either way, constrain within reasonable bounds
+               left = Math.max(0, Math.min(swatchRect.left - controlsRect.left - popoverWidth / 2, controlsRect.width - popoverWidth));
+           }
+
+           popover.style.left = left + 'px';
+           popover.style.top = top + 'px';
+       }
 
     /**
      * Generate an ID for a section if it doesn't have one
