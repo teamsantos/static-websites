@@ -92,7 +92,7 @@ async function processImages(images, projectName) {
 async function generateHtmlFromTemplate(templateId, customImages, customLangs, octokit, owner, repo) {
     try {
         // Load base template HTML (processed version with data attributes)
-        const templatePath = `templates/${templateId}/dist/index.html`;
+        const templatePath = `templates/${templateId}/index.html`;
         let templateHtml;
         try {
             const response = await octokit.rest.repos.getContent({
