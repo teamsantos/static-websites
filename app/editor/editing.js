@@ -21,121 +21,156 @@ export class EditingManager {
     }
 
      startTextEditing(element) {
-        this.editor.currentEditingElement = element;
-        element.classList.add('editing');
+         this.editor.currentEditingElement = element;
+         element.classList.add('editing');
 
-        const textId = element.getAttribute('data-text-id');
-        const currentText = this.editor.translations[this.editor.currentLanguage]?.[textId] || element.textContent;
-        // Ensure color is in hex format for Safari compatibility with color picker
-        let currentColor = this.editor.textColors[textId];
-        
-        // If no stored color, try to get it from element
-        if (!currentColor) {
-            const computedStyle = getComputedStyle(element);
-            currentColor = element.style.color || computedStyle.color || '#1f2937';
-        }
-        
-        // Convert RGB/RGBA to hex if needed
-        currentColor = this.editor.elements.rgbToHex(currentColor);
+         const textId = element.getAttribute('data-text-id');
+         const currentText = this.editor.translations[this.editor.currentLanguage]?.[textId] || element.textContent;
+         // Ensure color is in hex format
+         let currentColor = this.editor.textColors[textId];
+         
+         // If no stored color, try to get it from element
+         if (!currentColor) {
+             const computedStyle = getComputedStyle(element);
+             currentColor = element.style.color || computedStyle.color || '#1f2937';
+         }
+         
+         // Convert RGB/RGBA to hex if needed
+         currentColor = this.editor.elements.rgbToHex(currentColor);
 
-        // Create modern floating editor modal (like image editor)
-        const editorModal = document.createElement('div');
-        editorModal.className = 'modern-text-editor-overlay';
-        editorModal.innerHTML = `
-            <div class="modern-text-editor-card">
-                <div class="editor-card-content">
-                    <div class="text-editor-controls">
-                        <div class="color-picker-group">
-                            <label for="text-color-picker">Text Color:</label>
-                            <input type="color" id="text-color-picker" value="${currentColor}" class="color-picker">
-                        </div>
-                    </div>
-                    <textarea class="modern-text-input" placeholder="Enter your text here...">${currentText}</textarea>
-                </div>
-                <div class="editor-card-footer">
-                    <div class="editor-card-actions">
-                        <button class="btn btn-outline btn-glass" onclick="const modal = this.closest('.modern-text-editor-overlay'); modal.classList.add('removing'); setTimeout(() => { modal.remove(); if(window.templateEditorInstance) { window.templateEditorInstance.cancelCurrentEdit(); } }, 300);">
-                            Cancel
-                        </button>
-                        <button class="btn btn-primary" onclick="if(window.templateEditorInstance) { window.templateEditorInstance.saveModernTextEdit.call(window.templateEditorInstance, this); } else { console.error('Template editor instance not found'); }">
-                            Save Changes
-                        </button>
-                    </div>
-                <canvas class="stars popup-stars" aria-hidden="true"></canvas>
-                </div>
-            </div>
-        `;
+         // Create modern floating editor modal (like image editor)
+         const editorModal = document.createElement('div');
+         editorModal.className = 'modern-text-editor-overlay';
+         editorModal.innerHTML = `
+             <div class="modern-text-editor-card">
+                 <div class="editor-card-content">
+                     <div class="text-editor-controls">
+                         <div class="color-picker-group">
+                             <label for="text-color-swatch">Text Color:</label>
+                             <div id="text-color-swatch" class="color-swatch" style="background: ${currentColor};"></div>
+                         </div>
+                     </div>
+                     <div id="color-picker-popover" class="color-picker-popover" style="display: none;">
+                         <div id="color-picker"></div>
+                     </div>
+                     <textarea class="modern-text-input" placeholder="Enter your text here...">${currentText}</textarea>
+                 </div>
+                 <div class="editor-card-footer">
+                     <div class="editor-card-actions">
+                         <button class="btn btn-outline btn-glass" onclick="const modal = this.closest('.modern-text-editor-overlay'); modal.classList.add('removing'); setTimeout(() => { modal.remove(); if(window.templateEditorInstance) { window.templateEditorInstance.cancelCurrentEdit(); } }, 300);">
+                             Cancel
+                         </button>
+                         <button class="btn btn-primary" onclick="if(window.templateEditorInstance) { window.templateEditorInstance.saveModernTextEdit.call(window.templateEditorInstance, this); } else { console.error('Template editor instance not found'); }">
+                             Save Changes
+                         </button>
+                     </div>
+                 <canvas class="stars popup-stars" aria-hidden="true"></canvas>
+                 </div>
+             </div>
+         `;
 
-        // Calculate optimal dimensions for the card
-        const rect = element.getBoundingClientRect();
-        const minWidth = 440; // Minimum readable width for modern card
-        const minHeight = 380; // Minimum readable height for modern card (increased for color picker)
-        const maxWidth = Math.min(window.innerWidth - 48, 520);
-        const maxHeight = Math.min(window.innerHeight - 160, 640);
+         // Calculate optimal dimensions for the card
+         const rect = element.getBoundingClientRect();
+         const minWidth = 440; // Minimum readable width for modern card
+         const minHeight = 380; // Minimum readable height for modern card (increased for color picker)
+         const maxWidth = Math.min(window.innerWidth - 48, 520);
+         const maxHeight = Math.min(window.innerHeight - 160, 640);
 
-        const optimalWidth = Math.max(minWidth, Math.min(rect.width + 100, maxWidth));
-        const optimalHeight = Math.max(minHeight, Math.min(rect.height + 220, maxHeight)); // Increased for color picker
+         const optimalWidth = Math.max(minWidth, Math.min(rect.width + 100, maxWidth));
+         const optimalHeight = Math.max(minHeight, Math.min(rect.height + 220, maxHeight)); // Increased for color picker
 
-        const editorCard = editorModal.querySelector('.modern-text-editor-card');
-        editorCard.style.width = optimalWidth + 'px';
-        editorCard.style.minHeight = optimalHeight + 'px';
-        editorCard.style.maxHeight = maxHeight + 'px';
+         const editorCard = editorModal.querySelector('.modern-text-editor-card');
+         editorCard.style.width = optimalWidth + 'px';
+         editorCard.style.minHeight = optimalHeight + 'px';
+         editorCard.style.maxHeight = maxHeight + 'px';
 
-        document.body.appendChild(editorModal);
+         document.body.appendChild(editorModal);
 
-        // Add click handler to overlay for canceling (like image editor)
-        editorModal.addEventListener('click', (e) => {
-            // Only cancel if clicking on the overlay itself, not the card
-            if (e.target === editorModal) {
-                editorModal.classList.add('removing');
-                setTimeout(() => {
-                    editorModal.remove();
-                    if (window.templateEditorInstance) {
-                        window.templateEditorInstance.cancelCurrentEdit();
-                    }
-                }, 300);
-            }
-        });
+         // Add click handler to overlay for canceling (like image editor)
+         editorModal.addEventListener('click', (e) => {
+             // Only cancel if clicking on the overlay itself, not the card
+             if (e.target === editorModal) {
+                 editorModal.classList.add('removing');
+                 setTimeout(() => {
+                     editorModal.remove();
+                     if (window.templateEditorInstance) {
+                         window.templateEditorInstance.cancelCurrentEdit();
+                     }
+                 }, 300);
+             }
+         });
 
-        // Prevent click events on the card from bubbling to the overlay
-        editorCard.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
+         // Prevent click events on the card from bubbling to the overlay
+         editorCard.addEventListener('click', (e) => {
+             e.stopPropagation();
+         });
 
-        // Focus the textarea and reinitialize stars
-        const textarea = editorModal.querySelector('.modern-text-input');
-        const starCanvas = editorModal.querySelector('.stars');
+         // Focus the textarea and reinitialize stars
+         const textarea = editorModal.querySelector('.modern-text-input');
+         const starCanvas = editorModal.querySelector('.stars');
 
-        setTimeout(() => {
-            textarea.focus();
-            textarea.select();
+         setTimeout(() => {
+             textarea.focus();
+             textarea.select();
 
-            // Reinitialize stars for the popup canvas
-            if (starCanvas && window.starsAnimationInstance) {
-                window.starsAnimationInstance.reinitializeCanvas(starCanvas);
-            }
-        }, 100);
+             // Reinitialize stars for the popup canvas
+             if (starCanvas && window.starsAnimationInstance) {
+                 window.starsAnimationInstance.reinitializeCanvas(starCanvas);
+             }
+         }, 100);
 
+         // Initialize iro.js color picker
+         this.setupIroColorPicker(editorModal, currentColor);
 
+         // Handle keyboard shortcuts
+         textarea.addEventListener('keydown', (e) => {
+             if (e.key === 'Enter' && e.ctrlKey) {
+                 // Use the global instance for keyboard shortcuts
+                 if (window.templateEditorInstance) {
+                     window.templateEditorInstance.saveModernTextEdit.call(window.templateEditorInstance, editorModal.querySelector('.btn-primary'));
+                 }
+             } else if (e.key === 'Escape') {
+                 editorModal.classList.add('removing');
+                 setTimeout(() => {
+                     editorModal.remove();
+                     if (window.templateEditorInstance) {
+                         window.templateEditorInstance.cancelCurrentEdit();
+                     }
+                 }, 300);
+             }
+         });
+     }
 
-        // Handle keyboard shortcuts
-        textarea.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.ctrlKey) {
-                // Use the global instance for keyboard shortcuts
-                if (window.templateEditorInstance) {
-                    window.templateEditorInstance.saveModernTextEdit.call(window.templateEditorInstance, editorModal.querySelector('.btn-primary'));
-                }
-            } else if (e.key === 'Escape') {
-                editorModal.classList.add('removing');
-                setTimeout(() => {
-                    editorModal.remove();
-                    if (window.templateEditorInstance) {
-                        window.templateEditorInstance.cancelCurrentEdit();
-                    }
-                }, 300);
-            }
-        });
-    }
+     setupIroColorPicker(modal, initialColor) {
+         const swatch = modal.querySelector('#text-color-swatch');
+         const popover = modal.querySelector('#color-picker-popover');
+
+         const picker = new iro.ColorPicker('#color-picker', {
+             width: 180,
+             color: initialColor
+         });
+
+         // Store picker instance for later use
+         modal.colorPickerInstance = picker;
+
+         swatch.addEventListener('click', () => {
+             const rect = swatch.getBoundingClientRect();
+             const cardRect = modal.querySelector('.modern-text-editor-card').getBoundingClientRect();
+             popover.style.left = (rect.left - cardRect.left) + 'px';
+             popover.style.top = (rect.bottom - cardRect.top) + 'px';
+             popover.style.display = popover.style.display === 'block' ? 'none' : 'block';
+         });
+
+         document.addEventListener('click', (e) => {
+             if (!popover.contains(e.target) && e.target !== swatch) {
+                 popover.style.display = 'none';
+             }
+         });
+
+         picker.on('color:change', (color) => {
+             swatch.style.backgroundColor = color.hexString;
+         });
+     }
 
     saveTextEdit(editor, element) {
         const newText = editor.value.trim();
@@ -157,44 +192,44 @@ export class EditingManager {
         this.editor.cancelCurrentEdit();
     }
 
-    saveModernTextEdit(saveBtn) {
-        const modal = saveBtn.closest('.modern-text-editor-overlay');
-        const textarea = modal.querySelector('.modern-text-input');
-        const colorPicker = modal.querySelector('#text-color-picker');
+     saveModernTextEdit(saveBtn) {
+         const modal = saveBtn.closest('.modern-text-editor-overlay');
+         const textarea = modal.querySelector('.modern-text-input');
+         const picker = modal.colorPickerInstance;
 
-        const newText = textarea.value.trim();
-        const newColor = colorPicker.value;
+         const newText = textarea.value.trim();
+         const newColor = picker.color.hexString;
 
-        if (this.editor.currentEditingElement) {
-            const textId = this.editor.currentEditingElement.getAttribute('data-text-id');
+         if (this.editor.currentEditingElement) {
+             const textId = this.editor.currentEditingElement.getAttribute('data-text-id');
 
-            // Update element content
-            this.editor.currentEditingElement.textContent = newText;
+             // Update element content
+             this.editor.currentEditingElement.textContent = newText;
 
-            // Update element color
-            this.editor.currentEditingElement.style.setProperty('color', newColor, 'important');
-            console.debug(`Set color on element: ${newColor}`);
+             // Update element color
+             this.editor.currentEditingElement.style.setProperty('color', newColor, 'important');
+             console.debug(`Set color on element: ${newColor}`);
 
-            // Update translations
-            if (!this.editor.translations[this.editor.currentLanguage]) {
-                this.editor.translations[this.editor.currentLanguage] = {};
-            }
-            this.editor.translations[this.editor.currentLanguage][textId] = newText;
+             // Update translations
+             if (!this.editor.translations[this.editor.currentLanguage]) {
+                 this.editor.translations[this.editor.currentLanguage] = {};
+             }
+             this.editor.translations[this.editor.currentLanguage][textId] = newText;
 
-            // Update text colors
-            this.editor.textColors[textId] = newColor;
+             // Update text colors
+             this.editor.textColors[textId] = newColor;
 
-            this.editor.ui.showStatus('Text updated successfully', 'success');
-        } else {
-            console.warn('Cannot save: newText or currentEditingElement is missing');
-        }
+             this.editor.ui.showStatus('Text updated successfully', 'success');
+         } else {
+             console.warn('Cannot save: newText or currentEditingElement is missing');
+         }
 
-        modal.classList.add('removing');
-        setTimeout(() => {
-            modal.remove();
-            this.editor.cancelCurrentEdit();
-        }, 300);
-    }
+         modal.classList.add('removing');
+         setTimeout(() => {
+             modal.remove();
+             this.editor.cancelCurrentEdit();
+         }, 300);
+     }
 
     startImageEditing(element) {
         this.editor.currentEditingElement = element;

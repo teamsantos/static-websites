@@ -56,77 +56,144 @@ export class SectionManager {
         return childCount > 0 || textContent > 50;
     }
 
-    /**
-     * Add control buttons to a section
-     */
-    addSectionControls(section) {
-        const sectionId = section.id || this.generateSectionId(section);
-        if (!sectionId) return;
+     /**
+      * Add control buttons to a section
+      */
+     addSectionControls(section) {
+         const sectionId = section.id || this.generateSectionId(section);
+         if (!sectionId) return;
 
-        // Skip if controls already exist
-        if (this.sectionControls.has(sectionId)) return;
+         // Skip if controls already exist
+         if (this.sectionControls.has(sectionId)) return;
 
-        // Create control container
-        const controlContainer = document.createElement('div');
-        controlContainer.className = 'section-controls';
-        controlContainer.setAttribute('data-section-id', sectionId);
+         // Create control container
+         const controlContainer = document.createElement('div');
+         controlContainer.className = 'section-controls';
+         controlContainer.setAttribute('data-section-id', sectionId);
 
-        // Create hide button
-        const hideBtn = document.createElement('button');
-        hideBtn.className = 'section-control-btn section-hide-btn';
-        hideBtn.title = 'Hide section';
-        hideBtn.innerHTML = '×';
-        hideBtn.onclick = () => this.removeSection(sectionId);
+         // Create hide button
+         const hideBtn = document.createElement('button');
+         hideBtn.className = 'section-control-btn section-hide-btn';
+         hideBtn.title = 'Hide section';
+         hideBtn.innerHTML = '×';
+         hideBtn.onclick = () => this.removeSection(sectionId);
 
-        // Create background color picker
-        const bgColorBtn = document.createElement('input');
-        bgColorBtn.type = 'color';
-        bgColorBtn.className = 'section-bg-color-picker';
-        bgColorBtn.title = 'Change background color';
-        bgColorBtn.value = this.getSectionBackgroundColor(section);
-        bgColorBtn.onchange = (e) => this.changeSectionBackground(sectionId, e.target.value);
+         // Create background color swatch for iro.js picker
+         const bgColorSwatch = document.createElement('div');
+         bgColorSwatch.className = 'section-bg-color-swatch';
+         bgColorSwatch.setAttribute('data-section-id', sectionId);
+         bgColorSwatch.title = 'Change background color';
+         bgColorSwatch.style.backgroundColor = this.getSectionBackgroundColor(section);
+         bgColorSwatch.onclick = (e) => {
+             e.stopPropagation();
+             this.toggleSectionColorPicker(sectionId, bgColorSwatch);
+         };
 
-        // Create section label
-        const sectionLabel = document.createElement('span');
-        sectionLabel.className = 'section-label';
-        sectionLabel.textContent = this.getSectionLabel(section, sectionId);
+         // Create color picker popover container
+         const colorPickerPopover = document.createElement('div');
+         colorPickerPopover.className = 'section-color-picker-popover';
+         colorPickerPopover.style.display = 'none';
+         const pickerId = `section-color-picker-${sectionId}`;
+         colorPickerPopover.innerHTML = `<div id="${pickerId}"></div>`;
 
-        controlContainer.appendChild(sectionLabel);
-        controlContainer.appendChild(bgColorBtn);
-        controlContainer.appendChild(hideBtn);
+         // Create section label
+         const sectionLabel = document.createElement('span');
+         sectionLabel.className = 'section-label';
+         sectionLabel.textContent = this.getSectionLabel(section, sectionId);
 
-        // Position the controls - always visible for easier access
-        controlContainer.style.cssText = `
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        `;
+         controlContainer.appendChild(sectionLabel);
+         controlContainer.appendChild(bgColorSwatch);
+         controlContainer.appendChild(colorPickerPopover);
+         controlContainer.appendChild(hideBtn);
 
-        // Make section position relative for absolute positioning
-        section.style.position = section.style.position || 'relative';
+         // Position the controls - always visible for easier access
+         controlContainer.style.cssText = `
+             position: absolute;
+             top: 10px;
+             right: 10px;
+             background: rgba(0, 0, 0, 0.8);
+             color: white;
+             padding: 5px 10px;
+             border-radius: 4px;
+             font-size: 12px;
+             z-index: 1000;
+             display: flex;
+             align-items: center;
+             gap: 8px;
+             opacity: 0.7;
+             transition: opacity 0.2s;
+         `;
 
-        // Show controls on hover for better UX
-        section.addEventListener('mouseenter', () => {
-            controlContainer.style.opacity = '1';
-        });
-        section.addEventListener('mouseleave', () => {
-            controlContainer.style.opacity = '0.7';
-        });
+         // Make section position relative for absolute positioning
+         section.style.position = section.style.position || 'relative';
 
-        section.appendChild(controlContainer);
-        this.sectionControls.set(sectionId, controlContainer);
-    }
+         // Show controls on hover for better UX
+         section.addEventListener('mouseenter', () => {
+             controlContainer.style.opacity = '1';
+         });
+         section.addEventListener('mouseleave', () => {
+             controlContainer.style.opacity = '0.7';
+         });
+
+         section.appendChild(controlContainer);
+         this.sectionControls.set(sectionId, controlContainer);
+
+         // Initialize iro.js color picker for this section
+         setTimeout(() => {
+             this.initializeSectionColorPicker(sectionId, this.getSectionBackgroundColor(section));
+         }, 0);
+     }
+
+     /**
+      * Initialize iro.js color picker for section background
+      */
+     initializeSectionColorPicker(sectionId, initialColor) {
+         const pickerId = `section-color-picker-${sectionId}`;
+         const pickerContainer = document.getElementById(pickerId);
+         if (!pickerContainer || this.sectionPickers?.[sectionId]) return;
+
+         if (!this.sectionPickers) this.sectionPickers = {};
+
+         const picker = new iro.ColorPicker(`#${pickerId}`, {
+             width: 180,
+             color: initialColor
+         });
+
+         this.sectionPickers[sectionId] = picker;
+
+         picker.on('color:change', (color) => {
+             this.changeSectionBackground(sectionId, color.hexString);
+             const swatch = document.querySelector(`.section-bg-color-swatch[data-section-id="${sectionId}"]`);
+             if (swatch) {
+                 swatch.style.backgroundColor = color.hexString;
+             }
+         });
+     }
+
+     /**
+      * Toggle section color picker visibility
+      */
+     toggleSectionColorPicker(sectionId, swatchElement) {
+         const popover = swatchElement.parentElement.querySelector('.section-color-picker-popover');
+         if (!popover) return;
+
+         const isVisible = popover.style.display === 'block';
+         popover.style.display = isVisible ? 'none' : 'block';
+
+         if (!isVisible) {
+             const rect = swatchElement.getBoundingClientRect();
+             const controlsRect = swatchElement.closest('.section-controls').getBoundingClientRect();
+             popover.style.left = (rect.left - controlsRect.left) + 'px';
+             popover.style.top = (rect.bottom - controlsRect.top + 5) + 'px';
+         }
+
+         // Close picker when clicking outside
+         document.addEventListener('click', (e) => {
+             if (!popover.contains(e.target) && e.target !== swatchElement) {
+                 popover.style.display = 'none';
+             }
+         });
+     }
 
     /**
      * Generate an ID for a section if it doesn't have one

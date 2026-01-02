@@ -757,7 +757,7 @@ body {
     white-space: nowrap;
 }
 
-.color-picker {
+.color-swatch {
     width: 50px;
     height: 36px;
     border: 2px solid #e5e7eb;
@@ -768,14 +768,31 @@ body {
     transition: border-color 0.2s ease;
 }
 
-.color-picker:hover {
+.color-swatch:hover {
     border-color: #3b82f6;
 }
 
-.color-picker:focus {
+.color-swatch:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* iro.js Color Picker Popover */
+.color-picker-popover {
+    position: absolute;
+    display: none;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+}
+
+#color-picker {
+    width: 180px;
+    height: auto;
 }
 
 /* Ensure popup card content is above the stars */
@@ -1033,18 +1050,32 @@ body {
     background: rgba(107, 114, 128, 0.8);
 }
 
-.section-bg-color-picker {
+.section-bg-color-swatch {
     width: 24px;
     height: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 3px;
     cursor: pointer;
-    background: none;
+    background: white;
     margin-right: 4px;
+    transition: all 0.2s ease;
 }
 
-.section-bg-color-picker:hover {
-    border-color: rgba(255, 255, 255, 0.6);
+.section-bg-color-swatch:hover {
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+/* Section color picker popover */
+.section-color-picker-popover {
+    position: absolute;
+    display: none;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1010;
 }
 
 /* Re-add sections panel */
