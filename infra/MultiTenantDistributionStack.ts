@@ -4,7 +4,7 @@ import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as ssm from "aws-cdk-lib/aws-ssm";
+import { CertificateManager } from "./CertificateManager";
 
 interface MultiTenantDistributionStackProps extends cdk.StackProps {
     domainName: string;
@@ -26,57 +26,13 @@ export class MultiTenantDistributionStack extends cdk.Stack {
             domainName: props.hostedZoneDomainName,
         });
 
-        // Get or create wildcard certificate
-        const baseDomain = props.hostedZoneDomainName;
-        const wildcardDomain = `*.${baseDomain}`;
-        const certificateParameterPath = `/acm/certificates/${baseDomain}`;
+        // Use CertificateManager to get or create wildcard certificate
+        const certManager = new CertificateManager(this, "CertManager", {
+            domainName: props.domainName,
+            hostedZone: hostedZone,
+        });
 
-        let certificate: acm.ICertificate;
-
-        try {
-            // Try to get existing certificate from Parameter Store
-            const existingArn = ssm.StringParameter.valueFromLookup(
-                this,
-                certificateParameterPath
-            );
-
-            if (existingArn && existingArn.startsWith("arn:aws:acm:")) {
-                // Use existing certificate
-                certificate = acm.Certificate.fromCertificateArn(
-                    this,
-                    "ExistingWildcardCertificate",
-                    existingArn
-                );
-
-                new cdk.CfnOutput(this, "CertificateSource", {
-                    value: "Existing (from Parameter Store)",
-                    description: "Certificate source",
-                });
-            } else {
-                throw new Error("Invalid certificate ARN in Parameter Store");
-            }
-        } catch (error) {
-            // Create new wildcard certificate
-            const newCertificate = new acm.Certificate(this, "WildcardCertificate", {
-                domainName: wildcardDomain,
-                validation: acm.CertificateValidation.fromDns(hostedZone),
-            });
-
-            // Store the certificate ARN in Parameter Store
-            new ssm.StringParameter(this, "CertificateParameter", {
-                parameterName: certificateParameterPath,
-                stringValue: newCertificate.certificateArn,
-                description: `ACM Certificate ARN for ${wildcardDomain}`,
-                tier: ssm.ParameterTier.STANDARD,
-            });
-
-            certificate = newCertificate;
-
-            new cdk.CfnOutput(this, "CertificateSource", {
-                value: "Newly Created",
-                description: "Certificate source",
-            });
-        }
+        const certificate = certManager.certificate;
 
         // Import S3 bucket
         const siteBucket = s3.Bucket.fromBucketAttributes(
@@ -158,7 +114,7 @@ function handler(event) {
                 ),
                 cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
             },
-            domainNames: [wildcardDomain],
+            domainNames: [`*.${props.hostedZoneDomainName}`],
             defaultRootObject: "index.html",
             certificate: certificate,
             minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
