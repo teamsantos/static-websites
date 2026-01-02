@@ -66,18 +66,19 @@ export const handler = async (event) => {
     const operationKey = uuidv4();
 
     try {
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
-            mode: "subscription",
-            line_items: [
-                {
-                    price: priceId,
-                    quantity: 1,
-                },
-            ],
-            success_url: `${process.env.FRONTEND_URL}/success?operation_id=${operationKey}`,
-            cancel_url: `${process.env.FRONTEND_URL}/cancel?operation_id=${operationKey}`,
-        });
+         const session = await stripe.checkout.sessions.create({
+             payment_method_types: ["card"],
+             mode: "subscription",
+             customer_email: email,
+             line_items: [
+                 {
+                     price: priceId,
+                     quantity: 1,
+                 },
+             ],
+             success_url: `${process.env.FRONTEND_URL}/success?operation_id=${operationKey}`,
+             cancel_url: `${process.env.FRONTEND_URL}/cancel?operation_id=${operationKey}`,
+         });
 
         // ✅ Save metadata to S3
         await saveMetadata(operationKey, {

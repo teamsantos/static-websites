@@ -38,6 +38,10 @@ export class EditingManager {
          // Convert RGB/RGBA to hex if needed
          currentColor = this.editor.elements.rgbToHex(currentColor);
 
+         // Store initial state for cancel functionality
+         const initialColor = currentColor;
+         const initialComputedColor = getComputedStyle(element).color;
+
          // Create modern floating editor modal (like image editor)
          const editorModal = document.createElement('div');
          editorModal.className = 'modern-text-editor-overlay';
@@ -57,7 +61,7 @@ export class EditingManager {
                  </div>
                  <div class="editor-card-footer">
                      <div class="editor-card-actions">
-                         <button class="btn btn-outline btn-glass" onclick="const modal = this.closest('.modern-text-editor-overlay'); modal.classList.add('removing'); setTimeout(() => { modal.remove(); if(window.templateEditorInstance) { window.templateEditorInstance.cancelCurrentEdit(); } }, 300);">
+                         <button class="btn btn-outline btn-glass" onclick="const modal = this.closest('.modern-text-editor-overlay'); modal.classList.add('removing'); setTimeout(() => { modal.remove(); if(window.templateEditorInstance) { window.templateEditorInstance.cancelTextEdit(); } }, 300);">
                              Cancel
                          </button>
                          <button class="btn btn-primary" onclick="if(window.templateEditorInstance) { window.templateEditorInstance.saveModernTextEdit.call(window.templateEditorInstance, this); } else { console.error('Template editor instance not found'); }">
@@ -94,7 +98,7 @@ export class EditingManager {
                  setTimeout(() => {
                      editorModal.remove();
                      if (window.templateEditorInstance) {
-                         window.templateEditorInstance.cancelCurrentEdit();
+                         window.templateEditorInstance.cancelTextEdit();
                      }
                  }, 300);
              }
@@ -120,7 +124,7 @@ export class EditingManager {
          }, 100);
 
          // Initialize iro.js color picker
-         this.setupIroColorPicker(editorModal, currentColor);
+         this.setupIroColorPicker(editorModal, currentColor, element, initialColor);
 
          // Handle keyboard shortcuts
          textarea.addEventListener('keydown', (e) => {
@@ -134,14 +138,14 @@ export class EditingManager {
                  setTimeout(() => {
                      editorModal.remove();
                      if (window.templateEditorInstance) {
-                         window.templateEditorInstance.cancelCurrentEdit();
+                         window.templateEditorInstance.cancelTextEdit();
                      }
                  }, 300);
              }
          });
      }
 
-      setupIroColorPicker(modal, initialColor) {
+      setupIroColorPicker(modal, initialColor, element, originalColor) {
           const swatch = modal.querySelector('#text-color-swatch');
           const popover = modal.querySelector('#color-picker-popover');
           const card = modal.querySelector('.modern-text-editor-card');
@@ -179,9 +183,18 @@ export class EditingManager {
               }
           });
 
+          // Real-time color preview: update the element's color as user changes it
           picker.on('color:change', (color) => {
               swatch.style.backgroundColor = color.hexString;
+              // Update the element on the page in real-time
+              if (element) {
+                  element.style.setProperty('color', color.hexString, 'important');
+              }
           });
+
+          // Store original color for cancel functionality
+          modal.originalColor = originalColor;
+          modal.editingElement = element;
       }
 
        positionColorPickerPopover(swatch, popover, modal) {
@@ -227,25 +240,34 @@ export class EditingManager {
            popover.style.top = top + 'px';
        }
 
-    saveTextEdit(editor, element) {
-        const newText = editor.value.trim();
-        const textId = element.getAttribute('data-text-id');
+     saveTextEdit(editor, element) {
+         const newText = editor.value.trim();
+         const textId = element.getAttribute('data-text-id');
 
-        if (newText && textId) {
-            // Update element content
-            element.textContent = newText;
+         if (newText && textId) {
+             // Update element content
+             element.textContent = newText;
 
-            // Update translations
-            if (!this.editor.translations[this.editor.currentLanguage]) {
-                this.editor.translations[this.editor.currentLanguage] = {};
-            }
-            this.editor.translations[this.editor.currentLanguage][textId] = newText;
+             // Update translations
+             if (!this.editor.translations[this.editor.currentLanguage]) {
+                 this.editor.translations[this.editor.currentLanguage] = {};
+             }
+             this.editor.translations[this.editor.currentLanguage][textId] = newText;
 
-            this.editor.ui.showStatus('Text updated successfully', 'success');
-        }
+             this.editor.ui.showStatus('Text updated successfully', 'success');
+         }
 
-        this.editor.cancelCurrentEdit();
-    }
+         this.editor.cancelCurrentEdit();
+     }
+
+     cancelTextEdit() {
+         // Restore the original color of the element
+         const modal = document.querySelector('.modern-text-editor-overlay');
+         if (modal && modal.originalColor && modal.editingElement) {
+             modal.editingElement.style.setProperty('color', modal.originalColor, 'important');
+         }
+         this.editor.cancelCurrentEdit();
+     }
 
      saveModernTextEdit(saveBtn) {
          const modal = saveBtn.closest('.modern-text-editor-overlay');
