@@ -144,6 +144,7 @@ export class EditingManager {
       setupIroColorPicker(modal, initialColor) {
           const swatch = modal.querySelector('#text-color-swatch');
           const popover = modal.querySelector('#color-picker-popover');
+          const card = modal.querySelector('.modern-text-editor-card');
 
           const picker = new iro.ColorPicker('#color-picker', {
               width: 180,
@@ -153,7 +154,8 @@ export class EditingManager {
           // Store picker instance for later use
           modal.colorPickerInstance = picker;
 
-          swatch.addEventListener('click', () => {
+          swatch.addEventListener('click', (e) => {
+              e.stopPropagation();
               const isVisible = popover.style.display === 'block';
               if (isVisible) {
                   popover.style.display = 'none';
@@ -163,8 +165,16 @@ export class EditingManager {
               }
           });
 
-          document.addEventListener('click', (e) => {
-              if (!popover.contains(e.target) && e.target !== swatch) {
+          // Close picker when clicking anywhere on the card (except the popover)
+          card.addEventListener('click', (e) => {
+              if (!popover.contains(e.target) && e.target !== swatch && !swatch.contains(e.target)) {
+                  popover.style.display = 'none';
+              }
+          });
+
+          // Close picker when clicking on the overlay
+          modal.addEventListener('click', (e) => {
+              if (e.target === modal) {
                   popover.style.display = 'none';
               }
           });
