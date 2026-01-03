@@ -3,6 +3,7 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { CertificateManager } from "./CertificateManager";
 
@@ -176,6 +177,15 @@ function handler(event) {
         this.distributionId = this.distribution.distributionId;
         this.distributionDomainName = this.distribution.distributionDomainName;
         this.certificate = certificate;
+
+        // Create wildcard Route53 record to route all subdomains to CloudFront
+        new route53.ARecord(this, "WildcardAliasRecord", {
+            zone: hostedZone,
+            recordName: `*.${props.hostedZoneDomainName}`,
+            target: route53.RecordTarget.fromAlias(
+                new route53Targets.CloudFrontTarget(this.distribution)
+            ),
+        });
 
         // Output distribution details
         new cdk.CfnOutput(this, "DistributionId", {
