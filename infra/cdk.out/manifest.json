@@ -23,7 +23,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/8d2acb9ef9451b1d9b342eca154dc292f22fbb1706ad07303e7a832d537193be.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/957e32538e2888261e54191e39f7dab78a7dc4e2a9c06b124aa4c3e879a3ac04.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -91,6 +91,280 @@
       },
       "displayName": "StaticWebsitesBucket"
     },
+    "MultiTenantDistribution.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "MultiTenantDistribution.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "MultiTenantDistribution": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/us-east-1",
+      "properties": {
+        "templateFile": "MultiTenantDistribution.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "MultiTenantDistribution"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/d051c6cf2b47c0cbc20bf1340b632dd2decca68c5308a07e277c755856ff1a41.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "MultiTenantDistribution.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "MultiTenantDistribution.assets"
+      ],
+      "metadata": {
+        "/MultiTenantDistribution": [
+          {
+            "type": "aws:cdk:error",
+            "data": "Found zones: [] for dns:e-info.click, privateZone:undefined, vpcId:undefined, but wanted exactly 1 zone",
+            "trace": [
+              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
+              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
+              "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
+              "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
+              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:25:47)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:38:33)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
+              "node:internal/modules/cjs/loader:1871:10",
+              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
+              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
+              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
+              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
+            ]
+          },
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "MultiTenantDistribution"
+              }
+            ]
+          }
+        ],
+        "/MultiTenantDistribution/CertManager": [
+          {
+            "type": "aws:cdk:error",
+            "data": "SSM parameter not available in account 941058531133, region us-east-1: /acm/certificates/e-info.click",
+            "trace": [
+              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
+              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
+              "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
+              "StringParameter2.valueFromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-ssm/lib/parameter.js:1:8254)",
+              "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:47:53)",
+              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:30:29)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:38:33)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
+              "node:internal/modules/cjs/loader:1871:10",
+              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
+              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
+              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
+              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
+            ]
+          }
+        ],
+        "/MultiTenantDistribution/CertManager/WildcardCertificate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertManagerWildcardCertificate24DD7CEC"
+          }
+        ],
+        "/MultiTenantDistribution/CertManager/CertificateParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertManagerCertificateParameter462FB0B2"
+          }
+        ],
+        "/MultiTenantDistribution/CertManager/CertificateSource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertManagerCertificateSource5157F320"
+          }
+        ],
+        "/MultiTenantDistribution/CertManager/ParameterPath": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertManagerParameterPath2828ED5A"
+          }
+        ],
+        "/MultiTenantDistribution/CertManager/CertificateArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertManagerCertificateArnFB493BE6"
+          }
+        ],
+        "/MultiTenantDistribution/OAC/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OAC5B452445"
+          }
+        ],
+        "/MultiTenantDistribution/PathRewriteFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PathRewriteFunction70CC2D13"
+          }
+        ],
+        "/MultiTenantDistribution/ErrorHandlerFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ErrorHandlerFunction246F95E6"
+          }
+        ],
+        "/MultiTenantDistribution/CorsPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CorsPolicyA1BBCACE"
+          }
+        ],
+        "/MultiTenantDistribution/Distribution/Origin1": [
+          {
+            "type": "aws:cdk:warning",
+            "data": "Cannot update bucket policy of an imported bucket. You will need to update the policy manually instead.\nSee the \"Setting up OAC with imported S3 buckets\" section of module's README for more info. [ack: @aws-cdk/aws-cloudfront-origins:updateImportedBucketPolicyOac]",
+            "trace": [
+              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
+              "Annotations.addWarningV2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:896)",
+              "S3BucketOriginWithOAC.bind (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront-origins/lib/s3-bucket-origin.js:2:282)",
+              "WrappedClass.addOrigin (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:14065)",
+              "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
+              "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
+              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:120:29)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:38:33)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
+              "node:internal/modules/cjs/loader:1871:10",
+              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
+              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
+              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
+              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
+            ]
+          }
+        ],
+        "/MultiTenantDistribution/Distribution/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Distribution830FAC52"
+          }
+        ],
+        "/MultiTenantDistribution/DistributionId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DistributionId"
+          }
+        ],
+        "/MultiTenantDistribution/DistributionDomainName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DistributionDomainName"
+          }
+        ],
+        "/MultiTenantDistribution/CertificateArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertificateArn"
+          }
+        ],
+        "/MultiTenantDistribution/AWSCloudFrontPartitionHostedZoneIdMap": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AWSCloudFrontPartitionHostedZoneIdMap"
+          }
+        ],
+        "/MultiTenantDistribution/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/MultiTenantDistribution/Exports/Output{\"Fn::GetAtt\":[\"Distribution830FAC52\",\"DomainName\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttDistribution830FAC52DomainNameBEB09E30"
+          }
+        ],
+        "/MultiTenantDistribution/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/MultiTenantDistribution/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "MultiTenantDistribution"
+    },
     "CreateProjectStack.assets": {
       "type": "cdk:asset-manifest",
       "properties": {
@@ -108,7 +382,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/c5e5b6d1d4ae64c28aff41fda65c6f255e0afdc3610ba6ebca57a5e9d1b6930c.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/85a8f50407c0ef182c6c5859a9b1437da53cead72eb887b778322283bb9e6e55.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -131,27 +405,31 @@
             "trace": [
               "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
               "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
-              "Function.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
-              "Function.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
+              "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
+              "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
               "new CreateProjectStack (/Users/fmpi.santos/Projects/static-websites/infra/CreateProjectStack.ts:23:47)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:35:28)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:59:28)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
+              "node:internal/modules/cjs/loader:1871:10",
               "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
               "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
               "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
               "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
               "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
-              "node:internal/main/run_main_module:17:47"
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
             ]
           }
         ],
@@ -397,7 +675,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/c2fe0cb4bc423fdeafacc2f4ae355ac90715b58a4888e4329da8b2a598ea1329.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/107d8ac657f85c8e2d4efc415b03a921783b3fc5a258c26627055598a6bf8161.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -420,27 +698,31 @@
             "trace": [
               "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
               "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
-              "Function.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
-              "Function.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
+              "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
+              "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
               "new StripeCheckoutStack (/Users/fmpi.santos/Projects/static-websites/infra/PaymentSessionStack.ts:22:43)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:46:1)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:70:1)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
+              "node:internal/modules/cjs/loader:1871:10",
               "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
               "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
               "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
               "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
               "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
-              "node:internal/main/run_main_module:17:47"
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
             ]
           }
         ],
@@ -627,7 +909,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/a72acc38aa35faef464335e0e259f05dd3c4e1cfc0c05841db1f412d6d92a7c4.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/f7eb3acbe89cc4e6611fec190f987a0535a6408dac06d63ba3b6ea6a10c30be9.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -640,6 +922,7 @@
         }
       },
       "dependencies": [
+        "MultiTenantDistribution",
         "Site-test.assets"
       ],
       "metadata": {
@@ -650,29 +933,33 @@
             "trace": [
               "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
               "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
-              "Function.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
-              "Function.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new ProjectSite (/Users/fmpi.santos/Projects/static-websites/infra/ProjectStack.ts:23:47)",
-              "/Users/fmpi.santos/Projects/static-websites/infra/index.ts:81:17",
+              "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
+              "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
+              "new ProjectSite (/Users/fmpi.santos/Projects/static-websites/infra/ProjectStack.ts:17:47)",
+              "/Users/fmpi.santos/Projects/static-websites/infra/index.ts:105:17",
               "Array.forEach (<anonymous>)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:74:22)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:98:22)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
+              "node:internal/modules/cjs/loader:1871:10",
               "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
               "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
               "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
               "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
               "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
-              "node:internal/main/run_main_module:17:47"
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
             ]
           },
           {
@@ -701,139 +988,10 @@
             ]
           }
         ],
-        "/Site-test/CertManager": [
-          {
-            "type": "aws:cdk:error",
-            "data": "SSM parameter not available in account 941058531133, region us-east-1: /acm/certificates/e-info.click",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
-              "Function.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
-              "Function.valueFromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-ssm/lib/parameter.js:1:8254)",
-              "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:47:53)",
-              "new ProjectSite (/Users/fmpi.santos/Projects/static-websites/infra/ProjectStack.ts:27:29)",
-              "/Users/fmpi.santos/Projects/static-websites/infra/index.ts:81:17",
-              "Array.forEach (<anonymous>)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:74:22)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
-              "node:internal/main/run_main_module:17:47"
-            ]
-          }
-        ],
-        "/Site-test/CertManager/WildcardCertificate/Resource": [
+        "/Site-test/AliasRecord/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "CertManagerWildcardCertificate24DD7CEC"
-          }
-        ],
-        "/Site-test/CertManager/CertificateParameter/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CertManagerCertificateParameter462FB0B2"
-          }
-        ],
-        "/Site-test/CertManager/CertificateSource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CertManagerCertificateSource5157F320"
-          }
-        ],
-        "/Site-test/CertManager/ParameterPath": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CertManagerParameterPath2828ED5A"
-          }
-        ],
-        "/Site-test/CertManager/CertificateArn": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CertManagerCertificateArnFB493BE6"
-          }
-        ],
-        "/Site-test/OAC/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "OAC5B452445"
-          }
-        ],
-        "/Site-test/CorsPolicy/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CorsPolicyA1BBCACE"
-          }
-        ],
-        "/Site-test/Distribution/Origin1": [
-          {
-            "type": "aws:cdk:warning",
-            "data": "Cannot update bucket policy of an imported bucket. You will need to update the policy manually instead.\nSee the \"Setting up OAC with imported S3 buckets\" section of module's README for more info. [ack: @aws-cdk/aws-cloudfront-origins:updateImportedBucketPolicyOac]",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addWarningV2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:896)",
-              "S3BucketOriginWithOAC.bind (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront-origins/lib/s3-bucket-origin.js:2:282)",
-              "WrappedClass.addOrigin (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:14174)",
-              "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3959)",
-              "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
-              "new ProjectSite (/Users/fmpi.santos/Projects/static-websites/infra/ProjectStack.ts:55:30)",
-              "/Users/fmpi.santos/Projects/static-websites/infra/index.ts:81:17",
-              "Array.forEach (<anonymous>)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:74:22)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1120:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1174:10)",
-              "Module.load (node:internal/modules/cjs/loader:998:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:839:12)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)",
-              "node:internal/main/run_main_module:17:47"
-            ]
-          }
-        ],
-        "/Site-test/Distribution/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "Distribution830FAC52"
-          }
-        ],
-        "/Site-test/AliasRecord": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "AliasRecord"
-          }
-        ],
-        "/Site-test/DistributionId": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "DistributionId"
-          }
-        ],
-        "/Site-test/DistributionDomainName": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "DistributionDomainName"
+            "data": "AliasRecord851000D2"
           }
         ],
         "/Site-test/WebsiteURL": [
@@ -842,10 +1000,72 @@
             "data": "WebsiteURL"
           }
         ],
+        "/Site-test/ProjectName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectName"
+          }
+        ],
+        "/Site-test/S3Path": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "S3Path"
+          }
+        ],
         "/Site-test/CDKMetadata/Default": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CDKMetadata"
+          }
+        ],
+        "/Site-test/MappingCopy-AWSCloudFrontPartitionHostedZoneIdMap-c8597fac189ed6675b8dbe80d7b3854ec60cbdd773": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MappingCopyAWSCloudFrontPartitionHostedZoneIdMapc8597fac189ed6675b8dbe80d7b3854ec60cbdd773"
+          },
+          {
+            "type": "aws:cdk:info",
+            "data": "Consider making this CfnMapping a lazy mapping by providing `lazy: true`: either no findInMap was called or every findInMap could be immediately resolved without using Fn::FindInMap",
+            "trace": [
+              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
+              "Annotations.addInfo (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1355)",
+              "CfnMapping.informLazyUse (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/cfn-mapping.js:1:2410)",
+              "CfnMapping._toCloudFormation (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/cfn-mapping.js:1:2237)",
+              "/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/stack.js:1:20986",
+              "Array.map (<anonymous>)",
+              "ProjectSite._toCloudFormation (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/stack.js:1:20964)",
+              "ProjectSite._synthesizeTemplate (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/stack.js:1:14887)",
+              "DefaultStackSynthesizer.synthesizeTemplate (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/stack-synthesizers/stack-synthesizer.js:1:2310)",
+              "DefaultStackSynthesizer.synthesize (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/stack-synthesizers/default-synthesizer.js:1:7064)",
+              "/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/private/synthesis.js:2:6190",
+              "visit (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/private/synthesis.js:4:372)",
+              "visit (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/private/synthesis.js:4:334)",
+              "synthesizeTree (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/private/synthesis.js:2:6032)",
+              "synthesize (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/private/synthesis.js:1:2028)",
+              "App.synth (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/stage.js:1:2770)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:174:5)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
+              "node:internal/modules/cjs/loader:1871:10",
+              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
+              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
+              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
+              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
+            ]
           }
         ],
         "/Site-test/BootstrapVersion": [
@@ -874,9 +1094,20 @@
       "properties": {
         "module": "aws-cdk-lib",
         "flags": {
-          "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": {
+          "@aws-cdk/core:enableStackNameDuplicates": {
             "recommendedValue": true,
-            "explanation": "Pass signingProfileName to CfnSigningProfile"
+            "explanation": "Allow multiple stacks with the same name",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "aws-cdk:enableDiffNoFail": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Make `cdk diff` not fail when there are differences",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
           },
           "@aws-cdk/core:newStyleStackSynthesis": {
             "recommendedValue": true,
@@ -893,9 +1124,40 @@
               "v2": true
             }
           },
-          "@aws-cdk/aws-ecs-patterns:secGroupsDisablesImplicitOpenListener": {
+          "@aws-cdk/aws-ecr-assets:dockerIgnoreSupport": {
             "recommendedValue": true,
-            "explanation": "Disable implicit openListener when custom security groups are provided"
+            "explanation": "DockerImageAsset properly supports `.dockerignore` files by default",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-secretsmanager:parseOwnedSecretName": {
+            "recommendedValue": true,
+            "explanation": "Fix the referencing of SecretsManager names from ARNs",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-kms:defaultKeyPolicies": {
+            "recommendedValue": true,
+            "explanation": "Tighten default KMS key policies",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-s3:grantWriteWithoutAcl": {
+            "recommendedValue": true,
+            "explanation": "Remove `PutObjectAcl` from Bucket.grantWrite",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-ecs-patterns:removeDefaultDesiredCount": {
+            "recommendedValue": true,
+            "explanation": "Do not specify a default DesiredCount for ECS services",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
           },
           "@aws-cdk/aws-rds:lowercaseDbIdentifier": {
             "recommendedValue": true,
@@ -907,6 +1169,13 @@
           "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": {
             "recommendedValue": true,
             "explanation": "Allow adding/removing multiple UsagePlanKeys independently",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-efs:defaultEncryptionAtRest": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to have elastic file systems encrypted at rest by default.",
             "unconfiguredBehavesLike": {
               "v2": true
             }
@@ -1238,7 +1507,10 @@
           },
           "@aws-cdk/cognito:logUserPoolClientSecretValue": {
             "recommendedValue": false,
-            "explanation": "When disabled, the value of the user pool client secret will not be logged in the custom resource lambda function logs."
+            "explanation": "When disabled, the value of the user pool client secret will not be logged in the custom resource lambda function logs.",
+            "unconfiguredBehavesLike": {
+              "v2": false
+            }
           },
           "@aws-cdk/pipelines:reduceCrossAccountActionRoleTrustScope": {
             "recommendedValue": true,
@@ -1261,7 +1533,10 @@
           },
           "@aws-cdk/aws-ec2-alpha:useResourceIdForVpcV2Migration": {
             "recommendedValue": false,
-            "explanation": "When enabled, use resource IDs for VPC V2 migration"
+            "explanation": "When enabled, use resource IDs for VPC V2 migration",
+            "unconfiguredBehavesLike": {
+              "v2": false
+            }
           },
           "@aws-cdk/aws-s3:publicAccessBlockedByDefault": {
             "recommendedValue": true,
@@ -1269,27 +1544,16 @@
           },
           "@aws-cdk/aws-lambda:useCdkManagedLogGroup": {
             "recommendedValue": true,
-            "explanation": "When enabled, CDK creates and manages loggroup for the lambda function"
+            "explanation": "When enabled, CDK creates and manages loggroup for the lambda function",
+            "unconfiguredBehavesLike": {
+              "v2": false
+            }
           }
         }
       }
     }
   },
   "missing": [
-    {
-      "key": "hosted-zone:account=941058531133:domainName=e-info.click:region=eu-south-2",
-      "provider": "hosted-zone",
-      "props": {
-        "dummyValue": {
-          "Id": "DUMMY",
-          "Name": "e-info.click"
-        },
-        "account": "941058531133",
-        "region": "eu-south-2",
-        "domainName": "e-info.click",
-        "lookupRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2"
-      }
-    },
     {
       "key": "hosted-zone:account=941058531133:domainName=e-info.click:region=us-east-1",
       "provider": "hosted-zone",
@@ -1315,7 +1579,21 @@
         "parameterName": "/acm/certificates/e-info.click",
         "lookupRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-us-east-1"
       }
+    },
+    {
+      "key": "hosted-zone:account=941058531133:domainName=e-info.click:region=eu-south-2",
+      "provider": "hosted-zone",
+      "props": {
+        "dummyValue": {
+          "Id": "DUMMY",
+          "Name": "e-info.click"
+        },
+        "account": "941058531133",
+        "region": "eu-south-2",
+        "domainName": "e-info.click",
+        "lookupRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2"
+      }
     }
   ],
-  "minimumCliVersion": "2.1029.4"
+  "minimumCliVersion": "2.1025.0"
 }

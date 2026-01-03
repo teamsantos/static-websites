@@ -38,6 +38,7 @@ const bucketStack_1 = require("./bucketStack");
 const CreateProjectStack_1 = require("./CreateProjectStack");
 const ProjectStack_1 = require("./ProjectStack");
 const PaymentSessionStack_1 = require("./PaymentSessionStack");
+const MultiTenantDistributionStack_1 = require("./MultiTenantDistributionStack");
 const app = new cdk.App();
 const config = {
     region: "eu-south-2",
@@ -49,6 +50,7 @@ const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('accou
 if (!account) {
     console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
 }
+// Create the shared S3 bucket
 new bucketStack_1.BucketStack(app, "StaticWebsitesBucket", {
     bucketName: config.s3Bucket,
     env: {
@@ -61,6 +63,23 @@ new bucketStack_1.BucketStack(app, "StaticWebsitesBucket", {
         Purpose: "StaticWebsiteHosting",
     },
 });
+// Create the shared multi-tenant CloudFront distribution (only once)
+const multiTenantDistribution = new MultiTenantDistributionStack_1.MultiTenantDistributionStack(app, "MultiTenantDistribution", {
+    domainName: config.domain,
+    hostedZoneDomainName: config.domain,
+    s3Bucket: config.s3Bucket,
+    region: config.region,
+    env: {
+        account: account,
+        region: config.certificateRegion,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "MultiTenantDistribution",
+    },
+});
+// Create other infrastructure stacks
 const createProjectStack = new CreateProjectStack_1.CreateProjectStack(app, "CreateProjectStack", {
     ses_region: config.certificateRegion,
     domain: config.domain,
@@ -101,11 +120,10 @@ else {
                 }
                 console.log(`Creating stack for project: ${project}.${config.domain}`);
                 new ProjectStack_1.ProjectSite(app, `Site-${project}`, {
-                    s3Bucket: config.s3Bucket,
-                    region: config.region,
                     projectName: project,
                     domainName: `${project}.${config.domain}`,
                     hostedZoneDomainName: config.domain,
+                    multiTenantDistribution: multiTenantDistribution,
                     type: 'project',
                     env: {
                         account: account,
@@ -134,11 +152,10 @@ else {
                 }
                 console.log(`Creating stack for template: ${template}.${config.domain}`);
                 new ProjectStack_1.ProjectSite(app, `Site-template-${template}`, {
-                    s3Bucket: config.s3Bucket,
-                    region: config.region,
                     projectName: template,
                     domainName: `${template}.templates.${config.domain}`,
                     hostedZoneDomainName: config.domain,
+                    multiTenantDistribution: multiTenantDistribution,
                     type: 'template',
                     env: {
                         account: account,
