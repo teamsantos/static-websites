@@ -60,19 +60,52 @@ function handler(event) {
     const request = event.request;
     const host = request.headers.host.value;
     
-    // Extract project name from subdomain (e.g., "brunodi4gay" from "brunodi4gay.e-info.click")
+    // Extract project name from subdomain (e.g., "generating" from "generating.e-info.click")
     const projectName = host.split('.')[0];
     
     // Rewrite the URI to include the project name prefix
-    // Request: / → /brunodi4gay/
-    // Request: /css/style.css → /brunodi4gay/css/style.css
-    if (request.uri === '/') {
+    // <projectName>.e-info.click/ → /<projectName>/index.html
+    // <projectName>.e-info.click/success?id=123 → /<projectName>/success?id=123
+    if (request.uri === '/' || request.uri === '') {
         request.uri = '/' + projectName + '/index.html';
     } else {
         request.uri = '/' + projectName + request.uri;
     }
     
     return request;
+}
+`),
+            }
+        );
+
+        // Create CloudFront Function to handle error responses with project path rewriting
+        const errorHandlerFunction = new cloudfront.Function(
+            this,
+            "ErrorHandlerFunction",
+            {
+                code: cloudfront.FunctionCode.fromInline(`
+function handler(event) {
+    const response = event.response;
+    const request = event.request;
+    
+    // Only handle error responses
+    if (response.status >= 400) {
+        const host = request.headers.host.value;
+        const projectName = host.split('.')[0];
+        
+        // Redirect error responses to the project's index.html
+        response.statusCode = 200;
+        response.headers['content-type'] = {
+            value: 'text/html; charset=UTF-8'
+        };
+        
+        // Store the project name in a custom header for the origin to use
+        response.headers['x-project-name'] = {
+            value: projectName
+        };
+    }
+    
+    return response;
 }
 `),
             }
@@ -95,6 +128,10 @@ function handler(event) {
                     {
                         function: pathRewriteFunction,
                         eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+                    },
+                    {
+                        function: errorHandlerFunction,
+                        eventType: cloudfront.FunctionEventType.VIEWER_RESPONSE,
                     },
                 ],
                 responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
