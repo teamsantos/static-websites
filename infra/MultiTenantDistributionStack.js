@@ -39,7 +39,6 @@ const cloudfront = __importStar(require("aws-cdk-lib/aws-cloudfront"));
 const origins = __importStar(require("aws-cdk-lib/aws-cloudfront-origins"));
 const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
 const s3 = __importStar(require("aws-cdk-lib/aws-s3"));
-const iam = __importStar(require("aws-cdk-lib/aws-iam"));
 const CertificateManager_1 = require("./CertificateManager");
 class MultiTenantDistributionStack extends cdk.Stack {
     constructor(scope, id, props) {
@@ -118,23 +117,6 @@ function handler(event) {
         const origin = origins.S3BucketOrigin.withOriginAccessControl(siteBucket, {
             originAccessControl: oac,
         });
-        // Grant OAC permissions to access the bucket
-        // The bucket is imported, so we need to explicitly grant permissions
-        const bucketPolicy = new s3.BucketPolicy(this, "OACBucketPolicy", {
-            bucket: siteBucket,
-        });
-        bucketPolicy.document.addStatements(new iam.PolicyStatement({
-            sid: "AllowOACAccess",
-            effect: iam.Effect.ALLOW,
-            principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
-            actions: ["s3:GetObject"],
-            resources: [`${siteBucket.bucketArn}/*`],
-            conditions: {
-                StringEquals: {
-                    "AWS:SourceAccount": cdk.Stack.of(this).account,
-                },
-            },
-        }));
         // Create multi-tenant CloudFront distribution
         this.distribution = new cloudfront.Distribution(this, "Distribution", {
             defaultBehavior: {
