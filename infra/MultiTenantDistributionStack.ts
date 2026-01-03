@@ -4,7 +4,6 @@ import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as iam from "aws-cdk-lib/aws-iam";
 import { CertificateManager } from "./CertificateManager";
 
 interface MultiTenantDistributionStackProps extends cdk.StackProps {
@@ -116,27 +115,6 @@ function handler(event) {
         const origin = origins.S3BucketOrigin.withOriginAccessControl(siteBucket, {
             originAccessControl: oac,
         });
-
-        // Grant OAC permissions to access the bucket
-        // The bucket is imported, so we need to explicitly grant permissions
-        const bucketPolicy = new s3.BucketPolicy(this, "OACBucketPolicy", {
-            bucket: siteBucket,
-        });
-        
-        bucketPolicy.document.addStatements(
-            new iam.PolicyStatement({
-                sid: "AllowOACAccess",
-                effect: iam.Effect.ALLOW,
-                principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
-                actions: ["s3:GetObject"],
-                resources: [`${siteBucket.bucketArn}/*`],
-                conditions: {
-                    StringEquals: {
-                        "AWS:SourceAccount": cdk.Stack.of(this).account,
-                    },
-                },
-            })
-        );
 
         // Create multi-tenant CloudFront distribution
         this.distribution = new cloudfront.Distribution(this, "Distribution", {
