@@ -62,9 +62,9 @@ class BucketStack extends cdk.Stack {
             bucketCreated = true;
         }
         this.bucket = bucket;
-        // Only manage bucket policy if we created the bucket
-        // For imported buckets, assume the policy is already configured or managed externally
-        if (bucketCreated && bucket instanceof s3.Bucket) {
+        // Always add bucket policy for CloudFront OAC access
+        // Even for imported buckets, we need to grant CloudFront permission
+        if (bucket instanceof s3.Bucket) {
             new s3.BucketPolicy(this, "CloudFrontOACPolicy", {
                 bucket: bucket,
             }).document.addStatements(new iam.PolicyStatement({

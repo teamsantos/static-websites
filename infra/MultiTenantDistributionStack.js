@@ -38,6 +38,7 @@ const cdk = __importStar(require("aws-cdk-lib"));
 const cloudfront = __importStar(require("aws-cdk-lib/aws-cloudfront"));
 const origins = __importStar(require("aws-cdk-lib/aws-cloudfront-origins"));
 const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
+const route53Targets = __importStar(require("aws-cdk-lib/aws-route53-targets"));
 const s3 = __importStar(require("aws-cdk-lib/aws-s3"));
 const CertificateManager_1 = require("./CertificateManager");
 class MultiTenantDistributionStack extends cdk.Stack {
@@ -172,6 +173,12 @@ function handler(event) {
         this.distributionId = this.distribution.distributionId;
         this.distributionDomainName = this.distribution.distributionDomainName;
         this.certificate = certificate;
+        // Create wildcard Route53 record to route all subdomains to CloudFront
+        new route53.ARecord(this, "WildcardAliasRecord", {
+            zone: hostedZone,
+            recordName: `*.${props.hostedZoneDomainName}`,
+            target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(this.distribution)),
+        });
         // Output distribution details
         new cdk.CfnOutput(this, "DistributionId", {
             value: this.distributionId,
