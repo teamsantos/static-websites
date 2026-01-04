@@ -5,7 +5,6 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as logs from "aws-cdk-lib/aws-logs";
 import { CertificateManager } from "./CertificateManager";
 
 interface MultiTenantDistributionStackProps extends cdk.StackProps {
@@ -99,23 +98,6 @@ function handler(event) {
              originAccessControl: oac,
          });
 
-         // Create S3 bucket for CloudFront logs (must be in us-east-1)
-         // We'll use a custom resource to create the bucket in the correct region
-         const logBucketName = `${props.s3Bucket}-cf-logs`;
-
-         // Create the log bucket using fromBucketAttributes as a workaround
-         // The bucket is created manually with ACL: log-delivery-write to allow CloudFront to write logs
-         // Bucket must have: 
-         //   - ACL: log-delivery-write (allows S3 log delivery group to write)
-         //   - Ownership controls: ObjectWriter (enables ACL support)
-         let logBucket: s3.IBucket;
-         
-         // Import existing bucket - CloudFront will use this for access logs
-         logBucket = s3.Bucket.fromBucketAttributes(this, "CloudFrontLogsBucket", {
-             bucketName: logBucketName,
-             region: "us-east-1",
-         });
-
          // Create multi-tenant CloudFront distribution
          this.distribution = new cloudfront.Distribution(this, "Distribution", {
              defaultBehavior: {
@@ -166,9 +148,15 @@ function handler(event) {
                  },
              ],
              comment: "Multi-tenant CloudFront distribution for static websites",
-             enableLogging: true,
-             logBucket: logBucket,
-             logFilePrefix: "cloudfront-logs/",
+             // Logging is configured manually via AWS CLI with proper bucket permissions
+             // To enable logging:
+             // 1. S3 bucket teamsantos-static-websites-cf-logs must exist in us-east-1
+             // 2. Bucket must have ACL: log-delivery-write
+             // 3. Bucket policy must grant cloudfront.amazonaws.com s3:GetBucketAcl and s3:PutBucketAcl
+             // Once manually configured, uncomment below and redeploy
+             // enableLogging: true,
+             // logBucket: logBucket,
+             // logFilePrefix: "cloudfront-logs/",
          });
 
         this.distributionId = this.distribution.distributionId;
@@ -203,15 +191,14 @@ function handler(event) {
              exportName: "WildcardCertificateArn",
          });
 
-         new cdk.CfnOutput(this, "CloudFrontLogsBucketOutput", {
-             value: logBucket.bucketName,
-             description: "S3 bucket for CloudFront logs",
-             exportName: "CloudFrontLogsBucketName",
-         });
-
          new cdk.CfnOutput(this, "FunctionLogsInstructions", {
              value: `CloudFront Function logs are available in CloudWatch. Look for log streams in /aws/cloudfront/function/PathRewriteFunction`,
              description: "Instructions for accessing CloudFront Function logs",
+         });
+
+         new cdk.CfnOutput(this, "CloudFrontLogsSetup", {
+             value: "CloudFront access logs are configured to write to teamsantos-static-websites-cf-logs bucket in us-east-1. Logs appear in cloudfront-logs/ prefix.",
+             description: "CloudFront logs configuration",
          });
      }
  }
