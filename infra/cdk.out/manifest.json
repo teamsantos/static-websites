@@ -23,7 +23,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/3be2701ed6761e0242be70abf6c9b5f57156fc4d8b973bb474ce3f5f62fd5af0.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/ee5bde49d5510b91521df8d5d78e46cc20c7cad90bc926f936fe6e77ad2fc3f3.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -260,6 +260,30 @@
             "data": "CDKMetadata"
           }
         ],
+        "/MultiTenantDistribution/ExportsWritereusouth2425DEA31/Resource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsWritereusouth2425DEA319B810939"
+          }
+        ],
+        "/MultiTenantDistribution/Custom::CrossRegionExportWriterCustomResourceProvider": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+            "data": true
+          }
+        ],
+        "/MultiTenantDistribution/Custom::CrossRegionExportWriterCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomCrossRegionExportWriterCustomResourceProviderRoleC951B1E1"
+          }
+        ],
+        "/MultiTenantDistribution/Custom::CrossRegionExportWriterCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomCrossRegionExportWriterCustomResourceProviderHandlerD8786E8A"
+          }
+        ],
         "/MultiTenantDistribution/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
@@ -297,7 +321,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/957e32538e2888261e54191e39f7dab78a7dc4e2a9c06b124aa4c3e879a3ac04.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/2005eb8f269d2da385ab5a8a66ca043e0d992ac85f3b5ba614348b19660d8cd7.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -310,6 +334,7 @@
         }
       },
       "dependencies": [
+        "MultiTenantDistribution",
         "StaticWebsitesBucket.assets"
       ],
       "metadata": {
@@ -332,6 +357,12 @@
             ]
           }
         ],
+        "/StaticWebsitesBucket/CloudFrontDistributionPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CloudFrontDistributionPolicy0E291C07"
+          }
+        ],
         "/StaticWebsitesBucket/BucketName": [
           {
             "type": "aws:cdk:logicalId",
@@ -348,6 +379,30 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "CDKMetadata"
+          }
+        ],
+        "/StaticWebsitesBucket/ExportsReader/Resource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsReader8B249524"
+          }
+        ],
+        "/StaticWebsitesBucket/Custom::CrossRegionExportReaderCustomResourceProvider": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+            "data": true
+          }
+        ],
+        "/StaticWebsitesBucket/Custom::CrossRegionExportReaderCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomCrossRegionExportReaderCustomResourceProviderRole10531BBD"
+          }
+        ],
+        "/StaticWebsitesBucket/Custom::CrossRegionExportReaderCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomCrossRegionExportReaderCustomResourceProviderHandler46647B68"
           }
         ],
         "/StaticWebsitesBucket/BootstrapVersion": [
@@ -408,7 +463,7 @@
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
               "new CreateProjectStack (/Users/fmpi.santos/Projects/static-websites/infra/CreateProjectStack.ts:23:47)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:63:28)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:64:28)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",
@@ -701,7 +756,7 @@
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
               "new StripeCheckoutStack (/Users/fmpi.santos/Projects/static-websites/infra/PaymentSessionStack.ts:22:43)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:74:1)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:75:1)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",

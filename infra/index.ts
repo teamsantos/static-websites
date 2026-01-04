@@ -52,6 +52,7 @@ new BucketStack(app, "StaticWebsitesBucket", {
         account: account,
         region: config.region,
     },
+    crossRegionReferences: true,
     tags: {
         ManagedBy: "CDK",
         Environment: "production",
