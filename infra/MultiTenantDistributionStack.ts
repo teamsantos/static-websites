@@ -77,7 +77,7 @@ function handler(event) {
     var projectName = host.split('.')[0];
     
     // Normalize URI - remove duplicate slashes
-    var uri = request.uri.replace(/\/+/g, '/');
+    var uri = request.uri.replace(/\\/+/g, '/');
     
     // Rewrite URI based on the path
     if (uri === '/' || uri === '') {
