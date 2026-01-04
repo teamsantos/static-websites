@@ -400,22 +400,29 @@
              
              for (let attempt = 0; attempt < maxAttempts; attempt++) {
                  try {
+                     // Add cache-busting query parameter to bypass CloudFront and browser caches
+                     // This ensures each request goes to origin and doesn't hit cached 404 responses
+                     const cacheBustUrl = `${websiteUrl}?t=${Date.now()}`;
+                     
                      // Try to fetch the website with a short timeout
-                     const response = await fetch(websiteUrl, {
-                         method: 'GET',
+                     // Use 'no-cache' to tell caches to revalidate with origin
+                     const response = await fetch(cacheBustUrl, {
+                         method: 'HEAD',
                          headers: {
-                             'Cache-Control': 'no-cache'
+                             'Cache-Control': 'no-cache, no-store, must-revalidate',
+                             'Pragma': 'no-cache',
+                             'Expires': '0'
                          }
                      });
                      
                      // If we get any successful response (2xx), the website is live
                      if (response.ok) {
-                         console.log(`Website is live after ${attempt} attempts (${attempt * delayMs}ms)`);
+                         console.log(`Website is live after ${attempt + 1} attempts (${(attempt + 1) * delayMs}ms)`);
                          return;
                      }
                  } catch (error) {
                      // Network error or timeout, keep trying
-                     console.log(`Attempt ${attempt + 1}/${maxAttempts}: Website not ready yet...`);
+                     console.log(`Attempt ${attempt + 1}/${maxAttempts}: Website not ready yet... (${error.message})`);
                  }
                  
                  // Wait before retrying
