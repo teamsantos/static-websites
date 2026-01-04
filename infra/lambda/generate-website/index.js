@@ -166,7 +166,7 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, o
         // Merge custom data with base data (custom overrides base)
         console.log(`[DEBUG] Custom langs before merge:`, JSON.stringify(customLangs, null, 2));
         console.log(`[DEBUG] Custom images before merge:`, JSON.stringify(customImages, null, 2));
-        
+
         const mergedLangs = { ...baseLangs, ...customLangs };
         const mergedImages = { ...baseImages, ...customImages };
 
@@ -179,11 +179,15 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, o
         const dom = new JSDOM(templateHtml);
         const document = dom.window.document;
 
+        console.log(`[DEBUG] Original HTML:`);
+        console.log(`${templateHtml}`);
         console.log(`[DEBUG] Starting content injection into HEAD and BODY`);
         injectContent(document.head, mergedLangs, mergedImages);
         injectContent(document.body, mergedLangs, mergedImages);
 
         const finalHtml = dom.serialize();
+        console.log(`[DEBUG] HTML generated:`);
+        console.log(`${finalHtml} bytes`);
         console.log(`[DEBUG] HTML generation complete, final size: ${finalHtml.length} bytes`);
 
         return finalHtml;
@@ -408,7 +412,7 @@ export const handler = async (event) => {
             const commitMessage = `Update ${projectName} project`;
             console.log(`[DEBUG] Commit message: ${commitMessage}`);
             console.log(`[DEBUG] Uploading to: projects/${projectName}/index.html`);
-            
+
             const updateResponse = await octokit.rest.repos.createOrUpdateFileContents({
                 owner,
                 repo,
@@ -416,7 +420,7 @@ export const handler = async (event) => {
                 message: commitMessage,
                 content: Buffer.from(html).toString('base64'),
             });
-            
+
             console.log(`[DEBUG] File update response:`, JSON.stringify(updateResponse.data, null, 2));
             console.log(`[DEBUG] Successfully updated index.html for project: ${projectName}`);
         } else {
