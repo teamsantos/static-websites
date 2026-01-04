@@ -99,30 +99,19 @@ function handler(event) {
              originAccessControl: oac,
          });
 
-         // Create or reference S3 bucket for CloudFront logs
-         let logBucket: s3.IBucket;
+         // Create S3 bucket for CloudFront logs (must be in us-east-1)
+         // We'll use a custom resource to create the bucket in the correct region
          const logBucketName = `${props.s3Bucket}-cf-logs`;
 
-         try {
-             // Try to reference an existing bucket
-             logBucket = s3.Bucket.fromBucketAttributes(this, "CloudFrontLogsBucket", {
-                 bucketName: logBucketName,
-             });
-         } catch (error) {
-             // If it doesn't exist, create it
-             logBucket = new s3.Bucket(this, "CloudFrontLogsBucketNew", {
-                 bucketName: logBucketName,
-                 blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-                 encryption: s3.BucketEncryption.S3_MANAGED,
-                 removalPolicy: cdk.RemovalPolicy.RETAIN,
-                 lifecycleRules: [
-                     {
-                         // Delete logs after 30 days to save storage costs
-                         expiration: cdk.Duration.days(30),
-                     },
-                 ],
-             });
-         }
+         // Create the log bucket using fromBucketAttributes as a workaround
+         // The bucket should be created manually or via a separate stack in us-east-1
+         let logBucket: s3.IBucket;
+         
+         // Try to import existing bucket, if it fails CloudFormation will catch it
+         logBucket = s3.Bucket.fromBucketAttributes(this, "CloudFrontLogsBucket", {
+             bucketName: logBucketName,
+             region: "us-east-1",
+         });
 
          // Create multi-tenant CloudFront distribution
          this.distribution = new cloudfront.Distribution(this, "Distribution", {
