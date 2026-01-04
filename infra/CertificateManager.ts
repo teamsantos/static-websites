@@ -98,10 +98,10 @@ export class CertificateManager extends Construct {
         hostedZone: route53.IHostedZone,
         parameterPath: string
     ): acm.Certificate {
-        // Create new wildcard certificate
+        // Create new certificate that covers both wildcard and root domain
         const newCertificate = new acm.Certificate(this, 'WildcardCertificate', {
             domainName: wildcardDomain,
-            subjectAlternativeNames: [domainName], // Also include the root domain
+            subjectAlternativeNames: [domainName], // Include the root domain (e.g., e-info.click)
             validation: acm.CertificateValidation.fromDns(hostedZone),
         });
 

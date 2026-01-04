@@ -47,7 +47,7 @@ class MultiTenantDistributionStack extends cdk.Stack {
         const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
             domainName: props.hostedZoneDomainName,
         });
-        // Use CertificateManager to get or create wildcard certificate
+        // Use CertificateManager to get or create certificate that covers both wildcard and root domain
         const certManager = new CertificateManager_1.CertificateManager(this, "CertManager", {
             domainName: props.domainName,
             hostedZone: hostedZone,
@@ -64,46 +64,23 @@ class MultiTenantDistributionStack extends cdk.Stack {
             signing: cloudfront.Signing.SIGV4_ALWAYS,
         });
         this.oac = oac;
-        // Create CloudFront Function to rewrite paths based on hostname and path
-        // Supports both subdomain-based routing (generating.e-info.click/) 
-        // and path-based routing (e-info.click/generating/)
+        // Create CloudFront Function to rewrite paths based on hostname
+        // Supports subdomain-based routing (generating.e-info.click/)
         const pathRewriteFunction = new cloudfront.Function(this, "PathRewriteFunction", {
             code: cloudfront.FunctionCode.fromInline(`
 function handler(event) {
     const request = event.request;
     const host = request.headers.host.value;
-    const baseDomain = '${props.hostedZoneDomainName}';
     
-    let projectName = '';
-    
-    // Determine project name from either subdomain or path
-    if (host === baseDomain) {
-        // Base domain: e-info.click/generating/ → extract from path
-        const pathParts = request.uri.split('/').filter(p => p);
-        if (pathParts.length > 0) {
-            projectName = pathParts[0];
-        } else {
-            // Root access: e-info.click/ → use default project
-            projectName = 'default';
-        }
-    } else {
-        // Subdomain: generating.e-info.click/ → extract from subdomain
-        projectName = host.split('.')[0];
-    }
+    // Extract project name from subdomain (e.g., "generating" from "generating.e-info.click")
+    const projectName = host.split('.')[0];
     
     // Rewrite the URI to include the project name prefix
-    // Handle trailing slashes and root access
+    // <projectName>.e-info.click/ → /<projectName>/index.html
+    // <projectName>.e-info.click/page → /<projectName>/page
     if (request.uri === '/' || request.uri === '') {
         request.uri = '/' + projectName + '/index.html';
-    } else if (host === baseDomain) {
-        // For path-based routing, remove the project name from path if it's there
-        // e-info.click/generating/page.html → /generating/page.html
-        // Keep as-is since it's already in the correct format
-        if (!request.uri.startsWith('/' + projectName + '/')) {
-            request.uri = '/' + projectName + request.uri;
-        }
     } else {
-        // For subdomain-based routing, just add project prefix
         request.uri = '/' + projectName + request.uri;
     }
     
@@ -111,33 +88,19 @@ function handler(event) {
 }
 `),
         });
-        // Create CloudFront Function to handle error responses with project path rewriting
-        // Works with both subdomain and path-based routing
+        // Create CloudFront Function to handle error responses
+        // Redirects 4xx/5xx errors to the project's index.html for SPA routing
         const errorHandlerFunction = new cloudfront.Function(this, "ErrorHandlerFunction", {
             code: cloudfront.FunctionCode.fromInline(`
 function handler(event) {
     const response = event.response;
     const request = event.request;
-    const baseDomain = '${props.hostedZoneDomainName}';
-    const host = request.headers.host.value;
     
     // Only handle error responses
     if (response.status >= 400) {
-        let projectName = '';
-        
-        // Determine project name from either subdomain or path
-        if (host === baseDomain) {
-            // Base domain: extract from path
-            const pathParts = request.uri.split('/').filter(p => p);
-            if (pathParts.length > 0) {
-                projectName = pathParts[0];
-            } else {
-                projectName = 'default';
-            }
-        } else {
-            // Subdomain: extract from subdomain
-            projectName = host.split('.')[0];
-        }
+        const host = request.headers.host.value;
+        // Extract project name from subdomain
+        const projectName = host.split('.')[0];
         
         // Redirect error responses to the project's index.html
         response.statusCode = 200;
@@ -145,7 +108,7 @@ function handler(event) {
             value: 'text/html; charset=UTF-8'
         };
         
-        // Set the URI to serve the project's index.html
+        // Store the project name in a custom header for the origin to use
         response.headers['x-project-name'] = {
             value: projectName
         };
@@ -190,7 +153,7 @@ function handler(event) {
                 }),
                 cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
             },
-            domainNames: [props.hostedZoneDomainName, `*.${props.hostedZoneDomainName}`],
+            domainNames: [`*.${props.hostedZoneDomainName}`],
             defaultRootObject: "index.html",
             certificate: certificate,
             minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
@@ -218,13 +181,6 @@ function handler(event) {
         new route53.ARecord(this, "WildcardAliasRecord", {
             zone: hostedZone,
             recordName: `*.${props.hostedZoneDomainName}`,
-            target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(this.distribution)),
-        });
-        // Create base domain Route53 record to route the base domain to CloudFront
-        // This enables path-based routing (e.g., https://e-info.click/generating/)
-        new route53.ARecord(this, "BaseDomainAliasRecord", {
-            zone: hostedZone,
-            recordName: props.hostedZoneDomainName,
             target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(this.distribution)),
         });
         // Output distribution details

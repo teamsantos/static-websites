@@ -23,7 +23,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/01c6bdb82939bb328f33a152e46e675955eb949ebcf23af2bd19f706021f1f69.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/1b24ceaf4c458aeb1fbd522cf842321e82a6a0b5862bc0dc934e36514d4a7703.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -192,7 +192,7 @@
               "WrappedClass.addOrigin (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:14065)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
-              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:164:29)",
+              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:127:29)",
               "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:25:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
@@ -234,12 +234,6 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "AWSCloudFrontPartitionHostedZoneIdMap"
-          }
-        ],
-        "/MultiTenantDistribution/BaseDomainAliasRecord/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "BaseDomainAliasRecord9AA30ECA"
           }
         ],
         "/MultiTenantDistribution/DistributionId": [

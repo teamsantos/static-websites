@@ -84,10 +84,10 @@ class CertificateManager extends constructs_1.Construct {
         });
     }
     createNewCertificate(wildcardDomain, domainName, hostedZone, parameterPath) {
-        // Create new wildcard certificate
+        // Create new certificate that covers both wildcard and root domain
         const newCertificate = new acm.Certificate(this, 'WildcardCertificate', {
             domainName: wildcardDomain,
-            subjectAlternativeNames: [domainName], // Also include the root domain
+            subjectAlternativeNames: [domainName], // Include the root domain (e.g., e-info.click)
             validation: acm.CertificateValidation.fromDns(hostedZone),
         });
         // Store the certificate ARN in Parameter Store
