@@ -63,11 +63,8 @@ export class MultiTenantDistributionStack extends cdk.Stack {
                 code: cloudfront.FunctionCode.fromInline(`
 function handler(event) {
     var request = event.request;
-
-    // Access host safely
     var hostHeader = request.headers['host'];
     if (!hostHeader || !hostHeader[0] || !hostHeader[0].value) {
-        // Fail gracefully
         return request;
     }
     var host = hostHeader[0].value;
@@ -83,8 +80,7 @@ function handler(event) {
     }
 
     return request;
-}
-`),
+}`),
             }
         );
 
