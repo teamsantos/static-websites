@@ -109,17 +109,18 @@ jobs:
             fi
           done
 
-      - name: Cleanup S3 files
-        shell: bash
-        run: |
-          echo "🧹 Cleaning up S3 files..."
-          IFS=' ' read -ra PROJ_ARR <<< "${{ steps.parse-projects.outputs.projects-space }}"
-          for project in "${PROJ_ARR[@]}"; do
-            if [ -n "$project" ]; then
-              echo "Deleting S3 files for project: $project"
-              aws s3 rm s3://teamsantos-static-websites/$project/ --recursive --region eu-south-2 || echo "Failed to delete S3 files for $project"
-            fi
-          done
+       - name: Cleanup S3 files
+         shell: bash
+         run: |
+           echo "🧹 Cleaning up S3 files..."
+           IFS=' ' read -ra PROJ_ARR <<< "${{ steps.parse-projects.outputs.projects-space }}"
+           for project in "${PROJ_ARR[@]}"; do
+             if [ -n "$project" ]; then
+               echo "Deleting S3 files for project: $project"
+               # All projects are stored under /projects prefix in S3
+               aws s3 rm s3://teamsantos-static-websites/projects/$project/ --recursive --region eu-south-2 || echo "Failed to delete S3 files for $project"
+             fi
+           done
 
       - name: Delete CloudFormation stacks
         shell: bash
@@ -157,7 +158,7 @@ jobs:
               echo "  • CloudFront Distribution for $project.e-info.click"
               echo "  • Route53 A Record for $project.e-info.click"
               echo "  • ACM Certificate for $project.e-info.click"
-              echo "  • S3 files in s3://$S3_BUCKET/$project/"
+               echo "  • S3 files in s3://$S3_BUCKET/projects/$project/"
               echo ""
             fi
           done

@@ -56,6 +56,7 @@ export class MultiTenantDistributionStack extends cdk.Stack {
 
         // Create CloudFront Function to rewrite paths based on hostname
         // Supports subdomain-based routing (generating.e-info.click/)
+        // All projects are stored under /projects prefix in S3
         const pathRewriteFunction = new cloudfront.Function(
             this,
             "PathRewriteFunction",
@@ -77,14 +78,14 @@ function handler(event) {
     
     // Rewrite URI based on the path
     if (request.uri === '/' || request.uri === '') {
-        // Root path -> /projectName/index.html
-        request.uri = '/' + projectName + '/index.html';
+        // Root path -> /projects/projectName/index.html
+        request.uri = '/projects/' + projectName + '/index.html';
     } else if (request.uri === '/success') {
-        // /success path -> /projectName/index.html (preserving query string)
-        request.uri = '/' + projectName + '/index.html';
+        // /success path -> /projects/projectName/index.html (preserving query string)
+        request.uri = '/projects/' + projectName + '/index.html';
     } else {
-        // Other paths -> /projectName + original path
-        request.uri = '/' + projectName + request.uri;
+        // Other paths -> /projects/projectName + original path
+        request.uri = '/projects/' + projectName + request.uri;
     }
     
     return request;

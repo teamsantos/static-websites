@@ -57,7 +57,7 @@ async function processImages(images, projectName) {
                 ContentType: `image/${imageFormat}`
             }).promise();
 
-            updatedImages[key] = `/images/${imageName}`;
+            updatedImages[key] = `/projects/${projectName}/images/${imageName}`;
         } else {
             // Assume it's already a path or other valid value
             updatedImages[key] = value;
