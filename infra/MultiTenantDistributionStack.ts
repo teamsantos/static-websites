@@ -64,21 +64,24 @@ export class MultiTenantDistributionStack extends cdk.Stack {
 function handler(event) {
     var request = event.request;
     var hostHeader = request.headers['host'];
-    if (!hostHeader || !hostHeader[0] || !hostHeader[0].value) {
+    
+    // Check if host header exists and has a value
+    if (!hostHeader || !hostHeader.value) {
         return request;
     }
-    var host = hostHeader[0].value;
-
+    
+    var host = hostHeader.value;
+    
     // Extract project name from subdomain
     var projectName = host.split('.')[0];
-
+    
     // Rewrite URI
     if (request.uri === '/' || request.uri === '') {
         request.uri = '/' + projectName + '/index.html';
     } else {
         request.uri = '/' + projectName + request.uri;
     }
-
+    
     return request;
 }`),
             }
