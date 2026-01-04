@@ -71,6 +71,7 @@ class BucketStack extends cdk.Stack {
         // to update the policy since CDK's BucketPolicy construct fails when policy exists
         if (!(bucket instanceof s3.Bucket)) {
             // This is an imported bucket - use custom resource to update policy
+            // The policy allows CloudFront to access objects when using OAC
             const policyUpdateProvider = new custom.AwsCustomResource(this, "BucketPolicyUpdate", {
                 onUpdate: {
                     service: "S3",
@@ -81,7 +82,7 @@ class BucketStack extends cdk.Stack {
                             Version: "2012-10-17",
                             Statement: [
                                 {
-                                    Sid: "AllowCloudFrontDistributionWithOAC",
+                                    Sid: "AllowCloudFrontServicePrincipal",
                                     Effect: "Allow",
                                     Principal: {
                                         Service: "cloudfront.amazonaws.com",
@@ -89,7 +90,7 @@ class BucketStack extends cdk.Stack {
                                     Action: ["s3:GetObject", "s3:GetObjectVersion"],
                                     Resource: `${bucket.bucketArn}/*`,
                                     Condition: {
-                                        StringEquals: {
+                                        StringLike: {
                                             "AWS:SourceArn": `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/${props.distribution.distributionId}`,
                                         },
                                     },
@@ -114,13 +115,13 @@ class BucketStack extends cdk.Stack {
             new s3.BucketPolicy(this, "CloudFrontDistributionPolicy", {
                 bucket: bucket,
             }).document.addStatements(new iam.PolicyStatement({
-                sid: "AllowCloudFrontDistributionWithOAC",
+                sid: "AllowCloudFrontServicePrincipal",
                 effect: iam.Effect.ALLOW,
                 principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
                 actions: ["s3:GetObject", "s3:GetObjectVersion"],
                 resources: [`${bucket.bucketArn}/*`],
                 conditions: {
-                    StringEquals: {
+                    StringLike: {
                         "AWS:SourceArn": `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/${props.distribution.distributionId}`,
                     },
                 },

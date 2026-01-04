@@ -23,7 +23,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/ee5bde49d5510b91521df8d5d78e46cc20c7cad90bc926f936fe6e77ad2fc3f3.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/01c6bdb82939bb328f33a152e46e675955eb949ebcf23af2bd19f706021f1f69.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -192,7 +192,7 @@
               "WrappedClass.addOrigin (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:14065)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
-              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:124:29)",
+              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:164:29)",
               "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:25:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
@@ -234,6 +234,12 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "AWSCloudFrontPartitionHostedZoneIdMap"
+          }
+        ],
+        "/MultiTenantDistribution/BaseDomainAliasRecord/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BaseDomainAliasRecord9AA30ECA"
           }
         ],
         "/MultiTenantDistribution/DistributionId": [
@@ -321,7 +327,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/af8c5656c9740583002b3f1879e0dd2906f8764e20b5065caf995218abcc3b5c.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/7fd6e94b33500eb26f7ddbf4cfe3ad0989f0d75111165465944fedc8ef29fdf8.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -354,41 +360,6 @@
                 "Key": "Purpose",
                 "Value": "StaticWebsiteHosting"
               }
-            ]
-          }
-        ],
-        "/StaticWebsitesBucket/BucketPolicyUpdate": [
-          {
-            "type": "aws:cdk:warning",
-            "data": "installLatestAwsSdk was not specified, and defaults to true. You probably do not want this. Set the global context flag '@aws-cdk/customresources:installLatestAwsSdkDefault' to false to switch this behavior off project-wide, or set the property explicitly to true if you know you need to call APIs that are not in Lambda's built-in SDK version. [ack: @aws-cdk/custom-resources:installLatestAwsSdkNotSpecified]",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addWarningV2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:896)",
-              "new AwsCustomResource2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/custom-resources/lib/aws-custom-resource/aws-custom-resource.js:1:5991)",
-              "new AwsCustomResource2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
-              "new BucketStack (/Users/fmpi.santos/Projects/static-websites/infra/bucketStack.ts:51:42)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:47:1)",
-              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "node:internal/modules/cjs/loader:1871:10",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:1470:32)",
-              "Module._load (node:internal/modules/cjs/loader:1290:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
-              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
-              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
-              "Module.load (node:internal/modules/cjs/loader:1470:32)",
-              "Module._load (node:internal/modules/cjs/loader:1290:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
-              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
-              "node:internal/main/run_main_module:33:47"
             ]
           }
         ],
