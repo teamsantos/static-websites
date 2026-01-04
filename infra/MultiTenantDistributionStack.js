@@ -63,6 +63,7 @@ class MultiTenantDistributionStack extends cdk.Stack {
             description: "OAC for multi-tenant static websites",
             signing: cloudfront.Signing.SIGV4_ALWAYS,
         });
+        this.oac = oac;
         // Create CloudFront Function to rewrite paths based on hostname
         const pathRewriteFunction = new cloudfront.Function(this, "PathRewriteFunction", {
             code: cloudfront.FunctionCode.fromInline(`

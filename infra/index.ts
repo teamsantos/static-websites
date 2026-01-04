@@ -47,6 +47,7 @@ const multiTenantDistribution = new MultiTenantDistributionStack(
 new BucketStack(app, "StaticWebsitesBucket", {
     bucketName: config.s3Bucket,
     distribution: multiTenantDistribution.distribution,
+    oac: multiTenantDistribution.oac,
     env: {
         account: account,
         region: config.region,

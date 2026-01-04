@@ -19,6 +19,7 @@ export class MultiTenantDistributionStack extends cdk.Stack {
     public readonly distributionId: string;
     public readonly distributionDomainName: string;
     public readonly certificate: acm.ICertificate;
+    public readonly oac: cloudfront.S3OriginAccessControl;
 
     constructor(scope: cdk.App, id: string, props: MultiTenantDistributionStackProps) {
         super(scope, id, props);
@@ -50,6 +51,8 @@ export class MultiTenantDistributionStack extends cdk.Stack {
             description: "OAC for multi-tenant static websites",
             signing: cloudfront.Signing.SIGV4_ALWAYS,
         });
+
+        this.oac = oac;
 
         // Create CloudFront Function to rewrite paths based on hostname
         const pathRewriteFunction = new cloudfront.Function(

@@ -62,28 +62,42 @@ class BucketStack extends cdk.Stack {
             bucketCreated = true;
         }
         this.bucket = bucket;
-        // Add bucket policy for CloudFront distribution access
-        // Use grantRead on the service principal to avoid needing the distribution ID at synthesis time
+        // Add bucket policy for the specific CloudFront distribution with OAC
+        const oacPrincipal = new iam.PrincipalWithConditions(new iam.ServicePrincipal("cloudfront.amazonaws.com"), {
+            StringEquals: {
+                "AWS:SourceArn": `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/${props.distribution.distributionId}`,
+            },
+        });
         if (bucket instanceof s3.Bucket) {
             // For managed buckets, we can directly add the policy
             new s3.BucketPolicy(this, "CloudFrontDistributionPolicy", {
                 bucket: bucket,
             }).document.addStatements(new iam.PolicyStatement({
-                sid: "AllowCloudFrontServiceAccess",
+                sid: "AllowCloudFrontDistributionWithOAC",
                 effect: iam.Effect.ALLOW,
                 principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
                 actions: ["s3:GetObject", "s3:GetObjectVersion"],
                 resources: [`${bucket.bucketArn}/*`],
+                conditions: {
+                    StringEquals: {
+                        "AWS:SourceArn": `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/${props.distribution.distributionId}`,
+                    },
+                },
             }));
         }
         else {
             // For imported buckets, add the policy statement to the bucket's resource policy
             bucket.addToResourcePolicy(new iam.PolicyStatement({
-                sid: "AllowCloudFrontServiceAccess",
+                sid: "AllowCloudFrontDistributionWithOAC",
                 effect: iam.Effect.ALLOW,
                 principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
                 actions: ["s3:GetObject", "s3:GetObjectVersion"],
                 resources: [`${bucket.bucketArn}/*`],
+                conditions: {
+                    StringEquals: {
+                        "AWS:SourceArn": `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/${props.distribution.distributionId}`,
+                    },
+                },
             }));
         }
         // Output the bucket name for reference
