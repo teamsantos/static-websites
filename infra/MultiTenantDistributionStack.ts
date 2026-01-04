@@ -54,100 +54,105 @@ export class MultiTenantDistributionStack extends cdk.Stack {
 
         this.oac = oac;
 
-         // Create CloudFront Function to rewrite paths based on hostname
-         // Supports subdomain-based routing (generating.e-info.click/)
-         const pathRewriteFunction = new cloudfront.Function(
-             this,
-             "PathRewriteFunction",
-             {
-                  code: cloudfront.FunctionCode.fromInline(`
+        // Create CloudFront Function to rewrite paths based on hostname
+        // Supports subdomain-based routing (generating.e-info.click/)
+        const pathRewriteFunction = new cloudfront.Function(
+            this,
+            "PathRewriteFunction",
+            {
+                code: cloudfront.FunctionCode.fromInline(`
 function handler(event) {
-    const request = event.request;
-    const host = request.headers.host[0].value;
-    
-    // Extract project name from subdomain (e.g., "generating" from "generating.e-info.click")
-    const projectName = host.split('.')[0];
-    
-    // Rewrite the URI to include the project name prefix
-    // <projectName>.e-info.click/ → /<projectName>/index.html
-    // <projectName>.e-info.click/page → /<projectName>/page
+    var request = event.request;
+
+    // Access host safely
+    var hostHeader = request.headers['host'];
+    if (!hostHeader || !hostHeader[0] || !hostHeader[0].value) {
+        // Fail gracefully
+        return request;
+    }
+    var host = hostHeader[0].value;
+
+    // Extract project name from subdomain
+    var projectName = host.split('.')[0];
+
+    // Rewrite URI
     if (request.uri === '/' || request.uri === '') {
         request.uri = '/' + projectName + '/index.html';
     } else {
         request.uri = '/' + projectName + request.uri;
     }
-    
+
     return request;
 }
 `),
-             }
-         );
+            }
+        );
 
-         // Create S3 origin
-         const origin = origins.S3BucketOrigin.withOriginAccessControl(siteBucket, {
-             originAccessControl: oac,
-         });
+        // Create S3 origin
+        const origin = origins.S3BucketOrigin.withOriginAccessControl(siteBucket, {
+            originAccessControl: oac,
+        });
 
-         // Create multi-tenant CloudFront distribution
-         this.distribution = new cloudfront.Distribution(this, "Distribution", {
-             defaultBehavior: {
-                 origin: origin,
-                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                 allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
-                 cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-                 compress: true,
-                 functionAssociations: [
-                     {
-                         function: pathRewriteFunction,
-                         eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-                     },
-                 ],
-                 responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
-                     this,
-                     "CorsPolicy",
-                     {
-                         corsBehavior: {
-                             accessControlAllowCredentials: false,
-                             accessControlAllowHeaders: ["*"],
-                             accessControlAllowMethods: ["GET", "HEAD"],
-                             accessControlAllowOrigins: ["https://editor.e-info.click"],
-                             accessControlExposeHeaders: [],
-                             accessControlMaxAge: cdk.Duration.seconds(3600),
-                             originOverride: true,
-                         },
-                     }
-                 ),
-                 cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-             },
-             domainNames: [`*.${props.hostedZoneDomainName}`],
-             defaultRootObject: "index.html",
-             certificate: certificate,
-             minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-             errorResponses: [
-                 {
-                     httpStatus: 403,
-                     responseHttpStatus: 200,
-                     responsePagePath: "/index.html",
-                     ttl: cdk.Duration.minutes(30),
-                 },
-                 {
-                     httpStatus: 404,
-                     responseHttpStatus: 200,
-                     responsePagePath: "/index.html",
-                     ttl: cdk.Duration.minutes(30),
-                 },
-             ],
-             comment: "Multi-tenant CloudFront distribution for static websites",
-             // Logging is configured manually via AWS CLI with proper bucket permissions
-             // To enable logging:
-             // 1. S3 bucket teamsantos-static-websites-cf-logs must exist in us-east-1
-             // 2. Bucket must have ACL: log-delivery-write
-             // 3. Bucket policy must grant cloudfront.amazonaws.com s3:GetBucketAcl and s3:PutBucketAcl
-             // Once manually configured, uncomment below and redeploy
-             // enableLogging: true,
-             // logBucket: logBucket,
-             // logFilePrefix: "cloudfront-logs/",
-         });
+        // Create multi-tenant CloudFront distribution
+        this.distribution = new cloudfront.Distribution(this, "Distribution", {
+            defaultBehavior: {
+                origin: origin,
+                viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+                cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+                compress: true,
+                functionAssociations: [
+                    {
+                        function: pathRewriteFunction,
+                        eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+                    },
+                ],
+                responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
+                    this,
+                    "CorsPolicy",
+                    {
+                        corsBehavior: {
+                            accessControlAllowCredentials: false,
+                            accessControlAllowHeaders: ["*"],
+                            accessControlAllowMethods: ["GET", "HEAD"],
+                            accessControlAllowOrigins: ["https://editor.e-info.click"],
+                            accessControlExposeHeaders: [],
+                            accessControlMaxAge: cdk.Duration.seconds(3600),
+                            originOverride: true,
+                        },
+                    }
+                ),
+                cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+            },
+            domainNames: [`*.${props.hostedZoneDomainName}`],
+            defaultRootObject: "index.html",
+            certificate: certificate,
+            minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+            errorResponses: [
+                {
+                    httpStatus: 403,
+                    responseHttpStatus: 200,
+                    responsePagePath: "/index.html",
+                    ttl: cdk.Duration.minutes(30),
+                },
+                {
+                    httpStatus: 404,
+                    responseHttpStatus: 200,
+                    responsePagePath: "/index.html",
+                    ttl: cdk.Duration.minutes(30),
+                },
+            ],
+            comment: "Multi-tenant CloudFront distribution for static websites",
+            // Logging is configured manually via AWS CLI with proper bucket permissions
+            // To enable logging:
+            // 1. S3 bucket teamsantos-static-websites-cf-logs must exist in us-east-1
+            // 2. Bucket must have ACL: log-delivery-write
+            // 3. Bucket policy must grant cloudfront.amazonaws.com s3:GetBucketAcl and s3:PutBucketAcl
+            // Once manually configured, uncomment below and redeploy
+            // enableLogging: true,
+            // logBucket: logBucket,
+            // logFilePrefix: "cloudfront-logs/",
+        });
 
         this.distributionId = this.distribution.distributionId;
         this.distributionDomainName = this.distribution.distributionDomainName;
@@ -175,20 +180,20 @@ function handler(event) {
             exportName: "MultiTenantDistributionDomainName",
         });
 
-         new cdk.CfnOutput(this, "CertificateArn", {
-             value: certificate.certificateArn,
-             description: "ACM Certificate ARN",
-             exportName: "WildcardCertificateArn",
-         });
+        new cdk.CfnOutput(this, "CertificateArn", {
+            value: certificate.certificateArn,
+            description: "ACM Certificate ARN",
+            exportName: "WildcardCertificateArn",
+        });
 
-         new cdk.CfnOutput(this, "FunctionLogsInstructions", {
-             value: `CloudFront Function logs are available in CloudWatch. Look for log streams in /aws/cloudfront/function/PathRewriteFunction`,
-             description: "Instructions for accessing CloudFront Function logs",
-         });
+        new cdk.CfnOutput(this, "FunctionLogsInstructions", {
+            value: `CloudFront Function logs are available in CloudWatch. Look for log streams in /aws/cloudfront/function/PathRewriteFunction`,
+            description: "Instructions for accessing CloudFront Function logs",
+        });
 
-         new cdk.CfnOutput(this, "CloudFrontLogsSetup", {
-             value: "CloudFront access logs are configured to write to teamsantos-static-websites-cf-logs bucket in us-east-1. Logs appear in cloudfront-logs/ prefix.",
-             description: "CloudFront logs configuration",
-         });
-     }
- }
+        new cdk.CfnOutput(this, "CloudFrontLogsSetup", {
+            value: "CloudFront access logs are configured to write to teamsantos-static-websites-cf-logs bucket in us-east-1. Logs appear in cloudfront-logs/ prefix.",
+            description: "CloudFront logs configuration",
+        });
+    }
+}
