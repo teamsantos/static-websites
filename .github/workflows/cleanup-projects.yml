@@ -109,9 +109,9 @@ jobs:
             fi
           done
 
-       - name: Cleanup S3 files
-         shell: bash
-         run: |
+      - name: Cleanup S3 files
+        shell: bash
+        run: |
            echo "🧹 Cleaning up S3 files..."
            IFS=' ' read -ra PROJ_ARR <<< "${{ steps.parse-projects.outputs.projects-space }}"
            for project in "${PROJ_ARR[@]}"; do

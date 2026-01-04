@@ -261,9 +261,9 @@ jobs:
             fi
           done
 
-       - name: Sync built sites to S3 (incremental)
-         shell: bash
-         run: |
+      - name: Sync built sites to S3 (incremental)
+        shell: bash
+        run: |
            echo "📤 Syncing built sites to S3..."
            IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
            for project in "${PROJ_ARR[@]}"; do
