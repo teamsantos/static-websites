@@ -50,20 +50,8 @@ const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('accou
 if (!account) {
     console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
 }
-// Create the shared S3 bucket
-new bucketStack_1.BucketStack(app, "StaticWebsitesBucket", {
-    bucketName: config.s3Bucket,
-    env: {
-        account: account,
-        region: config.region,
-    },
-    tags: {
-        ManagedBy: "CDK",
-        Environment: "production",
-        Purpose: "StaticWebsiteHosting",
-    },
-});
-// Create the shared multi-tenant CloudFront distribution (only once)
+// Create the shared multi-tenant CloudFront distribution FIRST
+// This is required so we can get the OAC to pass to BucketStack
 const multiTenantDistribution = new MultiTenantDistributionStack_1.MultiTenantDistributionStack(app, "MultiTenantDistribution", {
     domainName: config.domain,
     hostedZoneDomainName: config.domain,
@@ -77,6 +65,21 @@ const multiTenantDistribution = new MultiTenantDistributionStack_1.MultiTenantDi
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "MultiTenantDistribution",
+    },
+});
+// Create the shared S3 bucket AFTER MultiTenantDistribution
+// and pass the distribution so it can create the correct bucket policy
+new bucketStack_1.BucketStack(app, "StaticWebsitesBucket", {
+    bucketName: config.s3Bucket,
+    distribution: multiTenantDistribution.distribution,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "StaticWebsiteHosting",
     },
 });
 // Create other infrastructure stacks

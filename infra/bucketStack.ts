@@ -1,13 +1,15 @@
 import * as cdk from "aws-cdk-lib";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from "aws-cdk-lib/aws-s3";
 
 interface BucketStackProps extends cdk.StackProps {
     bucketName: string;
+    distribution: cloudfront.Distribution;
 }
 
 export class BucketStack extends cdk.Stack {
-    public readonly bucket: s3.Bucket;
+    public readonly bucket: s3.IBucket;
 
     constructor(scope: cdk.App, id: string, props: BucketStackProps) {
         super(scope, id, props);
@@ -34,25 +36,32 @@ export class BucketStack extends cdk.Stack {
             bucketCreated = true;
         }
 
-        this.bucket = bucket as s3.Bucket;
+        this.bucket = bucket;
 
-        // Always add bucket policy for CloudFront OAC access
-        // Even for imported buckets, we need to grant CloudFront permission
+        // Add bucket policy for CloudFront distribution access
+        // Use grantRead on the service principal to avoid needing the distribution ID at synthesis time
         if (bucket instanceof s3.Bucket) {
-            new s3.BucketPolicy(this, "CloudFrontOACPolicy", {
+            // For managed buckets, we can directly add the policy
+            new s3.BucketPolicy(this, "CloudFrontDistributionPolicy", {
                 bucket: bucket,
             }).document.addStatements(
                 new iam.PolicyStatement({
-                    sid: "AllowCloudFrontOACAccess",
+                    sid: "AllowCloudFrontServiceAccess",
                     effect: iam.Effect.ALLOW,
                     principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
-                    actions: ["s3:GetObject"],
+                    actions: ["s3:GetObject", "s3:GetObjectVersion"],
                     resources: [`${bucket.bucketArn}/*`],
-                    conditions: {
-                        StringEquals: {
-                            "AWS:SourceAccount": cdk.Stack.of(this).account,
-                        },
-                    },
+                })
+            );
+        } else {
+            // For imported buckets, add the policy statement to the bucket's resource policy
+            bucket.addToResourcePolicy(
+                new iam.PolicyStatement({
+                    sid: "AllowCloudFrontServiceAccess",
+                    effect: iam.Effect.ALLOW,
+                    principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
+                    actions: ["s3:GetObject", "s3:GetObjectVersion"],
+                    resources: [`${bucket.bucketArn}/*`],
                 })
             );
         }
