@@ -104,10 +104,13 @@ function handler(event) {
          const logBucketName = `${props.s3Bucket}-cf-logs`;
 
          // Create the log bucket using fromBucketAttributes as a workaround
-         // The bucket should be created manually or via a separate stack in us-east-1
+         // The bucket is created manually with ACL: log-delivery-write to allow CloudFront to write logs
+         // Bucket must have: 
+         //   - ACL: log-delivery-write (allows S3 log delivery group to write)
+         //   - Ownership controls: ObjectWriter (enables ACL support)
          let logBucket: s3.IBucket;
          
-         // Try to import existing bucket, if it fails CloudFormation will catch it
+         // Import existing bucket - CloudFront will use this for access logs
          logBucket = s3.Bucket.fromBucketAttributes(this, "CloudFrontLogsBucket", {
              bucketName: logBucketName,
              region: "us-east-1",
