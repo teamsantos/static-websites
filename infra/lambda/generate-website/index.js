@@ -105,28 +105,34 @@ async function processImages(images, projectName) {
     return updatedImages;
 }
 
+async function getTemplateFromS3(templateId) {
+    try {
+        const bucketName = process.env.S3_BUCKET_NAME;
+        const s3Key = `templates/${templateId}/index.html`;
+        console.log(`[DEBUG] Fetching template HTML from S3: ${s3Key}`);
+        
+        const response = await s3.getObject({
+            Bucket: bucketName,
+            Key: s3Key
+        }).promise();
+
+        const templateHtml = response.Body.toString('utf-8');
+        console.log(`[DEBUG] Retrieved template HTML from S3, size: ${templateHtml.length} bytes`);
+        return templateHtml;
+    } catch (error) {
+        console.error(`Error fetching template from S3:`, error);
+        throw error;
+    }
+}
+
 async function generateHtmlFromTemplate(templateId, customImages, customLangs, octokit, owner, repo) {
     try {
         console.log(`[DEBUG] Starting HTML generation for template: ${templateId}`);
-        // Load base template HTML (processed version with data attributes)
-        const templatePath = `templates/${templateId}/index.html`;
-        let templateHtml;
-        try {
-            const response = await octokit.rest.repos.getContent({
-                owner,
-                repo,
-                path: templatePath,
-            });
-            templateHtml = Buffer.from(response.data.content, 'base64').toString('utf8');
-            console.log(`[DEBUG] Retrieved template HTML, size: ${templateHtml.length} bytes`);
-        } catch (error) {
-            if (error.status === 404) {
-                throw new Error(`Template not found: ${templatePath}`);
-            }
-            throw error;
-        }
+        
+        // Load base template HTML from S3
+        const templateHtml = await getTemplateFromS3(templateId);
 
-        // Load base langs and images
+        // Load base langs and images from GitHub
         const baseLangsPath = `templates/${templateId}/langs/en.json`;
         const baseImagesPath = `templates/${templateId}/assets/images.json`;
 
@@ -140,12 +146,12 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, o
                 path: baseLangsPath,
             });
             baseLangs = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf8'));
-            console.log(`[DEBUG] Loaded base langs, keys: ${Object.keys(baseLangs).join(', ')}`);
+            console.log(`[DEBUG] Loaded base langs from GitHub, keys: ${Object.keys(baseLangs).join(', ')}`);
         } catch (error) {
             if (error.status !== 404) {
                 throw error;
             }
-            console.log(`[DEBUG] Base langs file not found: ${baseLangsPath}`);
+            console.log(`[DEBUG] Base langs file not found in GitHub: ${baseLangsPath}`);
         }
 
         try {
@@ -155,12 +161,12 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, o
                 path: baseImagesPath,
             });
             baseImages = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf8'));
-            console.log(`[DEBUG] Loaded base images, keys: ${Object.keys(baseImages).join(', ')}`);
+            console.log(`[DEBUG] Loaded base images from GitHub, keys: ${Object.keys(baseImages).join(', ')}`);
         } catch (error) {
             if (error.status !== 404) {
                 throw error;
             }
-            console.log(`[DEBUG] Base images file not found: ${baseImagesPath}`);
+            console.log(`[DEBUG] Base images file not found in GitHub: ${baseImagesPath}`);
         }
 
         // Merge custom data with base data (custom overrides base)
@@ -179,15 +185,12 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, o
         const dom = new JSDOM(templateHtml);
         const document = dom.window.document;
 
-        console.log(`[DEBUG] Original HTML:`);
-        console.log(`${templateHtml}`);
+        console.log(`[DEBUG] Original HTML size: ${templateHtml.length} bytes`);
         console.log(`[DEBUG] Starting content injection into HEAD and BODY`);
         injectContent(document.head, mergedLangs, mergedImages);
         injectContent(document.body, mergedLangs, mergedImages);
 
         const finalHtml = dom.serialize();
-        console.log(`[DEBUG] HTML generated:`);
-        console.log(`${finalHtml} bytes`);
         console.log(`[DEBUG] HTML generation complete, final size: ${finalHtml.length} bytes`);
 
         return finalHtml;

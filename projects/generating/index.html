@@ -270,7 +270,7 @@
         </div>
 
          <h1 id="mainTitle">Creating your website</h1>
-         <p class="subtitle" id="subtitle">We're building and deploying your website. This usually takes 30-90 seconds. Please don't close this page.</p>
+         <p class="subtitle" id="subtitle">We're building and deploying your website. This usually takes 1-2 minutes. Please don't close this page.</p>
 
         <div class="progress-steps">
             <div class="step active" id="step1">
@@ -393,21 +393,25 @@
              }
          }
 
-         // Poll the website URL until it's actually live
+         // Poll CloudFront until the website is actually live
+         // Since S3 is not publicly accessible, we check through CloudFront
+         // CloudFront returns 200 OK even for missing files, so we verify the response is valid HTML
          async function waitForWebsiteLive(websiteUrl) {
-             const maxAttempts = 120; // 2 minutes with 1s intervals
+             const maxAttempts = 300; // 5 minutes with 1s intervals
              const delayMs = 1000; // 1 second between checks
+             
+             console.log(`Checking for website: ${websiteUrl}`);
              
              for (let attempt = 0; attempt < maxAttempts; attempt++) {
                  try {
                      // Add cache-busting query parameter to bypass CloudFront and browser caches
-                     // This ensures each request goes to origin and doesn't hit cached 404 responses
+                     // This ensures each request goes to origin and doesn't hit cached responses
                      const cacheBustUrl = `${websiteUrl}?t=${Date.now()}`;
                      
-                     // Try to fetch the website with a short timeout
+                     // Fetch the website (not just HEAD, need to check content)
                      // Use 'no-cache' to tell caches to revalidate with origin
                      const response = await fetch(cacheBustUrl, {
-                         method: 'HEAD',
+                         method: 'GET',
                          headers: {
                              'Cache-Control': 'no-cache, no-store, must-revalidate',
                              'Pragma': 'no-cache',
@@ -415,14 +419,34 @@
                          }
                      });
                      
-                     // If we get any successful response (2xx), the website is live
-                     if (response.ok) {
-                         console.log(`Website is live after ${attempt + 1} attempts (${(attempt + 1) * delayMs}ms)`);
-                         return;
+                     // Check if we got valid HTML content
+                     // CloudFront returns 200 even for missing files, so we need to verify content
+                     if (response.status === 200) {
+                         const contentType = response.headers.get('content-type');
+                         
+                         // Valid HTML response should have text/html content type
+                         if (contentType && contentType.includes('text/html')) {
+                             const text = await response.text();
+                             
+                             // Verify it's actual HTML, not an error page
+                             // Error pages typically have minimal content or specific error markers
+                             if (text && text.length > 100 && text.includes('<')) {
+                                 console.log(`Website is live after ${attempt + 1} attempts (${(attempt + 1) * delayMs}ms)`);
+                                 console.log(`Content length: ${text.length} bytes`);
+                                 return;
+                             }
+                         }
+                     }
+                     
+                     // Log status every 10 attempts for debugging
+                     if (attempt % 10 === 0) {
+                         console.log(`Attempt ${attempt + 1}/${maxAttempts}: Status ${response.status}, Content-Type: ${response.headers.get('content-type')}`);
                      }
                  } catch (error) {
                      // Network error or timeout, keep trying
-                     console.log(`Attempt ${attempt + 1}/${maxAttempts}: Website not ready yet... (${error.message})`);
+                     if (attempt % 10 === 0) {
+                         console.log(`Attempt ${attempt + 1}/${maxAttempts}: Network error - ${error.message}`);
+                     }
                  }
                  
                  // Wait before retrying
@@ -430,7 +454,7 @@
              }
              
              // If we get here, the website didn't come online within the timeout
-             throw new Error('Website deployment timed out. It may still be processing. Please try visiting the URL in a moment.');
+             throw new Error('Website deployment timed out. The file was not published within 5 minutes. Please try visiting the URL manually or contact support.');
          }
 
         function showSuccess(url) {
