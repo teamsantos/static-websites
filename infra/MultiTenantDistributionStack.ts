@@ -60,34 +60,24 @@ export class MultiTenantDistributionStack extends cdk.Stack {
              this,
              "PathRewriteFunction",
              {
-                 code: cloudfront.FunctionCode.fromInline(`
+                  code: cloudfront.FunctionCode.fromInline(`
 function handler(event) {
-     const request = event.request;
-     const host = request.headers.host.value;
-     
-     // Log the incoming request
-     console.log('[CloudFront Function] Incoming request:');
-     console.log('  Host: ' + host);
-     console.log('  URI: ' + request.uri);
-     console.log('  Method: ' + request.method);
-     
-     // Extract project name from subdomain (e.g., "generating" from "generating.e-info.click")
-     const projectName = host.split('.')[0];
-     console.log('  Extracted project name: ' + projectName);
-     
-     // Rewrite the URI to include the project name prefix
-     // <projectName>.e-info.click/ → /<projectName>/index.html
-     // <projectName>.e-info.click/page → /<projectName>/page
-     if (request.uri === '/' || request.uri === '') {
-         request.uri = '/' + projectName + '/index.html';
-     } else {
-         request.uri = '/' + projectName + request.uri;
-     }
-     
-     console.log('  Rewritten URI: ' + request.uri);
-     console.log('[CloudFront Function] Request processing completed successfully');
-     
-     return request;
+    const request = event.request;
+    const host = request.headers.host[0].value;
+    
+    // Extract project name from subdomain (e.g., "generating" from "generating.e-info.click")
+    const projectName = host.split('.')[0];
+    
+    // Rewrite the URI to include the project name prefix
+    // <projectName>.e-info.click/ → /<projectName>/index.html
+    // <projectName>.e-info.click/page → /<projectName>/page
+    if (request.uri === '/' || request.uri === '') {
+        request.uri = '/' + projectName + '/index.html';
+    } else {
+        request.uri = '/' + projectName + request.uri;
+    }
+    
+    return request;
 }
 `),
              }
