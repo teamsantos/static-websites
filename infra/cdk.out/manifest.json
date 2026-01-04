@@ -23,7 +23,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/317ae4b69df3ae879de525961767fc107f255b5af17b5d5e2b61deabe6f33ef7.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/4deb73aa1643ca4d2826427b7814af92448958ef74bc3f49ca4002aca30dd522.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -48,7 +48,7 @@
               "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:27:47)",
+              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:28:47)",
               "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:25:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
@@ -101,7 +101,7 @@
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "StringParameter2.valueFromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-ssm/lib/parameter.js:1:8254)",
               "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:47:53)",
-              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:32:29)",
+              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:33:29)",
               "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:25:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
@@ -186,7 +186,7 @@
               "WrappedClass.addOrigin (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:14065)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
-              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:92:29)",
+              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:128:30)",
               "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:25:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
@@ -246,6 +246,18 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "CertificateArn"
+          }
+        ],
+        "/MultiTenantDistribution/CloudFrontLogsBucketOutput": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CloudFrontLogsBucketOutput"
+          }
+        ],
+        "/MultiTenantDistribution/FunctionLogsInstructions": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FunctionLogsInstructions"
           }
         ],
         "/MultiTenantDistribution/CDKMetadata/Default": [
