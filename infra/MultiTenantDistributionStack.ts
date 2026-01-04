@@ -83,41 +83,6 @@ function handler(event) {
             }
         );
 
-        // Create CloudFront Function to handle error responses
-        // Redirects 4xx/5xx errors to the project's index.html for SPA routing
-        const errorHandlerFunction = new cloudfront.Function(
-            this,
-            "ErrorHandlerFunction",
-            {
-                code: cloudfront.FunctionCode.fromInline(`
-function handler(event) {
-    const response = event.response;
-    const request = event.request;
-    
-    // Only handle error responses
-    if (response.status >= 400) {
-        const host = request.headers.host.value;
-        // Extract project name from subdomain
-        const projectName = host.split('.')[0];
-        
-        // Redirect error responses to the project's index.html
-        response.statusCode = 200;
-        response.headers['content-type'] = {
-            value: 'text/html; charset=UTF-8'
-        };
-        
-        // Store the project name in a custom header for the origin to use
-        response.headers['x-project-name'] = {
-            value: projectName
-        };
-    }
-    
-    return response;
-}
-`),
-            }
-        );
-
         // Create S3 origin
         const origin = origins.S3BucketOrigin.withOriginAccessControl(siteBucket, {
             originAccessControl: oac,
@@ -135,10 +100,6 @@ function handler(event) {
                     {
                         function: pathRewriteFunction,
                         eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-                    },
-                    {
-                        function: errorHandlerFunction,
-                        eventType: cloudfront.FunctionEventType.VIEWER_RESPONSE,
                     },
                 ],
                 responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
