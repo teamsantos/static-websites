@@ -76,16 +76,19 @@ function handler(event) {
     // Extract project name from subdomain
     var projectName = host.split('.')[0];
     
+    // Normalize URI - remove duplicate slashes
+    var uri = request.uri.replace(/\/+/g, '/');
+    
     // Rewrite URI based on the path
-    if (request.uri === '/' || request.uri === '') {
+    if (uri === '/' || uri === '') {
         // Root path -> /projects/projectName/index.html
         request.uri = '/projects/' + projectName + '/index.html';
-    } else if (request.uri === '/success') {
+    } else if (uri === '/success') {
         // /success path -> /projects/projectName/index.html (preserving query string)
         request.uri = '/projects/' + projectName + '/index.html';
     } else {
         // Other paths -> /projects/projectName + original path
-        request.uri = '/projects/' + projectName + request.uri;
+        request.uri = '/projects/' + projectName + uri;
     }
     
     return request;
