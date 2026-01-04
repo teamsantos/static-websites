@@ -75,10 +75,15 @@ function handler(event) {
     // Extract project name from subdomain
     var projectName = host.split('.')[0];
     
-    // Rewrite URI
+    // Rewrite URI based on the path
     if (request.uri === '/' || request.uri === '') {
+        // Root path -> /projectName/index.html
+        request.uri = '/' + projectName + '/index.html';
+    } else if (request.uri === '/success') {
+        // /success path -> /projectName/index.html (preserving query string)
         request.uri = '/' + projectName + '/index.html';
     } else {
+        // Other paths -> /projectName + original path
         request.uri = '/' + projectName + request.uri;
     }
     
