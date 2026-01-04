@@ -121,23 +121,9 @@ function handler(event) {
                 cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
             },
             domainNames: [`*.${props.hostedZoneDomainName}`],
-            defaultRootObject: "index.html",
             certificate: certificate,
             minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-            errorResponses: [
-                {
-                    httpStatus: 403,
-                    responseHttpStatus: 200,
-                    responsePagePath: "/index.html",
-                    ttl: cdk.Duration.minutes(30),
-                },
-                {
-                    httpStatus: 404,
-                    responseHttpStatus: 200,
-                    responsePagePath: "/index.html",
-                    ttl: cdk.Duration.minutes(30),
-                },
-            ],
+            errorResponses: [],
             comment: "Multi-tenant CloudFront distribution for static websites",
             // Logging is configured manually via AWS CLI with proper bucket permissions
             // To enable logging:
