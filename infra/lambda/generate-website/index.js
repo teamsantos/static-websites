@@ -109,7 +109,7 @@ async function getTemplateFromS3(templateId) {
     }
 }
 
-async function generateHtmlFromTemplate(templateId, customImages, customLangs, octokit, owner, repo) {
+async function generateHtmlFromTemplate(templateId, customImages, customLangs, customTextColors, customSectionBackgrounds, octokit, owner, repo) {
     try {
         // Load base template HTML from S3
         const templateHtml = await getTemplateFromS3(`${templateId}`.toLowerCase());
@@ -155,8 +155,8 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, o
         const dom = new JSDOM(templateHtml);
         const document = dom.window.document;
 
-        injectContent(document.head, mergedLangs, mergedImages);
-        injectContent(document.body, mergedLangs, mergedImages);
+        injectContent(document.head, mergedLangs, mergedImages, customTextColors, customSectionBackgrounds);
+        injectContent(document.body, mergedLangs, mergedImages, customTextColors, customSectionBackgrounds);
 
         const finalHtml = dom.serialize();
 
@@ -167,7 +167,7 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, o
     }
 }
 
-function injectContent(element, langs, images) {
+function injectContent(element, langs, images, textColors, sectionBackgrounds) {
     // Skip script and style elements
     if (element.tagName === 'SCRIPT' || element.tagName === 'STYLE') {
         return;
@@ -190,6 +190,14 @@ function injectContent(element, langs, images) {
         } else {
             element.textContent = langs[textId];
         }
+    }
+
+    // Apply text color if textColors exist for this element
+    if (textColors && textId && textColors[textId]) {
+        const currentStyle = element.getAttribute('style') || '';
+        const colorStyle = `color: ${textColors[textId]}`;
+        const newStyle = currentStyle ? `${currentStyle}; ${colorStyle}` : colorStyle;
+        element.setAttribute('style', newStyle);
     }
 
     // Inject alt text
@@ -229,10 +237,19 @@ function injectContent(element, langs, images) {
         element.setAttribute('style', newStyle);
     }
 
+    // Apply section background color if sectionBackgrounds exist
+    const sectionId = element.getAttribute('data-section-id');
+    if (sectionBackgrounds && sectionId && sectionBackgrounds[sectionId]) {
+        const currentStyle = element.getAttribute('style') || '';
+        const bgColorStyle = `background-color: ${sectionBackgrounds[sectionId]}`;
+        const newStyle = currentStyle ? `${currentStyle}; ${bgColorStyle}` : bgColorStyle;
+        element.setAttribute('style', newStyle);
+    }
+
     // Process children
     const children = Array.from(element.children || []);
     for (let child of children) {
-        injectContent(child, langs, images);
+        injectContent(child, langs, images, textColors, sectionBackgrounds);
     }
 }
 
@@ -307,59 +324,59 @@ export const handler = async (event) => {
     }
 
     try {
-        // Fetch metadata from S3
-        const metadata = await getMetadataFromS3(operationId);
+         // Fetch metadata from S3
+         const metadata = await getMetadataFromS3(operationId);
 
-        const { images, langs, templateId, email, projectName } = metadata;
+         const { images, langs, templateId, email, projectName, textColors, sectionBackgrounds } = metadata;
 
-        // Validate metadata
-        // if (!images || !langs || !templateId || !email || !projectName || !sections) {
-        if (!images || !langs || !templateId || !email || !projectName) {
-            return {
-                statusCode: 400,
-                headers: {
-                    'Access-Control-Allow-Origin': origin || '*',
-                    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                    'Access-Control-Allow-Methods': 'POST,OPTIONS',
-                },
-                body: JSON.stringify({ error: 'Invalid metadata: missing required fields (images, langs, templateId, email, name)' }),
-            };
-        }
+         // Validate metadata
+         // if (!images || !langs || !templateId || !email || !projectName || !sections) {
+         if (!images || !langs || !templateId || !email || !projectName) {
+             return {
+                 statusCode: 400,
+                 headers: {
+                     'Access-Control-Allow-Origin': origin || '*',
+                     'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                     'Access-Control-Allow-Methods': 'POST,OPTIONS',
+                 },
+                 body: JSON.stringify({ error: 'Invalid metadata: missing required fields (images, langs, templateId, email, name)' }),
+             };
+         }
 
-        // Process images: upload new ones to S3 and update paths
-        const processedImages = await processImages(images, projectName);
+         // Process images: upload new ones to S3 and update paths
+         const processedImages = await processImages(images, projectName);
 
-        // Get secrets from AWS Secrets Manager
-        const { githubToken, githubOwner, githubRepo } = await getSecrets();
+         // Get secrets from AWS Secrets Manager
+         const { githubToken, githubOwner, githubRepo } = await getSecrets();
 
-        const octokit = new Octokit({
-            auth: githubToken,
-        });
+         const octokit = new Octokit({
+             auth: githubToken,
+         });
 
-        const owner = githubOwner;
-        const repo = githubRepo;
+         const owner = githubOwner;
+         const repo = githubRepo;
 
-        let isUpdate = false;
-        try {
-            // Check if project exists
-            const path = `projects/${projectName}`;
-            await octokit.rest.repos.getContent({
-                owner,
-                repo,
-                path,
-            });
+         let isUpdate = false;
+         try {
+             // Check if project exists
+             const path = `projects/${projectName}`;
+             await octokit.rest.repos.getContent({
+                 owner,
+                 repo,
+                 path,
+             });
 
-            // If no error, project exists, this is an update
-            isUpdate = true;
-        } catch (error) {
-            if (error.status !== 404) {
-                throw error;
-            }
-            // 404 means not exists, this is a create
-        }
+             // If no error, project exists, this is an update
+             isUpdate = true;
+         } catch (error) {
+             if (error.status !== 404) {
+                 throw error;
+             }
+             // 404 means not exists, this is a create
+         }
 
-        // Generate HTML from template and custom data
-        const html = await generateHtmlFromTemplate(templateId, processedImages, langs, octokit, owner, repo);
+         // Generate HTML from template and custom data
+         const html = await generateHtmlFromTemplate(templateId, processedImages, langs, textColors, sectionBackgrounds, octokit, owner, repo);
 
         if (isUpdate) {
             // For updates, just update the index.html file
