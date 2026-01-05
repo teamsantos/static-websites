@@ -64,12 +64,32 @@ class BucketStack extends cdk.Stack {
             bucketCreated = true;
         }
         this.bucket = bucket;
-        // For imported buckets with existing policies, we need to use a custom resource
-        // to update the policy since CDK's BucketPolicy construct fails when policy exists
-        if (!(bucket instanceof s3.Bucket)) {
-            // This is an imported bucket - use custom resource to update policy
-            // The policy allows CloudFront to access objects when using OAC
-            const policyUpdateProvider = new custom.AwsCustomResource(this, "BucketPolicyUpdate", {
+        // Define the CloudFront bucket policy statement
+        const cloudFrontPolicyStatement = new iam.PolicyStatement({
+            sid: "AllowAllCloudFrontDistributionsInAccount",
+            effect: iam.Effect.ALLOW,
+            principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
+            actions: ["s3:GetObject"],
+            resources: [`${bucket.bucketArn}/*`],
+            conditions: {
+                StringEquals: {
+                    "AWS:SourceAccount": "396913706953",
+                },
+                StringLike: {
+                    "AWS:SourceArn": "arn:aws:cloudfront::396913706953:distribution/*",
+                },
+            },
+        });
+        // For newly created buckets, use the standard BucketPolicy construct
+        if (bucket instanceof s3.Bucket) {
+            new s3.BucketPolicy(this, "CloudFrontDistributionPolicy", {
+                bucket: bucket,
+            }).document.addStatements(cloudFrontPolicyStatement);
+        }
+        else {
+            // For imported buckets with existing policies, use a custom resource
+            // to update the policy since CDK's BucketPolicy construct fails when policy exists
+            new custom.AwsCustomResource(this, "BucketPolicyUpdate", {
                 onUpdate: {
                     service: "S3",
                     action: "putBucketPolicy",
@@ -108,24 +128,6 @@ class BucketStack extends cdk.Stack {
                 ]),
                 installLatestAwsSdk: false,
             });
-            // For newly created buckets, use the standard BucketPolicy construct
-            new s3.BucketPolicy(this, "CloudFrontDistributionPolicy", {
-                bucket: bucket,
-            }).document.addStatements(new iam.PolicyStatement({
-                sid: "AllowAllCloudFrontDistributionsInAccount",
-                effect: iam.Effect.ALLOW,
-                principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
-                actions: ["s3:GetObject"],
-                resources: [`${bucket.bucketArn}/*`],
-                conditions: {
-                    StringEquals: {
-                        "AWS:SourceAccount": "396913706953",
-                    },
-                    StringLike: {
-                        "AWS:SourceArn": "arn:aws:cloudfront::396913706953:distribution/*",
-                    },
-                },
-            }));
         }
         // Output the bucket name for reference
         new cdk.CfnOutput(this, "BucketName", {
