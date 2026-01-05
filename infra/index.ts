@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { BucketStack } from "./bucketStack";
+import { CloudWatchLogsStack } from "./CloudWatchLogsStack";
 import { CreateProjectStack } from "./CreateProjectStack";
 import { ProjectSite } from "./ProjectStack";
 import { StripeCheckoutStack } from "./PaymentSessionStack";
@@ -57,6 +58,20 @@ new BucketStack(app, "StaticWebsitesBucket", {
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "StaticWebsiteHosting",
+    },
+});
+
+// Create CloudWatch logs bucket with lifecycle policy for Glacier archival
+new CloudWatchLogsStack(app, "CloudWatchLogsBucket", {
+    bucketName: `${config.s3Bucket}-logs`,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "CloudWatchLogsArchival",
     },
 });
 

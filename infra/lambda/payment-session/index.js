@@ -8,7 +8,6 @@ const BUCKET_NAME = process.env.S3_BUCKET_NAME || "teamsantos-static-websites";
 const METADATA_KEY = "metadata.json";
 
 export const handler = async (event) => {
-    console.log(process.env.STRIPE_SECRET_KEY);
     if (event.httpMethod === "OPTIONS") {
         return {
             statusCode: 200,
@@ -136,8 +135,6 @@ async function saveMetadata(operationKey, entry) {
             Body: JSON.stringify(metadata, null, 2),
             ContentType: "application/json",
         }).promise();
-
-        console.log(`Stored metadata for operationKey: ${operationKey}`);
     } catch (error) {
         console.error("Failed to store metadata:", error);
         throw error;

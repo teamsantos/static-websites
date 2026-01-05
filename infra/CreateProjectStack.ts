@@ -3,6 +3,7 @@ import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
@@ -50,6 +51,12 @@ export class CreateProjectStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(30),
         });
 
+        // Set CloudWatch log retention to 30 days
+        new logs.LogRetention(this, 'CreateProjectLogRetention', {
+            logGroupName: createProjectFunction.logGroup.logGroupName,
+            retention: logs.RetentionDays.ONE_MONTH,
+        });
+
         // Grant permissions to read the secrets
         githubTokenSecret.grantRead(createProjectFunction);
         githubConfigSecret.grantRead(createProjectFunction);
@@ -82,6 +89,12 @@ export class CreateProjectStack extends cdk.Stack {
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites"
             },
             timeout: cdk.Duration.seconds(60),
+        });
+
+        // Set CloudWatch log retention to 30 days
+        new logs.LogRetention(this, 'GenerateWebsiteLogRetention', {
+            logGroupName: generateWebsiteFunction.logGroup.logGroupName,
+            retention: logs.RetentionDays.ONE_MONTH,
         });
 
         // Grant permissions to generate-website Lambda

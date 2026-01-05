@@ -31,7 +31,6 @@ async function getSecrets() {
 async function getMetadataFromS3(operationId) {
     try {
         const bucketName = process.env.S3_BUCKET_NAME;
-        console.log(`[DEBUG] Fetching metadata from S3 bucket: ${bucketName}`);
         const response = await s3.getObject({
             Bucket: bucketName,
             Key: 'metadata.json'
@@ -40,15 +39,11 @@ async function getMetadataFromS3(operationId) {
         const metadataContent = response.Body.toString('utf-8');
         const metadata = JSON.parse(metadataContent);
 
-        console.log(`[DEBUG] All metadata keys available: ${Object.keys(metadata).join(', ')}`);
         if (!metadata[operationId]) {
             throw new Error(`Operation ID '${operationId}' not found in metadata`);
         }
 
         const operationMetadata = metadata[operationId];
-        console.log(`[DEBUG] Retrieved metadata for operationId: ${operationId}`);
-        console.log(`[DEBUG] Metadata content (before processing):`, JSON.stringify(operationMetadata, null, 2));
-
         return operationMetadata;
     } catch (error) {
         console.error('Error fetching metadata from S3:', error);
@@ -60,18 +55,13 @@ async function processImages(images, projectName) {
     const updatedImages = {};
     const bucketName = process.env.S3_BUCKET_NAME;
 
-    console.log(`[DEBUG] Processing images for project: ${projectName}`);
-    console.log(`[DEBUG] Input images object:`, JSON.stringify(images, null, 2));
-
     for (const [key, value] of Object.entries(images)) {
         // Check if it's a URL (starts with http/https) or a data URL (base64 image content)
         if (typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://'))) {
             // It's already a URL, keep as is
-            console.log(`[DEBUG] Image '${key}' is already a URL: ${value}`);
             updatedImages[key] = value;
         } else if (typeof value === 'string' && value.startsWith('data:image/')) {
             // It's base64 image data, upload to S3
-            console.log(`[DEBUG] Image '${key}' is base64 data, uploading to S3`);
             const matches = value.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/);
             if (!matches) {
                 throw new Error(`Invalid image data for ${key}`);
@@ -81,7 +71,6 @@ async function processImages(images, projectName) {
             const imageName = `${key}.${imageFormat}`;
             const s3Key = `projects/${projectName}/images/${imageName}`;
 
-            console.log(`[DEBUG] Uploading image to S3: ${s3Key}`);
             const buffer = Buffer.from(imageData, 'base64');
 
             await s3.putObject({
@@ -92,16 +81,13 @@ async function processImages(images, projectName) {
             }).promise();
 
             const imageUrl = `/images/${imageName}`;
-            console.log(`[DEBUG] Image uploaded successfully, URL: ${imageUrl}`);
             updatedImages[key] = imageUrl;
         } else {
             // Assume it's already a path or other valid value
-            console.log(`[DEBUG] Image '${key}' is already a path: ${value}`);
             updatedImages[key] = value;
         }
     }
 
-    console.log(`[DEBUG] Processed images output:`, JSON.stringify(updatedImages, null, 2));
     return updatedImages;
 }
 
@@ -109,7 +95,6 @@ async function getTemplateFromS3(templateId) {
     try {
         const bucketName = process.env.S3_BUCKET_NAME;
         const s3Key = `templates/${templateId}/index.html`;
-        console.log(`[DEBUG] Fetching template HTML from S3: ${s3Key}`);
 
         const response = await s3.getObject({
             Bucket: bucketName,
@@ -117,7 +102,6 @@ async function getTemplateFromS3(templateId) {
         }).promise();
 
         const templateHtml = response.Body.toString('utf-8');
-        console.log(`[DEBUG] Retrieved template HTML from S3, size: ${templateHtml.length} bytes`);
         return templateHtml;
     } catch (error) {
         console.error(`Error fetching template from S3:`, error);
@@ -127,8 +111,6 @@ async function getTemplateFromS3(templateId) {
 
 async function generateHtmlFromTemplate(templateId, customImages, customLangs, octokit, owner, repo) {
     try {
-        console.log(`[DEBUG] Starting HTML generation for template: ${templateId}`);
-
         // Load base template HTML from S3
         const templateHtml = await getTemplateFromS3(`${templateId}`.toLowerCase());
 
@@ -146,12 +128,10 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, o
                 path: baseLangsPath,
             });
             baseLangs = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf8'));
-            console.log(`[DEBUG] Loaded base langs from GitHub, keys: ${Object.keys(baseLangs).join(', ')}`);
         } catch (error) {
             if (error.status !== 404) {
                 throw error;
             }
-            console.log(`[DEBUG] Base langs file not found in GitHub: ${baseLangsPath}`);
         }
 
         try {
@@ -161,37 +141,24 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, o
                 path: baseImagesPath,
             });
             baseImages = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf8'));
-            console.log(`[DEBUG] Loaded base images from GitHub, keys: ${Object.keys(baseImages).join(', ')}`);
         } catch (error) {
             if (error.status !== 404) {
                 throw error;
             }
-            console.log(`[DEBUG] Base images file not found in GitHub: ${baseImagesPath}`);
         }
 
         // Merge custom data with base data (custom overrides base)
-        console.log(`[DEBUG] Custom langs before merge:`, JSON.stringify(customLangs, null, 2));
-        console.log(`[DEBUG] Custom images before merge:`, JSON.stringify(customImages, null, 2));
-
         const mergedLangs = { ...baseLangs, ...customLangs };
         const mergedImages = { ...baseImages, ...customImages };
-
-        console.log(`[DEBUG] Merged langs keys: ${Object.keys(mergedLangs).join(', ')}`);
-        console.log(`[DEBUG] Merged images keys: ${Object.keys(mergedImages).join(', ')}`);
-        console.log(`[DEBUG] Merged langs content:`, JSON.stringify(mergedLangs, null, 2));
-        console.log(`[DEBUG] Merged images content:`, JSON.stringify(mergedImages, null, 2));
 
         // Inject content into HTML
         const dom = new JSDOM(templateHtml);
         const document = dom.window.document;
 
-        console.log(`[DEBUG] Original HTML size: ${templateHtml.length} bytes`);
-        console.log(`[DEBUG] Starting content injection into HEAD and BODY`);
         injectContent(document.head, mergedLangs, mergedImages);
         injectContent(document.body, mergedLangs, mergedImages);
 
         const finalHtml = dom.serialize();
-        console.log(`[DEBUG] HTML generation complete, final size: ${finalHtml.length} bytes`);
 
         return finalHtml;
     } catch (error) {
@@ -209,7 +176,6 @@ function injectContent(element, langs, images) {
     // Inject text content
     const textId = element.getAttribute('data-text-id');
     if (textId && langs[textId]) {
-        console.log(`[DEBUG] Injecting text into ${element.tagName} with data-text-id='${textId}': ${langs[textId]}`);
         if (element.tagName === 'BUTTON') {
             element.textContent = langs[textId];
         } else if (element.tagName === 'TEXTAREA') {
@@ -229,14 +195,12 @@ function injectContent(element, langs, images) {
     // Inject alt text
     const altTextId = element.getAttribute('data-alt-text-id');
     if (altTextId && langs[altTextId]) {
-        console.log(`[DEBUG] Injecting alt text into ${element.tagName} with data-alt-text-id='${altTextId}': ${langs[altTextId]}`);
         element.setAttribute('alt', langs[altTextId]);
     }
 
     // Inject title text
     const titleTextId = element.getAttribute('data-title-text-id');
     if (titleTextId && langs[titleTextId]) {
-        console.log(`[DEBUG] Injecting title into ${element.tagName} with data-title-text-id='${titleTextId}': ${langs[titleTextId]}`);
         if (element.tagName === 'TITLE') {
             element.textContent = langs[titleTextId];
         } else {
@@ -247,21 +211,18 @@ function injectContent(element, langs, images) {
     // Inject meta content
     const metaContentId = element.getAttribute('data-meta-content-id');
     if (metaContentId && langs[metaContentId]) {
-        console.log(`[DEBUG] Injecting meta content into ${element.tagName} with data-meta-content-id='${metaContentId}': ${langs[metaContentId]}`);
         element.setAttribute('content', langs[metaContentId]);
     }
 
     // Inject image sources
     const imageSrc = element.getAttribute('data-image-src');
     if (imageSrc && images[imageSrc]) {
-        console.log(`[DEBUG] Injecting image src into ${element.tagName} with data-image-src='${imageSrc}': ${images[imageSrc]}`);
         element.setAttribute('src', images[imageSrc]);
     }
 
     // Inject background images
     const bgImage = element.getAttribute('data-bg-image');
     if (bgImage && images[bgImage]) {
-        console.log(`[DEBUG] Injecting background image into ${element.tagName} with data-bg-image='${bgImage}': ${images[bgImage]}`);
         const currentStyle = element.getAttribute('style') || '';
         const bgImageStyle = `background-image: url('${images[bgImage]}')`;
         const newStyle = currentStyle ? `${currentStyle}; ${bgImageStyle}` : bgImageStyle;
@@ -291,8 +252,6 @@ export const handler = async (event) => {
 
     // Check origin for security - allow specific origins
     const origin = event.headers?.origin || event.headers?.Origin;
-
-    console.log(`Origin: ${origin}`);
 
     const allowedOrigins = [
         'https://editor.e-info.click',
@@ -351,8 +310,6 @@ export const handler = async (event) => {
         // Fetch metadata from S3
         const metadata = await getMetadataFromS3(operationId);
 
-        console.log(`[DEBUG] Retrieved metadata for operation ${operationId}`);
-        console.log(`[DEBUG] Metadata:`, JSON.stringify(metadata, null, 2));
         const { images, langs, templateId, email, projectName } = metadata;
 
         // Validate metadata
@@ -386,7 +343,6 @@ export const handler = async (event) => {
         try {
             // Check if project exists
             const path = `projects/${projectName}`;
-            console.log(`[DEBUG] Checking if project exists at: ${path}`);
             await octokit.rest.repos.getContent({
                 owner,
                 repo,
@@ -395,26 +351,19 @@ export const handler = async (event) => {
 
             // If no error, project exists, this is an update
             isUpdate = true;
-            console.log(`[DEBUG] Project exists - this is an UPDATE operation`);
         } catch (error) {
             if (error.status !== 404) {
                 throw error;
             }
             // 404 means not exists, this is a create
-            console.log(`[DEBUG] Project does not exist - this is a CREATE operation`);
         }
 
         // Generate HTML from template and custom data
-        console.log(`[DEBUG] Generating HTML from template...`);
         const html = await generateHtmlFromTemplate(templateId, processedImages, langs, octokit, owner, repo);
-        console.log(`[DEBUG] HTML generated successfully, size: ${html.length} bytes`);
 
         if (isUpdate) {
             // For updates, just update the index.html file
-            console.log(`[DEBUG] UPDATING project: ${projectName}`);
             const commitMessage = `Update ${projectName} project`;
-            console.log(`[DEBUG] Commit message: ${commitMessage}`);
-            console.log(`[DEBUG] Uploading to: projects/${projectName}/index.html`);
 
             const updateResponse = await octokit.rest.repos.createOrUpdateFileContents({
                 owner,
@@ -424,11 +373,9 @@ export const handler = async (event) => {
                 content: Buffer.from(html).toString('base64'),
             });
 
-            console.log(`[DEBUG] File update response:`, JSON.stringify(updateResponse.data, null, 2));
             console.log(`[DEBUG] Successfully updated index.html for project: ${projectName}`);
         } else {
             // For new projects, create both files in a single commit
-            console.log(`[DEBUG] CREATING new project: ${projectName}`);
             const commitMessage = `Add ${projectName} project`;
 
             // Get the current branch reference
@@ -439,7 +386,6 @@ export const handler = async (event) => {
             });
 
             const baseSha = ref.object.sha;
-            console.log(`[DEBUG] Base SHA: ${baseSha}`);
 
             // Get the base commit
             const { data: baseCommit } = await octokit.rest.git.getCommit({
@@ -464,8 +410,6 @@ export const handler = async (event) => {
                 }),
             ]);
 
-            console.log(`[DEBUG] Created blobs - HTML: ${htmlBlob.data.sha}, Email: ${emailBlob.data.sha}`);
-
             // Create tree with both files
             const { data: tree } = await octokit.rest.git.createTree({
                 owner,
@@ -487,8 +431,6 @@ export const handler = async (event) => {
                 ],
             });
 
-            console.log(`[DEBUG] Created tree: ${tree.sha}`);
-
             // Create commit
             const { data: commit } = await octokit.rest.git.createCommit({
                 owner,
@@ -498,8 +440,6 @@ export const handler = async (event) => {
                 parents: [baseSha],
             });
 
-            console.log(`[DEBUG] Created commit: ${commit.sha}`);
-
             // Update branch reference
             await octokit.rest.git.updateRef({
                 owner,
@@ -507,13 +447,10 @@ export const handler = async (event) => {
                 ref: 'heads/master',
                 sha: commit.sha,
             });
-
-            console.log(`[DEBUG] Updated master branch to: ${commit.sha}`);
         }
 
         // Send email only for new projects
         if (!isUpdate) {
-            console.log(`[DEBUG] Sending deployment email to: ${email}`);
             const params = {
                 Source: process.env.FROM_EMAIL,
                 Destination: {
@@ -542,10 +479,8 @@ E-info team.`
             };
 
             await ses.sendEmail(params).promise();
-            console.log(`[DEBUG] Email sent successfully`);
         }
 
-        console.log(`[DEBUG] Handler execution completed successfully`);
         return {
             statusCode: 200,
             headers: {

@@ -137,15 +137,6 @@ function handler(event) {
             minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
             errorResponses: [],
             comment: "Multi-tenant CloudFront distribution for static websites",
-            // Logging is configured manually via AWS CLI with proper bucket permissions
-            // To enable logging:
-            // 1. S3 bucket teamsantos-static-websites-cf-logs must exist in us-east-1
-            // 2. Bucket must have ACL: log-delivery-write
-            // 3. Bucket policy must grant cloudfront.amazonaws.com s3:GetBucketAcl and s3:PutBucketAcl
-            // Once manually configured, uncomment below and redeploy
-            // enableLogging: true,
-            // logBucket: logBucket,
-            // logFilePrefix: "cloudfront-logs/",
         });
 
         this.distributionId = this.distribution.distributionId;
@@ -178,16 +169,6 @@ function handler(event) {
             value: certificate.certificateArn,
             description: "ACM Certificate ARN",
             exportName: "WildcardCertificateArn",
-        });
-
-        new cdk.CfnOutput(this, "FunctionLogsInstructions", {
-            value: `CloudFront Function logs are available in CloudWatch. Look for log streams in /aws/cloudfront/function/PathRewriteFunction`,
-            description: "Instructions for accessing CloudFront Function logs",
-        });
-
-        new cdk.CfnOutput(this, "CloudFrontLogsSetup", {
-            value: "CloudFront access logs are configured to write to teamsantos-static-websites-cf-logs bucket in us-east-1. Logs appear in cloudfront-logs/ prefix.",
-            description: "CloudFront logs configuration",
         });
     }
 }

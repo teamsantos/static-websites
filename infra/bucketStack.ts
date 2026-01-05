@@ -3,7 +3,6 @@ import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as custom from 'aws-cdk-lib/custom-resources';
-import * as logs from 'aws-cdk-lib/aws-logs';
 
 interface BucketStackProps extends cdk.StackProps {
     bucketName: string;
@@ -27,7 +26,6 @@ export class BucketStack extends cdk.Stack {
                 bucketName: props.bucketName,
                 bucketArn: `arn:aws:s3:::${props.bucketName}`,
             });
-            console.log(`Using existing S3 bucket: ${props.bucketName}`);
             bucketCreated = false;
         } catch (error) {
             // If the bucket doesn't exist, create it
@@ -38,7 +36,6 @@ export class BucketStack extends cdk.Stack {
                 versioned: false,
                 removalPolicy: cdk.RemovalPolicy.RETAIN,
             });
-            console.log(`Created new S3 bucket: ${props.bucketName}`);
             bucketCreated = true;
         }
 
@@ -75,20 +72,17 @@ export class BucketStack extends cdk.Stack {
                                          },
                                      },
                                  },
-                             ],
-                         }),
-                     },
-                     physicalResourceId: custom.PhysicalResourceId.of(`bucket-policy-${props.bucketName}`),
-                 },
-                 policy: custom.AwsCustomResourcePolicy.fromStatements([
-                     new iam.PolicyStatement({
-                         actions: ["s3:PutBucketPolicy"],
-                         resources: [bucket.bucketArn],
-                     }),
-                 ]),
-                 logRetention: logs.RetentionDays.ONE_DAY,
-                 installLatestAwsSdk: false,
-             });
+                  ],
+                  physicalResourceId: custom.PhysicalResourceId.of(`bucket-policy-${props.bucketName}`),
+              },
+              policy: custom.AwsCustomResourcePolicy.fromStatements([
+                  new iam.PolicyStatement({
+                      actions: ["s3:PutBucketPolicy"],
+                      resources: [bucket.bucketArn],
+                  }),
+              ]),
+              installLatestAwsSdk: false,
+          });
          } else {
              // For newly created buckets, use the standard BucketPolicy construct
              new s3.BucketPolicy(this, "CloudFrontDistributionPolicy", {

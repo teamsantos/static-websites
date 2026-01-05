@@ -223,8 +223,6 @@ export const handler = async (event) => {
     // Check origin for security - allow specific origins
     const origin = event.headers?.origin || event.headers?.Origin;
 
-    console.log(`Origin: ${origin}`);
-
     const allowedOrigins = [
         'https://editor.e-info.click',
         'https://ssh.e-info.click',
@@ -289,8 +287,6 @@ export const handler = async (event) => {
 
     const owner = githubOwner;
     const repo = githubRepo;
-
-    console.log(`Using GitHub repo: ${owner}/${repo}`);
 
     let isUpdate = false;
     try {

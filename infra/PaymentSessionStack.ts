@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
@@ -40,6 +41,12 @@ export class StripeCheckoutStack extends cdk.Stack {
         S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
       },
       timeout: cdk.Duration.seconds(30),
+    });
+
+    // Set CloudWatch log retention to 30 days
+    new logs.LogRetention(this, 'StripeCheckoutLogRetention', {
+      logGroupName: checkoutFunction.logGroup.logGroupName,
+      retention: logs.RetentionDays.ONE_MONTH,
     });
 
     if (props.s3Bucket) {
