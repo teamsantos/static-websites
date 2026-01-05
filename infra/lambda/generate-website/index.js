@@ -110,7 +110,7 @@ async function getTemplateFromS3(templateId) {
         const bucketName = process.env.S3_BUCKET_NAME;
         const s3Key = `templates/${templateId}/index.html`;
         console.log(`[DEBUG] Fetching template HTML from S3: ${s3Key}`);
-        
+
         const response = await s3.getObject({
             Bucket: bucketName,
             Key: s3Key
@@ -128,9 +128,9 @@ async function getTemplateFromS3(templateId) {
 async function generateHtmlFromTemplate(templateId, customImages, customLangs, octokit, owner, repo) {
     try {
         console.log(`[DEBUG] Starting HTML generation for template: ${templateId}`);
-        
+
         // Load base template HTML from S3
-        const templateHtml = await getTemplateFromS3(templateId);
+        const templateHtml = await getTemplateFromS3(`${templateId}`.toLowerCase());
 
         // Load base langs and images from GitHub
         const baseLangsPath = `templates/${templateId}/langs/en.json`;
