@@ -91,7 +91,7 @@ async function processImages(images, projectName) {
                 ContentType: `image/${imageFormat}`
             }).promise();
 
-            const imageUrl = `/projects/${projectName}/images/${imageName}`;
+            const imageUrl = `/images/${imageName}`;
             console.log(`[DEBUG] Image uploaded successfully, URL: ${imageUrl}`);
             updatedImages[key] = imageUrl;
         } else {
