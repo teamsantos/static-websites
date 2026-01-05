@@ -23,7 +23,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/4deb73aa1643ca4d2826427b7814af92448958ef74bc3f49ca4002aca30dd522.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/1f6e17ce405486ed9282cbfa5849916080ead45f15e82cae2bd968ee08a88426.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -48,8 +48,8 @@
               "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:28:47)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:25:33)",
+              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:27:47)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:26:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",
@@ -101,8 +101,8 @@
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "StringParameter2.valueFromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-ssm/lib/parameter.js:1:8254)",
               "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:47:53)",
-              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:33:29)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:25:33)",
+              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:32:29)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:26:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",
@@ -186,8 +186,8 @@
               "WrappedClass.addOrigin (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:14065)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
-              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:128:30)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:25:33)",
+              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:105:29)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:26:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",
@@ -248,46 +248,10 @@
             "data": "CertificateArn"
           }
         ],
-        "/MultiTenantDistribution/CloudFrontLogsBucketOutput": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CloudFrontLogsBucketOutput"
-          }
-        ],
-        "/MultiTenantDistribution/FunctionLogsInstructions": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "FunctionLogsInstructions"
-          }
-        ],
         "/MultiTenantDistribution/CDKMetadata/Default": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CDKMetadata"
-          }
-        ],
-        "/MultiTenantDistribution/ExportsWritereusouth2425DEA31/Resource/Default": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsWritereusouth2425DEA319B810939"
-          }
-        ],
-        "/MultiTenantDistribution/Custom::CrossRegionExportWriterCustomResourceProvider": [
-          {
-            "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
-            "data": true
-          }
-        ],
-        "/MultiTenantDistribution/Custom::CrossRegionExportWriterCustomResourceProvider/Role": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CustomCrossRegionExportWriterCustomResourceProviderRoleC951B1E1"
-          }
-        ],
-        "/MultiTenantDistribution/Custom::CrossRegionExportWriterCustomResourceProvider/Handler": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CustomCrossRegionExportWriterCustomResourceProviderHandlerD8786E8A"
           }
         ],
         "/MultiTenantDistribution/BootstrapVersion": [
@@ -327,7 +291,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/7fd6e94b33500eb26f7ddbf4cfe3ad0989f0d75111165465944fedc8ef29fdf8.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/e7dbdc3121959cfc0159102336141a59e6cdb349f3fdab4fbc58b3d4ee7fb04b.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -340,7 +304,6 @@
         }
       },
       "dependencies": [
-        "MultiTenantDistribution",
         "StaticWebsitesBucket.assets"
       ],
       "metadata": {
@@ -397,34 +360,10 @@
             "data": "AWS679f53fac002430cb0da5b7982bd22872D164C4C"
           }
         ],
-        "/StaticWebsitesBucket/AWS679f53fac002430cb0da5b7982bd2287/LogRetention": [
-          {
-            "type": "aws:cdk:is-custom-resource-handler-logRetention",
-            "data": true
-          }
-        ],
-        "/StaticWebsitesBucket/AWS679f53fac002430cb0da5b7982bd2287/LogRetention/Resource": [
+        "/StaticWebsitesBucket/CloudFrontDistributionPolicy/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "AWS679f53fac002430cb0da5b7982bd2287LogRetentionCE72797A"
-          }
-        ],
-        "/StaticWebsitesBucket/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
-          }
-        ],
-        "/StaticWebsitesBucket/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB"
-          }
-        ],
-        "/StaticWebsitesBucket/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A"
+            "data": "CloudFrontDistributionPolicy0E291C07"
           }
         ],
         "/StaticWebsitesBucket/BucketName": [
@@ -445,30 +384,6 @@
             "data": "CDKMetadata"
           }
         ],
-        "/StaticWebsitesBucket/ExportsReader/Resource/Default": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsReader8B249524"
-          }
-        ],
-        "/StaticWebsitesBucket/Custom::CrossRegionExportReaderCustomResourceProvider": [
-          {
-            "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
-            "data": true
-          }
-        ],
-        "/StaticWebsitesBucket/Custom::CrossRegionExportReaderCustomResourceProvider/Role": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CustomCrossRegionExportReaderCustomResourceProviderRole10531BBD"
-          }
-        ],
-        "/StaticWebsitesBucket/Custom::CrossRegionExportReaderCustomResourceProvider/Handler": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CustomCrossRegionExportReaderCustomResourceProviderHandler46647B68"
-          }
-        ],
         "/StaticWebsitesBucket/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
@@ -483,6 +398,102 @@
         ]
       },
       "displayName": "StaticWebsitesBucket"
+    },
+    "CloudWatchLogsBucket.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "CloudWatchLogsBucket.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "CloudWatchLogsBucket": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/eu-south-2",
+      "properties": {
+        "templateFile": "CloudWatchLogsBucket.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "CloudWatchLogsArchival"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/f42d1544f726d9b8baa5dbcf7f28cc439d7068e26e5de5babe4f14203c4730a8.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "CloudWatchLogsBucket.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "CloudWatchLogsBucket.assets"
+      ],
+      "metadata": {
+        "/CloudWatchLogsBucket": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "CloudWatchLogsArchival"
+              }
+            ]
+          }
+        ],
+        "/CloudWatchLogsBucket/CloudWatchLogsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CloudWatchLogsBucket12F6311C"
+          }
+        ],
+        "/CloudWatchLogsBucket/LogsBucketName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogsBucketName"
+          }
+        ],
+        "/CloudWatchLogsBucket/LogsBucketArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogsBucketArn"
+          }
+        ],
+        "/CloudWatchLogsBucket/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/CloudWatchLogsBucket/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/CloudWatchLogsBucket/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "CloudWatchLogsBucket"
     },
     "CreateProjectStack.assets": {
       "type": "cdk:asset-manifest",
@@ -501,7 +512,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/85a8f50407c0ef182c6c5859a9b1437da53cead72eb887b778322283bb9e6e55.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/f797ffb8369887431f2a401224c2134deca9b44140634b513282a9a04635f49f.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -526,8 +537,8 @@
               "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new CreateProjectStack (/Users/fmpi.santos/Projects/static-websites/infra/CreateProjectStack.ts:23:47)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:64:28)",
+              "new CreateProjectStack (/Users/fmpi.santos/Projects/static-websites/infra/CreateProjectStack.ts:24:47)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:79:28)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",
@@ -600,6 +611,36 @@
             "data": "CreateProjectFunction0FC649A9"
           }
         ],
+        "/CreateProjectStack/CreateProjectFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectFunctionLogRetention6A67A69A"
+          }
+        ],
+        "/CreateProjectStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+          }
+        ],
+        "/CreateProjectStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB"
+          }
+        ],
+        "/CreateProjectStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A"
+          }
+        ],
+        "/CreateProjectStack/CreateProjectLogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CreateProjectLogRetention7A7F7C47"
+          }
+        ],
         "/CreateProjectStack/GenerateWebsiteFunction/ServiceRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -616,6 +657,18 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "GenerateWebsiteFunctionE00554AA"
+          }
+        ],
+        "/CreateProjectStack/GenerateWebsiteFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GenerateWebsiteFunctionLogRetention879B7670"
+          }
+        ],
+        "/CreateProjectStack/GenerateWebsiteLogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GenerateWebsiteLogRetention7111F218"
           }
         ],
         "/CreateProjectStack/CreateProjectApi/Resource": [
@@ -794,7 +847,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/107d8ac657f85c8e2d4efc415b03a921783b3fc5a258c26627055598a6bf8161.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/556dfb8b48a0745e7507b16f374c3e367cea4b8736672d02a835afadc8340d0d.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -819,8 +872,8 @@
               "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new StripeCheckoutStack (/Users/fmpi.santos/Projects/static-websites/infra/PaymentSessionStack.ts:22:43)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:75:1)",
+              "new StripeCheckoutStack (/Users/fmpi.santos/Projects/static-websites/infra/PaymentSessionStack.ts:23:43)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:90:1)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",
@@ -891,6 +944,36 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "StripeCheckoutFunctionFAA66D03"
+          }
+        ],
+        "/StripeCheckoutStack/StripeCheckoutFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeCheckoutFunctionLogRetention6694993A"
+          }
+        ],
+        "/StripeCheckoutStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+          }
+        ],
+        "/StripeCheckoutStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB"
+          }
+        ],
+        "/StripeCheckoutStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A"
+          }
+        ],
+        "/StripeCheckoutStack/StripeCheckoutLogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeCheckoutLogRetentionC6A66002"
           }
         ],
         "/StripeCheckoutStack/StripeApi/Resource": [

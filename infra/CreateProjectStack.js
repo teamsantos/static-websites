@@ -39,6 +39,7 @@ const apigateway = __importStar(require("aws-cdk-lib/aws-apigateway"));
 const aws_certificatemanager_1 = require("aws-cdk-lib/aws-certificatemanager");
 const iam = __importStar(require("aws-cdk-lib/aws-iam"));
 const lambda = __importStar(require("aws-cdk-lib/aws-lambda"));
+const logs = __importStar(require("aws-cdk-lib/aws-logs"));
 const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
 const route53Targets = __importStar(require("aws-cdk-lib/aws-route53-targets"));
 const secretsmanager = __importStar(require("aws-cdk-lib/aws-secretsmanager"));
@@ -72,6 +73,11 @@ class CreateProjectStack extends cdk.Stack {
             },
             timeout: cdk.Duration.seconds(30),
         });
+        // Set CloudWatch log retention to 30 days
+        new logs.LogRetention(this, 'CreateProjectLogRetention', {
+            logGroupName: createProjectFunction.logGroup.logGroupName,
+            retention: logs.RetentionDays.ONE_MONTH,
+        });
         // Grant permissions to read the secrets
         githubTokenSecret.grantRead(createProjectFunction);
         githubConfigSecret.grantRead(createProjectFunction);
@@ -100,6 +106,11 @@ class CreateProjectStack extends cdk.Stack {
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites"
             },
             timeout: cdk.Duration.seconds(60),
+        });
+        // Set CloudWatch log retention to 30 days
+        new logs.LogRetention(this, 'GenerateWebsiteLogRetention', {
+            logGroupName: generateWebsiteFunction.logGroup.logGroupName,
+            retention: logs.RetentionDays.ONE_MONTH,
         });
         // Grant permissions to generate-website Lambda
         githubTokenSecret.grantRead(generateWebsiteFunction);

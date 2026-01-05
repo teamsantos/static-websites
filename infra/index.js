@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const cdk = __importStar(require("aws-cdk-lib"));
 const bucketStack_1 = require("./bucketStack");
+const CloudWatchLogsStack_1 = require("./CloudWatchLogsStack");
 const CreateProjectStack_1 = require("./CreateProjectStack");
 const ProjectStack_1 = require("./ProjectStack");
 const PaymentSessionStack_1 = require("./PaymentSessionStack");
@@ -82,6 +83,19 @@ new bucketStack_1.BucketStack(app, "StaticWebsitesBucket", {
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "StaticWebsiteHosting",
+    },
+});
+// Create CloudWatch logs bucket with lifecycle policy for Glacier archival
+new CloudWatchLogsStack_1.CloudWatchLogsStack(app, "CloudWatchLogsBucket", {
+    bucketName: `${config.s3Bucket}-logs`,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "CloudWatchLogsArchival",
     },
 });
 // Create other infrastructure stacks

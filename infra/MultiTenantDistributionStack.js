@@ -66,27 +66,40 @@ class MultiTenantDistributionStack extends cdk.Stack {
         this.oac = oac;
         // Create CloudFront Function to rewrite paths based on hostname
         // Supports subdomain-based routing (generating.e-info.click/)
+        // All projects are stored under /projects prefix in S3
         const pathRewriteFunction = new cloudfront.Function(this, "PathRewriteFunction", {
             code: cloudfront.FunctionCode.fromInline(`
 function handler(event) {
-    const request = event.request;
-    const host = request.headers.host.value;
+    var request = event.request;
+    var hostHeader = request.headers['host'];
     
-    // Extract project name from subdomain (e.g., "generating" from "generating.e-info.click")
-    const projectName = host.split('.')[0];
+    // Check if host header exists and has a value
+    if (!hostHeader || !hostHeader.value) {
+        return request;
+    }
     
-    // Rewrite the URI to include the project name prefix
-    // <projectName>.e-info.click/ → /<projectName>/index.html
-    // <projectName>.e-info.click/page → /<projectName>/page
-    if (request.uri === '/' || request.uri === '') {
-        request.uri = '/' + projectName + '/index.html';
+    var host = hostHeader.value;
+    
+    // Extract project name from subdomain
+    var projectName = host.split('.')[0];
+    
+    // Normalize URI - remove duplicate slashes
+    var uri = request.uri.replace(/\\/+/g, '/');
+    
+    // Rewrite URI based on the path
+    if (uri === '/' || uri === '') {
+        // Root path -> /projects/projectName/index.html
+        request.uri = '/projects/' + projectName + '/index.html';
+    } else if (uri === '/success') {
+        // /success path -> /projects/projectName/index.html (preserving query string)
+        request.uri = '/projects/' + projectName + '/index.html';
     } else {
-        request.uri = '/' + projectName + request.uri;
+        // Other paths -> /projects/projectName + original path
+        request.uri = '/projects/' + projectName + uri;
     }
     
     return request;
-}
-`),
+}`),
         });
         // Create S3 origin
         const origin = origins.S3BucketOrigin.withOriginAccessControl(siteBucket, {
@@ -124,7 +137,6 @@ function handler(event) {
             minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
             errorResponses: [],
             comment: "Multi-tenant CloudFront distribution for static websites",
-            enableLogging: false,
         });
         this.distributionId = this.distribution.distributionId;
         this.distributionDomainName = this.distribution.distributionDomainName;

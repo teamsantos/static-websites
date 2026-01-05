@@ -38,7 +38,6 @@ const cdk = __importStar(require("aws-cdk-lib"));
 const iam = __importStar(require("aws-cdk-lib/aws-iam"));
 const s3 = __importStar(require("aws-cdk-lib/aws-s3"));
 const custom = __importStar(require("aws-cdk-lib/custom-resources"));
-const logs = __importStar(require("aws-cdk-lib/aws-logs"));
 class BucketStack extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
@@ -51,7 +50,6 @@ class BucketStack extends cdk.Stack {
                 bucketName: props.bucketName,
                 bucketArn: `arn:aws:s3:::${props.bucketName}`,
             });
-            console.log(`Using existing S3 bucket: ${props.bucketName}`);
             bucketCreated = false;
         }
         catch (error) {
@@ -63,7 +61,6 @@ class BucketStack extends cdk.Stack {
                 versioned: false,
                 removalPolicy: cdk.RemovalPolicy.RETAIN,
             });
-            console.log(`Created new S3 bucket: ${props.bucketName}`);
             bucketCreated = true;
         }
         this.bucket = bucket;
@@ -82,16 +79,19 @@ class BucketStack extends cdk.Stack {
                             Version: "2012-10-17",
                             Statement: [
                                 {
-                                    Sid: "AllowCloudFrontServicePrincipal",
+                                    Sid: "AllowAllCloudFrontDistributionsInAccount",
                                     Effect: "Allow",
                                     Principal: {
                                         Service: "cloudfront.amazonaws.com",
                                     },
-                                    Action: ["s3:GetObject", "s3:GetObjectVersion"],
+                                    Action: "s3:GetObject",
                                     Resource: `${bucket.bucketArn}/*`,
                                     Condition: {
+                                        StringEquals: {
+                                            "AWS:SourceAccount": "396913706953",
+                                        },
                                         StringLike: {
-                                            "AWS:SourceArn": `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/${props.distribution.distributionId}`,
+                                            "AWS:SourceArn": "arn:aws:cloudfront::396913706953:distribution/*",
                                         },
                                     },
                                 },
@@ -106,23 +106,23 @@ class BucketStack extends cdk.Stack {
                         resources: [bucket.bucketArn],
                     }),
                 ]),
-                logRetention: logs.RetentionDays.ONE_DAY,
                 installLatestAwsSdk: false,
             });
-        }
-        else {
             // For newly created buckets, use the standard BucketPolicy construct
             new s3.BucketPolicy(this, "CloudFrontDistributionPolicy", {
                 bucket: bucket,
             }).document.addStatements(new iam.PolicyStatement({
-                sid: "AllowCloudFrontServicePrincipal",
+                sid: "AllowAllCloudFrontDistributionsInAccount",
                 effect: iam.Effect.ALLOW,
                 principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
-                actions: ["s3:GetObject", "s3:GetObjectVersion"],
+                actions: ["s3:GetObject"],
                 resources: [`${bucket.bucketArn}/*`],
                 conditions: {
+                    StringEquals: {
+                        "AWS:SourceAccount": "396913706953",
+                    },
                     StringLike: {
-                        "AWS:SourceArn": `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/${props.distribution.distributionId}`,
+                        "AWS:SourceArn": "arn:aws:cloudfront::396913706953:distribution/*",
                     },
                 },
             }));

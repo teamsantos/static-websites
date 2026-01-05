@@ -38,6 +38,7 @@ const cdk = __importStar(require("aws-cdk-lib"));
 const apigateway = __importStar(require("aws-cdk-lib/aws-apigateway"));
 const aws_certificatemanager_1 = require("aws-cdk-lib/aws-certificatemanager");
 const lambda = __importStar(require("aws-cdk-lib/aws-lambda"));
+const logs = __importStar(require("aws-cdk-lib/aws-logs"));
 const iam = __importStar(require("aws-cdk-lib/aws-iam"));
 const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
 const route53Targets = __importStar(require("aws-cdk-lib/aws-route53-targets"));
@@ -64,6 +65,11 @@ class StripeCheckoutStack extends cdk.Stack {
                 S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
             },
             timeout: cdk.Duration.seconds(30),
+        });
+        // Set CloudWatch log retention to 30 days
+        new logs.LogRetention(this, 'StripeCheckoutLogRetention', {
+            logGroupName: checkoutFunction.logGroup.logGroupName,
+            retention: logs.RetentionDays.ONE_MONTH,
         });
         if (props.s3Bucket) {
             // Allow ListBucket on the bucket

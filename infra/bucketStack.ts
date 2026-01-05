@@ -46,44 +46,45 @@ export class BucketStack extends cdk.Stack {
          if (!(bucket instanceof s3.Bucket)) {
              // This is an imported bucket - use custom resource to update policy
              // The policy allows CloudFront to access objects when using OAC
-             const policyUpdateProvider = new custom.AwsCustomResource(this, "BucketPolicyUpdate", {
-                 onUpdate: {
-                     service: "S3",
-                     action: "putBucketPolicy",
-                     parameters: {
-                         Bucket: props.bucketName,
-                         Policy: cdk.Fn.toJsonString({
-                             Version: "2012-10-17",
-                             Statement: [
-                                 {
-                                     Sid: "AllowAllCloudFrontDistributionsInAccount",
-                                     Effect: "Allow",
-                                     Principal: {
-                                         Service: "cloudfront.amazonaws.com",
-                                     },
-                                     Action: "s3:GetObject",
-                                     Resource: `${bucket.bucketArn}/*`,
-                                     Condition: {
-                                         StringEquals: {
-                                             "AWS:SourceAccount": "396913706953",
-                                         },
-                                         StringLike: {
-                                             "AWS:SourceArn": "arn:aws:cloudfront::396913706953:distribution/*",
-                                         },
-                                     },
-                                 },
-                  ],
-                  physicalResourceId: custom.PhysicalResourceId.of(`bucket-policy-${props.bucketName}`),
-              },
-              policy: custom.AwsCustomResourcePolicy.fromStatements([
-                  new iam.PolicyStatement({
-                      actions: ["s3:PutBucketPolicy"],
-                      resources: [bucket.bucketArn],
-                  }),
-              ]),
-              installLatestAwsSdk: false,
-          });
-         } else {
+              const policyUpdateProvider = new custom.AwsCustomResource(this, "BucketPolicyUpdate", {
+                  onUpdate: {
+                      service: "S3",
+                      action: "putBucketPolicy",
+                      parameters: {
+                          Bucket: props.bucketName,
+                          Policy: cdk.Fn.toJsonString({
+                              Version: "2012-10-17",
+                              Statement: [
+                                  {
+                                      Sid: "AllowAllCloudFrontDistributionsInAccount",
+                                      Effect: "Allow",
+                                      Principal: {
+                                          Service: "cloudfront.amazonaws.com",
+                                      },
+                                      Action: "s3:GetObject",
+                                      Resource: `${bucket.bucketArn}/*`,
+                                      Condition: {
+                                          StringEquals: {
+                                              "AWS:SourceAccount": "396913706953",
+                                          },
+                                          StringLike: {
+                                              "AWS:SourceArn": "arn:aws:cloudfront::396913706953:distribution/*",
+                                          },
+                                      },
+                                  },
+                              ],
+                          }),
+                      },
+                      physicalResourceId: custom.PhysicalResourceId.of(`bucket-policy-${props.bucketName}`),
+                  },
+                  policy: custom.AwsCustomResourcePolicy.fromStatements([
+                      new iam.PolicyStatement({
+                          actions: ["s3:PutBucketPolicy"],
+                          resources: [bucket.bucketArn],
+                      }),
+                  ]),
+                  installLatestAwsSdk: false,
+              });
              // For newly created buckets, use the standard BucketPolicy construct
              new s3.BucketPolicy(this, "CloudFrontDistributionPolicy", {
                  bucket: bucket,
