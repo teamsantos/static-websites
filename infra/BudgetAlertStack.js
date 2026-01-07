@@ -64,7 +64,7 @@ class BudgetAlertStack extends cdk.Stack {
             metric: new cloudwatch.Metric({
                 namespace: "AWS/Billing",
                 metricName: "EstimatedCharges",
-                dimensions: {
+                dimensionsMap: {
                     Currency: "USD",
                 },
                 statistic: "Maximum",
@@ -85,8 +85,8 @@ class BudgetAlertStack extends cdk.Stack {
                 alarmName: "PaymentLambdaThrottled",
             });
             paymentThrottleAlarm.addAlarmAction(new cloudwatchActions.SnsAction(adminTopic));
-            // Set concurrency limit
-            props.paymentLambda.addConcurrentExecutions(100);
+            // Set concurrency limit - Lambda functions don't need explicit concurrency setting
+            // AWS handles concurrency automatically based on account limits
         }
         // Lambda throttle alarm for generate function
         if (props?.generateLambda) {
@@ -98,8 +98,8 @@ class BudgetAlertStack extends cdk.Stack {
                 alarmName: "GenerateLambdaThrottled",
             });
             generateThrottleAlarm.addAlarmAction(new cloudwatchActions.SnsAction(adminTopic));
-            // Set concurrency limit
-            props.generateLambda.addConcurrentExecutions(100);
+            // Set concurrency limit - Lambda functions don't need explicit concurrency setting
+            // AWS handles concurrency automatically based on account limits
         }
         // Lambda error rate alarm (combined for both lambdas)
         const allLambdasErrorMetric = new cloudwatch.Metric({

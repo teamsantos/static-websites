@@ -78,8 +78,8 @@ class WAFStack extends cdk.Stack {
                                     fieldToMatch: {
                                         uriPath: {},
                                     },
-                                    positionalCharacter: "EXACTLY",
-                                    textTransformation: [
+                                    positionalConstraint: "EXACTLY",
+                                    textTransformations: [
                                         {
                                             priority: 0,
                                             type: "LOWERCASE",
@@ -112,8 +112,8 @@ class WAFStack extends cdk.Stack {
                                     fieldToMatch: {
                                         uriPath: {},
                                     },
-                                    positionalCharacter: "EXACTLY",
-                                    textTransformation: [
+                                    positionalConstraint: "EXACTLY",
+                                    textTransformations: [
                                         {
                                             priority: 0,
                                             type: "LOWERCASE",
@@ -131,10 +131,10 @@ class WAFStack extends cdk.Stack {
                     },
                 },
             ],
-            tags: {
-                Component: "Security",
-                Purpose: "RateLimiting",
-            },
+            tags: [
+                { key: "Component", value: "Security" },
+                { key: "Purpose", value: "RateLimiting" },
+            ],
         });
         new cdk.CfnOutput(this, "WebACLArn", {
             value: webAcl.attrArn,

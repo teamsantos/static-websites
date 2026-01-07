@@ -44,6 +44,11 @@ const DynamoDBMetadataStack_1 = require("./DynamoDBMetadataStack");
 const WAFStack_1 = require("./WAFStack");
 const BudgetAlertStack_1 = require("./BudgetAlertStack");
 const QueueStack_1 = require("./QueueStack");
+const StepFunctionsStack_1 = require("./StepFunctionsStack");
+const GitHubWebhookStack_1 = require("./GitHubWebhookStack");
+const HealthCheckStack_1 = require("./HealthCheckStack");
+const DashboardStack_1 = require("./DashboardStack");
+const AlertingStack_1 = require("./AlertingStack");
 const app = new cdk.App();
 const config = {
     region: "eu-south-2",
@@ -121,6 +126,7 @@ const createProjectStack = new CreateProjectStack_1.CreateProjectStack(app, "Cre
     certificateRegion: config.certificateRegion,
     s3Bucket: config.s3Bucket,
     metadataTable: dynamoDBStack.table,
+    idempotencyTable: dynamoDBStack.idempotencyTable,
     env: {
         account: account,
         region: config.region,
@@ -139,7 +145,21 @@ const queueStack = new QueueStack_1.QueueStack(app, "QueueStack", {
         Purpose: "AsyncWebsiteGeneration",
     },
 });
-new PaymentSessionStack_1.StripeCheckoutStack(app, "StripeCheckoutStack", {
+// Create Step Functions state machine for workflow orchestration and status tracking
+new StepFunctionsStack_1.StepFunctionsStack(app, "StepFunctionsStack", {
+    generateWebsiteLambda: createProjectStack.generateWebsiteFunction,
+    metadataTable: dynamoDBStack.table,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "WorkflowOrchestration",
+    },
+});
+const stripeCheckoutStack = new PaymentSessionStack_1.StripeCheckoutStack(app, "StripeCheckoutStack", {
     domain: config.domain,
     stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
     frontendUrl: process.env.FRONTEND_URL || "",
@@ -176,6 +196,75 @@ new BudgetAlertStack_1.BudgetAlertStack(app, "BudgetAlertStack", {
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "CostControls",
+    },
+});
+// Create GitHub webhook handler for deployment tracking
+const githubWebhookStack = new GitHubWebhookStack_1.GitHubWebhookStack(app, "GitHubWebhookStack", {
+    domain: config.domain,
+    metadataTable: dynamoDBStack.table,
+    githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || "",
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "DeploymentTracking",
+    },
+});
+// Create health check endpoint
+const healthCheckStack = new HealthCheckStack_1.HealthCheckStack(app, "HealthCheckStack", {
+    queueUrl: queueStack.queue.queueUrl,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "HealthMonitoring",
+    },
+});
+// Create CloudWatch monitoring dashboard
+new DashboardStack_1.DashboardStack(app, "DashboardStack", {
+    paymentSessionFunctionName: stripeCheckoutStack.paymentSessionFunctionName,
+    generateWebsiteFunctionName: createProjectStack.generateWebsiteFunctionName,
+    stripeWebhookFunctionName: stripeCheckoutStack.stripeWebhookFunctionName,
+    githubWebhookFunctionName: githubWebhookStack.githubWebhookFunctionName,
+    healthCheckFunctionName: healthCheckStack.healthCheckFunctionName,
+    metadataTableName: dynamoDBStack.table.tableName,
+    queueUrl: queueStack.queue.queueUrl,
+    queueName: queueStack.queue.queueName,
+    s3BucketName: config.s3Bucket,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "Monitoring",
+    },
+});
+// Create SNS alerts for critical issues
+new AlertingStack_1.AlertingStack(app, "AlertingStack", {
+    paymentSessionFunctionName: stripeCheckoutStack.paymentSessionFunctionName,
+    generateWebsiteFunctionName: createProjectStack.generateWebsiteFunctionName,
+    stripeWebhookFunctionName: stripeCheckoutStack.stripeWebhookFunctionName,
+    githubWebhookFunctionName: githubWebhookStack.githubWebhookFunctionName,
+    healthCheckFunctionName: healthCheckStack.healthCheckFunctionName,
+    metadataTableName: dynamoDBStack.table.tableName,
+    queueName: queueStack.queue.queueName,
+    adminEmail: process.env.ADMIN_EMAIL || "admin@e-info.click",
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "Alerting",
     },
 });
 const projectsParam = app.node.tryGetContext("projects");

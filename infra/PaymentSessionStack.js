@@ -68,6 +68,7 @@ class StripeCheckoutStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(30),
             reservedConcurrentExecutions: 100, // Limit concurrent executions to prevent runaway costs
         });
+        this.paymentSessionFunctionName = checkoutFunction.functionName;
         // Lambda for Stripe Webhook
         const webhookFunction = new lambda.Function(this, "StripeWebhookFunction", {
             runtime: lambda.Runtime.NODEJS_18_X,
@@ -83,6 +84,7 @@ class StripeCheckoutStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(30),
             reservedConcurrentExecutions: 100, // Limit concurrent executions
         });
+        this.stripeWebhookFunctionName = webhookFunction.functionName;
         // Set CloudWatch log retention to 30 days
         new logs.LogRetention(this, 'StripeCheckoutLogRetention', {
             logGroupName: checkoutFunction.logGroup.logGroupName,
