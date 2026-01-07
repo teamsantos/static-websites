@@ -1,7 +1,29 @@
-import Sharp from "sharp";
 import AWS from "aws-sdk";
 
 const s3 = new AWS.S3();
+
+// Lazy-loaded sharp module - only imported when optimizeImage() is called
+// This allows imageOptimization.js to be distributed to all Lambdas without
+// requiring sharp to be installed everywhere (only needed by generate-website)
+let Sharp = null;
+
+async function initSharp() {
+  if (Sharp) return Sharp;
+  
+  try {
+    // Dynamic import allows conditional loading of sharp
+    // sharp is a native binary module and only needed for image processing
+    Sharp = (await import("sharp")).default;
+    return Sharp;
+  } catch (err) {
+    const errorMsg =
+      "sharp library not available. Image optimization is disabled. " +
+      "Only generate-website Lambda should use optimizeImage(). " +
+      "If you need image optimization, install sharp: npm install sharp";
+    console.error(`[ImageOpt] ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
+}
 
 /**
  * Image Optimization Module
@@ -41,10 +63,13 @@ const QUALITY_LEVELS = {
  */
 export async function optimizeImage(imageData, imageName, format) {
   try {
+    // Initialize sharp on first use
+    const sharp = await initSharp();
+    
     const buffer = Buffer.from(imageData, "base64");
 
     // Get image metadata first
-    const metadata = await Sharp(buffer).metadata();
+    const metadata = await sharp(buffer).metadata();
     console.log(`[ImageOpt] Original: ${imageName} - ${metadata.width}x${metadata.height} ${format}`);
 
     const optimized = {};
@@ -63,15 +88,15 @@ export async function optimizeImage(imageData, imageName, format) {
         continue;
       }
 
-      // WEBP variant (best compression)
-      try {
-        const webpBuffer = await Sharp(buffer)
-          .resize(dimensions.width, dimensions.height, {
-            fit: "cover",
-            withoutEnlargement: true,
-          })
-          .webp({ quality: QUALITY_LEVELS[sizeKey] })
-          .toBuffer();
+       // WEBP variant (best compression)
+       try {
+         const webpBuffer = await sharp(buffer)
+           .resize(dimensions.width, dimensions.height, {
+             fit: "cover",
+             withoutEnlargement: true,
+           })
+           .webp({ quality: QUALITY_LEVELS[sizeKey] })
+           .toBuffer();
 
         optimized[`${sizeKey}_webp`] = {
           format: "webp",
@@ -84,15 +109,15 @@ export async function optimizeImage(imageData, imageName, format) {
         console.warn(`[ImageOpt] WEBP conversion failed for ${imageName} ${sizeKey}:`, err);
       }
 
-      // PNG variant (lossless, larger)
-      try {
-        const pngBuffer = await Sharp(buffer)
-          .resize(dimensions.width, dimensions.height, {
-            fit: "cover",
-            withoutEnlargement: true,
-          })
-          .png({ compressionLevel: 9 })
-          .toBuffer();
+       // PNG variant (lossless, larger)
+       try {
+         const pngBuffer = await sharp(buffer)
+           .resize(dimensions.width, dimensions.height, {
+             fit: "cover",
+             withoutEnlargement: true,
+           })
+           .png({ compressionLevel: 9 })
+           .toBuffer();
 
         optimized[`${sizeKey}_png`] = {
           format: "png",
@@ -105,16 +130,16 @@ export async function optimizeImage(imageData, imageName, format) {
         console.warn(`[ImageOpt] PNG conversion failed for ${imageName} ${sizeKey}:`, err);
       }
 
-      // Original format variant (JPEG)
-      if (format === "jpeg" || format === "jpg") {
-        try {
-          const jpegBuffer = await Sharp(buffer)
-            .resize(dimensions.width, dimensions.height, {
-              fit: "cover",
-              withoutEnlargement: true,
-            })
-            .jpeg({ quality: QUALITY_LEVELS[sizeKey], progressive: true })
-            .toBuffer();
+       // Original format variant (JPEG)
+       if (format === "jpeg" || format === "jpg") {
+         try {
+           const jpegBuffer = await sharp(buffer)
+             .resize(dimensions.width, dimensions.height, {
+               fit: "cover",
+               withoutEnlargement: true,
+             })
+             .jpeg({ quality: QUALITY_LEVELS[sizeKey], progressive: true })
+             .toBuffer();
 
           optimized[`${sizeKey}_jpeg`] = {
             format: "jpeg",
