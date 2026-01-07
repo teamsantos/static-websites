@@ -12,6 +12,7 @@ import { QueueStack } from "./QueueStack";
 import { StepFunctionsStack } from "./StepFunctionsStack";
 import { GitHubWebhookStack } from "./GitHubWebhookStack";
 import { HealthCheckStack } from "./HealthCheckStack";
+import { DashboardStack } from "./DashboardStack";
 
 const app = new cdk.App();
 
@@ -138,7 +139,7 @@ new StepFunctionsStack(app, "StepFunctionsStack", {
     },
 });
 
-new StripeCheckoutStack(app, "StripeCheckoutStack", {
+const stripeCheckoutStack = new StripeCheckoutStack(app, "StripeCheckoutStack", {
     domain: config.domain,
     stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
     frontendUrl: process.env.FRONTEND_URL || "",
@@ -181,7 +182,7 @@ new BudgetAlertStack(app, "BudgetAlertStack", {
 });
 
 // Create GitHub webhook handler for deployment tracking
-new GitHubWebhookStack(app, "GitHubWebhookStack", {
+const githubWebhookStack = new GitHubWebhookStack(app, "GitHubWebhookStack", {
     domain: config.domain,
     metadataTable: dynamoDBStack.table,
     githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || "",
@@ -197,7 +198,7 @@ new GitHubWebhookStack(app, "GitHubWebhookStack", {
 });
 
 // Create health check endpoint
-new HealthCheckStack(app, "HealthCheckStack", {
+const healthCheckStack = new HealthCheckStack(app, "HealthCheckStack", {
     queueUrl: queueStack.queue.queueUrl,
     env: {
         account: account,
@@ -207,6 +208,28 @@ new HealthCheckStack(app, "HealthCheckStack", {
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "HealthMonitoring",
+    },
+});
+
+// Create CloudWatch monitoring dashboard
+new DashboardStack(app, "DashboardStack", {
+    paymentSessionFunctionName: stripeCheckoutStack.paymentSessionFunctionName,
+    generateWebsiteFunctionName: createProjectStack.generateWebsiteFunctionName,
+    stripeWebhookFunctionName: stripeCheckoutStack.stripeWebhookFunctionName,
+    githubWebhookFunctionName: githubWebhookStack.githubWebhookFunctionName,
+    healthCheckFunctionName: healthCheckStack.healthCheckFunctionName,
+    metadataTableName: dynamoDBStack.table.tableName,
+    queueUrl: queueStack.queue.queueUrl,
+    queueName: queueStack.queue.queueName,
+    s3BucketName: config.s3Bucket,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "Monitoring",
     },
 });
 

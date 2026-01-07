@@ -27,6 +27,8 @@ interface GitHubWebhookStackProps extends cdk.StackProps {
  * - Lambda updates status to "deployed" with commit SHA and timestamp
  */
 export class GitHubWebhookStack extends cdk.Stack {
+  public githubWebhookFunctionName: string;
+
   constructor(scope: cdk.App, id: string, props: GitHubWebhookStackProps) {
     super(scope, id, props);
 
@@ -54,6 +56,7 @@ export class GitHubWebhookStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       reservedConcurrentExecutions: 50, // Lower limit - webhooks are infrequent
     });
+    this.githubWebhookFunctionName = webhookFunction.functionName;
 
     // Set CloudWatch log retention
     new logs.LogRetention(this, "GitHubWebhookLogRetention", {

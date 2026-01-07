@@ -20,6 +20,11 @@ interface CreateProjectProps extends cdk.StackProps {
 
 export class CreateProjectStack extends cdk.Stack {
     public generateWebsiteFunction: lambda.Function;
+    public generateWebsiteFunctionName: string;
+    public paymentSessionFunctionName: string = "";
+    public stripeWebhookFunctionName: string = "";
+    public githubWebhookFunctionName: string = "";
+    public healthCheckFunctionName: string = "";
 
     constructor(scope: cdk.App, id: string, props: CreateProjectProps) {
         super(scope, id, props);
@@ -101,6 +106,7 @@ export class CreateProjectStack extends cdk.Stack {
 
         // Export the function for use by QueueStack
         this.generateWebsiteFunction = generateWebsiteFunction;
+        this.generateWebsiteFunctionName = generateWebsiteFunction.functionName;
 
         // Set CloudWatch log retention to 30 days
         new logs.LogRetention(this, 'GenerateWebsiteLogRetention', {

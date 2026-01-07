@@ -30,6 +30,8 @@ interface HealthCheckStackProps extends cdk.StackProps {
  * - Dashboard integration
  */
 export class HealthCheckStack extends cdk.Stack {
+  public healthCheckFunctionName: string;
+
   constructor(scope: cdk.App, id: string, props?: HealthCheckStackProps) {
     super(scope, id, props);
 
@@ -46,6 +48,7 @@ export class HealthCheckStack extends cdk.Stack {
       memorySize: 256,
       reservedConcurrentExecutions: 10,
     });
+    this.healthCheckFunctionName = healthCheckFunction.functionName;
 
     // Set CloudWatch log retention
     new logs.LogRetention(this, "HealthCheckLogRetention", {

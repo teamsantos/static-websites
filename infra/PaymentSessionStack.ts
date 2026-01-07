@@ -20,6 +20,9 @@ interface StripeCheckoutProps extends cdk.StackProps {
 }
 
 export class StripeCheckoutStack extends cdk.Stack {
+  public paymentSessionFunctionName: string;
+  public stripeWebhookFunctionName: string;
+
   constructor(scope: cdk.App, id: string, props: StripeCheckoutProps) {
     super(scope, id, props);
 
@@ -49,6 +52,7 @@ export class StripeCheckoutStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       reservedConcurrentExecutions: 100, // Limit concurrent executions to prevent runaway costs
     });
+    this.paymentSessionFunctionName = checkoutFunction.functionName;
 
     // Lambda for Stripe Webhook
     const webhookFunction = new lambda.Function(this, "StripeWebhookFunction", {
@@ -65,6 +69,7 @@ export class StripeCheckoutStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       reservedConcurrentExecutions: 100, // Limit concurrent executions
     });
+    this.stripeWebhookFunctionName = webhookFunction.functionName;
 
     // Set CloudWatch log retention to 30 days
     new logs.LogRetention(this, 'StripeCheckoutLogRetention', {
