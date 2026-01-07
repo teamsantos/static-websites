@@ -7,5 +7,3 @@ node_modules/*
 dist
 dist/*
 
-# Lambda shared modules (copied at build time)
-infra/lambda/*/shared/
