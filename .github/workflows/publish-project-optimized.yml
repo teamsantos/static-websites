@@ -261,58 +261,8 @@ jobs:
             fi
           done
 
-      - name: Sync built sites to S3 (incremental)
-        shell: bash
-        run: |
-           echo "📤 Syncing built sites to S3..."
-           IFS=' ' read -ra PROJ_ARR <<< "${{ needs.detect-changes.outputs.projects }}"
-           for project in "${PROJ_ARR[@]}"; do
-             if [ -n "$project" ]; then
-               echo "Syncing $project to S3..."
-               _project=$(echo "$project" | tr '[:upper:]' '[:lower:]')
-               
-               if [ -d "$BUILD_DIR/$project" ]; then
-                 # Use incremental sync (no --delete flag for faster uploads)
-                 # Only upload changed files
-                 # All projects are stored under /projects prefix in S3
-                 aws s3 sync "$BUILD_DIR/$project" "s3://$S3_BUCKET/projects/$_project" \
-                   --region eu-south-2 \
-                   --exclude ".*" \
-                   --metadata "deployment-date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-                 
-                 echo "✅ Synced $project to S3"
-               else
-                 echo "⚠️ Build directory $BUILD_DIR/$project not found"
-               fi
-             fi
-           done
-
-      - name: Invalidate CloudFront cache (selective)
-        shell: bash
-        run: |
-          echo "🔄 Invalidating CloudFront cache for changed files..."
-          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
-            --region us-east-1 \
-            --stack-name MultiTenantDistribution \
-            --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' \
-            --output text 2>/dev/null)
-          
-          if [ -z "$DISTRIBUTION_ID" ] || [ "$DISTRIBUTION_ID" == "None" ]; then
-            echo "⚠️ Could not find distribution ID, skipping cache invalidation"
-            exit 0
-          fi
-          
-          echo "Distribution ID: $DISTRIBUTION_ID"
-          
-           # Invalidate all index.html files and common asset patterns
-           # This is more efficient than invalidating /* for every update
-           # All projects are stored under /projects prefix
-           aws cloudfront create-invalidation \
-             --distribution-id "$DISTRIBUTION_ID" \
-             --paths "/projects/*/index.html" "/projects/*/css/*" "/projects/*/js/*" "/projects/*/images/*" \
-             --output table
-          
-          echo "✅ Cache invalidation initiated"
+           echo "📝 Build complete - projects ready for Lambda processing"
+           echo "✨ S3 uploads and CloudFront invalidation handled by generate-website Lambda"
 
       - name: Deployment Summary
         shell: bash
@@ -330,5 +280,4 @@ jobs:
             fi
           done
           echo ""
-          echo "📊 S3 bucket: $S3_BUCKET"
-          echo "🌍 CloudFront: d27y4ufegjw8rd.cloudfront.net"
+          echo "📝 S3 uploads and CloudFront invalidation are handled by generate-website Lambda"
