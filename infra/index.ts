@@ -13,6 +13,7 @@ import { StepFunctionsStack } from "./StepFunctionsStack";
 import { GitHubWebhookStack } from "./GitHubWebhookStack";
 import { HealthCheckStack } from "./HealthCheckStack";
 import { DashboardStack } from "./DashboardStack";
+import { AlertingStack } from "./AlertingStack";
 
 const app = new cdk.App();
 
@@ -230,6 +231,27 @@ new DashboardStack(app, "DashboardStack", {
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "Monitoring",
+    },
+});
+
+// Create SNS alerts for critical issues
+new AlertingStack(app, "AlertingStack", {
+    paymentSessionFunctionName: stripeCheckoutStack.paymentSessionFunctionName,
+    generateWebsiteFunctionName: createProjectStack.generateWebsiteFunctionName,
+    stripeWebhookFunctionName: stripeCheckoutStack.stripeWebhookFunctionName,
+    githubWebhookFunctionName: githubWebhookStack.githubWebhookFunctionName,
+    healthCheckFunctionName: healthCheckStack.healthCheckFunctionName,
+    metadataTableName: dynamoDBStack.table.tableName,
+    queueName: queueStack.queue.queueName,
+    adminEmail: process.env.ADMIN_EMAIL || "admin@e-info.click",
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "Alerting",
     },
 });
 
