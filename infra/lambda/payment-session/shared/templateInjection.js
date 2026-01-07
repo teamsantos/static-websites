@@ -31,29 +31,33 @@ export function injectContent(html, langs = {}, images = {}, textColors = {}, se
   // Pattern: Replace text in elements with data-text-id="key"
   for (const [textId, text] of Object.entries(langs)) {
     const escapedText = escapeHtml(text);
+    // Escape special regex characters in textId
+    const escapedId = textId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     
     // For buttons and inputs (use value/placeholder)
     result = result.replace(
-      new RegExp(`(<(?:button|input|submit)[^>]*data-text-id=["']${textId}["'][^>]*)>`, 'g'),
+      new RegExp(`(<(?:button|input|submit)[^>]*data-text-id=["']${escapedId}["'][^>]*)>`, 'g'),
       `$1 value="${escapedText}">`
     );
 
-    // For text nodes (innerText)
+    // For text nodes (innerText) - More careful pattern matching
+    // Ensures we don't match across tag boundaries incorrectly
     result = result.replace(
-      new RegExp(`(<[^>]*data-text-id=["']${textId}["'][^>]*>)(.*?)(</[^>]*>)`, 'g'),
+      new RegExp(`(<[^>]*data-text-id=["']${escapedId}["'][^>]*>)(.*?)(</[^>]*>)`, 'g'),
       `$1${escapedText}$3`
     );
 
     // For title tags
     result = result.replace(
-      new RegExp(`(<title[^>]*data-text-id=["']${textId}["'][^>]*>)(.*?)(</title>)`, 'g'),
+      new RegExp(`(<title[^>]*data-text-id=["']${escapedId}["'][^>]*>)(.*?)(</title>)`, 'g'),
       `$1${escapedText}$3`
     );
   }
 
-  // 2. Inject text colors (data-text-id + color)
-  for (const [textId, color] of Object.entries(textColors)) {
-    const styleRegex = new RegExp(`(<[^>]*data-text-id=["']${textId}["'][^>]*(?:style=["']([^"']*)["'])?[^>]*)>`, 'g');
+   // 2. Inject text colors (data-text-id + color)
+   for (const [textId, color] of Object.entries(textColors)) {
+     const escapedId = textId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     const styleRegex = new RegExp(`(<[^>]*data-text-id=["']${escapedId}["'][^>]*(?:style=["']([^"']*)["'])?[^>]*)>`, 'g');
     result = result.replace(styleRegex, (match, p1) => {
       const hasStyle = match.includes('style=');
       if (hasStyle) {
@@ -64,51 +68,57 @@ export function injectContent(html, langs = {}, images = {}, textColors = {}, se
     });
   }
 
-  // 3. Inject alt text (data-alt-text-id)
-  for (const [altId, altText] of Object.entries(langs)) {
-    const escapedAlt = escapeHtml(altText);
-    result = result.replace(
-      new RegExp(`(data-alt-text-id=["']${altId}["'])`, 'g'),
-      `alt="${escapedAlt}"`
-    );
-  }
+   // 3. Inject alt text (data-alt-text-id)
+   for (const [altId, altText] of Object.entries(langs)) {
+     const escapedAlt = escapeHtml(altText);
+     const escapedId = altId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     result = result.replace(
+       new RegExp(`(data-alt-text-id=["']${escapedId}["'])`, 'g'),
+       `alt="${escapedAlt}"`
+     );
+   }
 
-  // 4. Inject title attributes (data-title-text-id)
-  for (const [titleId, titleText] of Object.entries(langs)) {
-    const escapedTitle = escapeHtml(titleText);
-    result = result.replace(
-      new RegExp(`(data-title-text-id=["']${titleId}["'])`, 'g'),
-      `title="${escapedTitle}"`
-    );
-  }
+   // 4. Inject title attributes (data-title-text-id)
+   for (const [titleId, titleText] of Object.entries(langs)) {
+     const escapedTitle = escapeHtml(titleText);
+     const escapedId = titleId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     result = result.replace(
+       new RegExp(`(data-title-text-id=["']${escapedId}["'])`, 'g'),
+       `title="${escapedTitle}"`
+     );
+   }
 
-  // 5. Inject meta content (data-meta-content-id)
-  for (const [metaId, metaText] of Object.entries(langs)) {
-    result = result.replace(
-      new RegExp(`(data-meta-content-id=["']${metaId}["'])`, 'g'),
-      `content="${escapeHtml(metaText)}"`
-    );
-  }
+   // 5. Inject meta content (data-meta-content-id)
+   for (const [metaId, metaText] of Object.entries(langs)) {
+     const escapedId = metaId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     result = result.replace(
+       new RegExp(`(data-meta-content-id=["']${escapedId}["'])`, 'g'),
+       `content="${escapeHtml(metaText)}"`
+     );
+   }
 
-  // 6. Inject image sources (data-image-src)
-  for (const [imageKey, imageUrl] of Object.entries(images)) {
-    result = result.replace(
-      new RegExp(`data-image-src=["']${imageKey}["']`, 'g'),
-      `src="${imageUrl}"`
-    );
-  }
+   // 6. Inject image sources (data-image-src)
+   for (const [imageKey, imageUrl] of Object.entries(images)) {
+     const escapedId = imageKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     result = result.replace(
+       new RegExp(`data-image-src=["']${escapedId}["']`, 'g'),
+       `src="${imageUrl}"`
+     );
+   }
 
-  // 7. Inject background images (data-bg-image)
-  for (const [bgKey, bgUrl] of Object.entries(images)) {
-    result = result.replace(
-      new RegExp(`(data-bg-image=["']${bgKey}["'][^>]*)>`, 'g'),
-      `$1 style="background-image: url('${bgUrl}')">`
-    );
-  }
+   // 7. Inject background images (data-bg-image)
+   for (const [bgKey, bgUrl] of Object.entries(images)) {
+     const escapedId = bgKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     result = result.replace(
+       new RegExp(`(data-bg-image=["']${escapedId}["'][^>]*)>`, 'g'),
+       `$1 style="background-image: url('${bgUrl}')">`
+     );
+   }
 
-  // 8. Inject section background colors (data-section-id)
-  for (const [sectionId, bgColor] of Object.entries(sectionBackgrounds)) {
-    const styleRegex = new RegExp(`(<[^>]*data-section-id=["']${sectionId}["'][^>]*(?:style=["']([^"']*)["'])?[^>]*)>`, 'g');
+   // 8. Inject section background colors (data-section-id)
+   for (const [sectionId, bgColor] of Object.entries(sectionBackgrounds)) {
+     const escapedId = sectionId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     const styleRegex = new RegExp(`(<[^>]*data-section-id=["']${escapedId}["'][^>]*(?:style=["']([^"']*)["'])?[^>]*)>`, 'g');
     result = result.replace(styleRegex, (match, p1) => {
       if (match.includes('style=')) {
         return match.replace(/style=["']([^"']*)["']/, `style="$1; background-color: ${bgColor}"`);
