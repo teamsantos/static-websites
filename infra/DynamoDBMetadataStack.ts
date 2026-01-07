@@ -38,10 +38,6 @@ export class DynamoDBMetadataStack extends cdk.Stack {
       pointInTimeRecovery: true, // Backup/recovery capability
       timeToLiveAttribute: "expiresAt", // Auto-cleanup after 7 days
       stream: dynamodb.StreamSpecification.NEW_AND_OLD_IMAGES, // For SQS integration later
-      tags: {
-        Component: "Metadata",
-        Purpose: "WebsiteOperationTracking",
-      },
     });
 
     // Global Secondary Index: Query by email + sort by createdAt
@@ -96,10 +92,6 @@ export class DynamoDBMetadataStack extends cdk.Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       timeToLiveAttribute: "expiresAt", // Auto-cleanup after 24h
-      tags: {
-        Component: "Idempotency",
-        Purpose: "DuplicateRequestPrevention",
-      },
     });
 
     // CloudWatch Alarms for monitoring

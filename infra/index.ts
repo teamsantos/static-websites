@@ -9,6 +9,8 @@ import { DynamoDBMetadataStack } from "./DynamoDBMetadataStack";
 import { WAFStack } from "./WAFStack";
 import { BudgetAlertStack } from "./BudgetAlertStack";
 import { QueueStack } from "./QueueStack";
+import { StepFunctionsStack } from "./StepFunctionsStack";
+import { GitHubWebhookStack } from "./GitHubWebhookStack";
 
 const app = new cdk.App();
 
@@ -119,6 +121,21 @@ const queueStack = new QueueStack(app, "QueueStack", {
     },
 });
 
+// Create Step Functions state machine for workflow orchestration and status tracking
+new StepFunctionsStack(app, "StepFunctionsStack", {
+    generateWebsiteLambda: createProjectStack.generateWebsiteFunction,
+    metadataTable: dynamoDBStack.table,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "WorkflowOrchestration",
+    },
+});
+
 new StripeCheckoutStack(app, "StripeCheckoutStack", {
     domain: config.domain,
     stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
@@ -158,6 +175,22 @@ new BudgetAlertStack(app, "BudgetAlertStack", {
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "CostControls",
+    },
+});
+
+// Create GitHub webhook handler for deployment tracking
+new GitHubWebhookStack(app, "GitHubWebhookStack", {
+    domain: config.domain,
+    metadataTable: dynamoDBStack.table,
+    githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || "",
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "DeploymentTracking",
     },
 });
 
