@@ -382,12 +382,20 @@ export const handler = async (event) => {
             // For updates, just update the index.html file
             const commitMessage = `Update ${projectName} project`;
 
+            // Fetch the current file to get its SHA
+            const currentFile = await octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path: `projects/${projectName}/index.html`,
+            });
+
             const updateResponse = await octokit.rest.repos.createOrUpdateFileContents({
                 owner,
                 repo,
                 path: `projects/${projectName}/index.html`,
                 message: commitMessage,
                 content: Buffer.from(html).toString('base64'),
+                sha: currentFile.data.sha,
             });
 
             console.log(`[DEBUG] Successfully updated index.html for project: ${projectName}`);
