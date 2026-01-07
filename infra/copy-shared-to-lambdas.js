@@ -10,6 +10,8 @@ const lambdas = [
   'lambda/stripe-webhook',
   'lambda/github-webhook',
   'lambda/health-check',
+  'lambda/generate-website',
+  'lambda/create-project',
   'lambda/get-projects',
   'lambda/delete-project',
   'lambda/send-email',
