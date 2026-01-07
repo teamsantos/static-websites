@@ -155,35 +155,44 @@ export const validateImages = (images, maxImages = 5) => {
  * Validates language strings object
  * @param {object} langs - Object with translated strings
  * @param {number} maxStringLength - Maximum string length
- * @returns {object} - { valid: boolean, error: string|null }
+ * @returns {object} - { valid: boolean, error: string|null, cleaned: object|null }
  */
 export const validateLanguageStrings = (langs, maxStringLength = 1000) => {
     if (!langs || typeof langs !== 'object' || Array.isArray(langs)) {
-        return { valid: false, error: 'Language strings must be an object with key-value pairs' };
+        return { valid: false, error: 'Language strings must be an object with key-value pairs', cleaned: null };
     }
 
     const langKeys = Object.keys(langs);
     
     if (langKeys.length === 0) {
-        return { valid: false, error: 'At least one language string is required' };
+        return { valid: false, error: 'At least one language string is required', cleaned: null };
     }
 
-    // Validate each language string
+    // Validate each language string and filter out empty ones
+    const cleaned = {};
     for (const [key, value] of Object.entries(langs)) {
         if (typeof value !== 'string') {
-            return { valid: false, error: `Language '${key}': Value must be a string` };
+            return { valid: false, error: `Language '${key}': Value must be a string`, cleaned: null };
         }
 
+        // Skip empty strings (filter them out)
         if (value.length === 0) {
-            return { valid: false, error: `Language '${key}': Value cannot be empty` };
+            continue;
         }
 
         if (value.length > maxStringLength) {
-            return { valid: false, error: `Language '${key}': Too long. Maximum ${maxStringLength} chars, got ${value.length}` };
+            return { valid: false, error: `Language '${key}': Too long. Maximum ${maxStringLength} chars, got ${value.length}`, cleaned: null };
         }
+
+        cleaned[key] = value;
     }
 
-    return { valid: true, error: null };
+    // After filtering, we need at least one non-empty language string
+    if (Object.keys(cleaned).length === 0) {
+        return { valid: false, error: 'At least one non-empty language string is required', cleaned: null };
+    }
+
+    return { valid: true, error: null, cleaned };
 };
 
 /**
@@ -242,64 +251,64 @@ export const validatePriceId = (priceId) => {
  * Comprehensive validation for payment session request
  * @param {object} requestBody - Request body to validate
  * @param {string[]} allowedTemplates - List of allowed template IDs
- * @returns {object} - { valid: boolean, error: string|null }
+ * @returns {object} - { valid: boolean, error: string|null, cleanedLangs: object|null }
  */
 export const validatePaymentSessionRequest = (requestBody, allowedTemplates = []) => {
     if (!requestBody || typeof requestBody !== 'object') {
-        return { valid: false, error: 'Request body must be an object' };
+        return { valid: false, error: 'Request body must be an object', cleanedLangs: null };
     }
 
     const { email, projectName, images, priceId, langs, textColors, sectionBackgrounds, templateId } = requestBody;
 
     // Validate email
     if (!email) {
-        return { valid: false, error: 'Missing required field: email' };
+        return { valid: false, error: 'Missing required field: email', cleanedLangs: null };
     }
     if (!validateEmail(email)) {
-        return { valid: false, error: 'Invalid email format' };
+        return { valid: false, error: 'Invalid email format', cleanedLangs: null };
     }
 
     // Validate project name
     if (!projectName) {
-        return { valid: false, error: 'Missing required field: projectName' };
+        return { valid: false, error: 'Missing required field: projectName', cleanedLangs: null };
     }
     if (!validateProjectName(projectName)) {
-        return { valid: false, error: 'Invalid project name. Must be 3-63 chars, lowercase, alphanumeric and hyphens only' };
+        return { valid: false, error: 'Invalid project name. Must be 3-63 chars, lowercase, alphanumeric and hyphens only', cleanedLangs: null };
     }
 
     // Validate price ID
     if (!priceId) {
-        return { valid: false, error: 'Missing required field: priceId' };
+        return { valid: false, error: 'Missing required field: priceId', cleanedLangs: null };
     }
     if (!validatePriceId(priceId)) {
-        return { valid: false, error: 'Invalid priceId format' };
+        return { valid: false, error: 'Invalid priceId format', cleanedLangs: null };
     }
 
     // Validate template ID
     if (!templateId) {
-        return { valid: false, error: 'Missing required field: templateId' };
+        return { valid: false, error: 'Missing required field: templateId', cleanedLangs: null };
     }
     if (allowedTemplates.length > 0 && !validateTemplate(templateId, allowedTemplates)) {
-        return { valid: false, error: `Invalid template. Allowed: ${allowedTemplates.join(', ')}` };
+        return { valid: false, error: `Invalid template. Allowed: ${allowedTemplates.join(', ')}`, cleanedLangs: null };
     }
 
     // Validate images
     const imagesValidation = validateImages(images);
     if (!imagesValidation.valid) {
-        return { valid: false, error: imagesValidation.error };
+        return { valid: false, error: imagesValidation.error, cleanedLangs: null };
     }
 
-    // Validate language strings
+    // Validate language strings (and get cleaned version)
     const langsValidation = validateLanguageStrings(langs);
     if (!langsValidation.valid) {
-        return { valid: false, error: langsValidation.error };
+        return { valid: false, error: langsValidation.error, cleanedLangs: null };
     }
 
     // Validate text colors (optional)
     if (textColors !== undefined && textColors !== null) {
         const textColorsValidation = validateColorsObject(textColors, 'textColors');
         if (!textColorsValidation.valid) {
-            return { valid: false, error: textColorsValidation.error };
+            return { valid: false, error: textColorsValidation.error, cleanedLangs: null };
         }
     }
 
@@ -307,9 +316,9 @@ export const validatePaymentSessionRequest = (requestBody, allowedTemplates = []
     if (sectionBackgrounds !== undefined && sectionBackgrounds !== null) {
         const sectionBgValidation = validateColorsObject(sectionBackgrounds, 'sectionBackgrounds');
         if (!sectionBgValidation.valid) {
-            return { valid: false, error: sectionBgValidation.error };
+            return { valid: false, error: sectionBgValidation.error, cleanedLangs: null };
         }
     }
 
-    return { valid: true, error: null };
+    return { valid: true, error: null, cleanedLangs: langsValidation.cleaned };
 };

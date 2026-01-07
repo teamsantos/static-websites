@@ -84,6 +84,9 @@ export const handler = async (event, context) => {
         };
     }
 
+    // Use cleaned language strings (empty values filtered out)
+    const cleanedLangs = validation.cleanedLangs || langs;
+
     // IDEMPOTENCY: Generate key from request to prevent duplicates
     const idempotencyKey = generateIdempotencyKey({
         method: "POST",
@@ -132,7 +135,7 @@ export const handler = async (event, context) => {
                 email,
                 projectName,
                 images,
-                langs,
+                langs: cleanedLangs,
                 textColors,
                 sectionBackgrounds,
                 templateId, 
