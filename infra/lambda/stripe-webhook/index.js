@@ -1,6 +1,7 @@
 import AWS from "aws-sdk";
 import Stripe from "stripe";
 import crypto from "crypto";
+import { createLogger, logMetric } from "../../shared/logger.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const dynamodb = new AWS.DynamoDB.DocumentClient();
@@ -22,13 +23,15 @@ const METADATA_KEY = "metadata.json";
  * 
  * Critical: Verify webhook signature to prevent spoofed events
  */
-export const handler = async (event) => {
+export const handler = async (event, context) => {
+    const logger = createLogger('stripe-webhook', context);
+    
     try {
         // Verify Stripe webhook signature
         const signature = event.headers['stripe-signature'];
         
         if (!signature) {
-            console.warn('Missing Stripe signature header');
+            logger.warn('Missing Stripe signature header');
             return {
                 statusCode: 400,
                 body: JSON.stringify({ error: 'Missing Stripe signature' }),
@@ -46,35 +49,33 @@ export const handler = async (event) => {
                 webhookSecret
             );
         } catch (err) {
-            console.error('Webhook signature verification failed:', err.message);
+            logger.error('Webhook signature verification failed', { error: err.message }, { severity: 'security' });
             return {
                 statusCode: 400,
                 body: JSON.stringify({ error: 'Webhook signature verification failed' }),
             };
         }
 
-        console.log(`Processing Stripe event: ${stripeEvent.type}, ID: ${stripeEvent.id}`);
+        logger.info('Processing Stripe event', { eventType: stripeEvent.type, eventId: stripeEvent.id });
 
         // Handle specific event types
         switch (stripeEvent.type) {
             case 'checkout.session.completed': {
                 const session = stripeEvent.data.object;
-                console.log(`Checkout session completed: ${session.id}, payment_status: ${session.payment_status}`);
+                logger.info('Checkout session completed', { sessionId: session.id, paymentStatus: session.payment_status });
                 
                 if (session.payment_status === 'paid') {
                     // Find operationId by payment session ID
-                    const operationId = await findOperationIdBySessionId(session.id);
+                    const operationId = await findOperationIdBySessionId(logger, session.id);
                     
                     if (operationId) {
                         // Update metadata status to "paid" immediately
-                        await updateMetadataStatus(operationId, 'paid', session.id);
-                        console.log(`Updated operationId: ${operationId} to paid status`);
+                        await updateMetadataStatus(logger, operationId, 'paid', session.id);
                         
                         // Enqueue for website generation (async processing)
-                        await enqueueWebsiteGeneration(operationId);
-                        console.log(`Enqueued website generation for operationId: ${operationId}`);
+                        await enqueueWebsiteGeneration(logger, operationId);
                     } else {
-                        console.error(`Could not find operationId for session: ${session.id}`);
+                        logger.error('Could not find operationId for session', { sessionId: session.id }, { severity: 'warning' });
                     }
                 }
                 break;
@@ -82,21 +83,20 @@ export const handler = async (event) => {
 
             case 'charge.failed': {
                 const charge = stripeEvent.data.object;
-                console.log(`Charge failed: ${charge.id}`);
+                logger.warn('Charge failed', { chargeId: charge.id, failureMessage: charge.failure_message });
                 
                 // Find operationId by charge
                 const sessionId = charge.payment_intent;
-                const operationId = await findOperationIdBySessionId(sessionId);
+                const operationId = await findOperationIdBySessionId(logger, sessionId);
                 
                 if (operationId) {
-                    await updateMetadataStatus(operationId, 'failed', charge.failure_message || 'Payment failed');
-                    console.log(`Updated operationId: ${operationId} to failed status`);
+                    await updateMetadataStatus(logger, operationId, 'failed', charge.failure_message || 'Payment failed');
                 }
                 break;
             }
 
             default:
-                console.log(`Unhandled event type: ${stripeEvent.type}`);
+                logger.debug('Unhandled event type', { eventType: stripeEvent.type });
         }
 
         return {
@@ -104,7 +104,7 @@ export const handler = async (event) => {
             body: JSON.stringify({ success: true, received: true }),
         };
     } catch (error) {
-        console.error('Error processing Stripe webhook:', error);
+        logger.error('Error processing Stripe webhook', { error: error.message, stack: error.stack }, { severity: 'error' });
         // Return 200 to prevent Stripe retries on unexpected errors
         // but log the error for manual review
         return {
@@ -116,41 +116,46 @@ export const handler = async (event) => {
 
 /**
  * Find operationId by Stripe session ID
+ * @param {object} logger - Logger instance
  * @param {string} sessionId - Stripe checkout session ID
  * @returns {Promise<string|null>} - operationId if found, null otherwise
  */
-async function findOperationIdBySessionId(sessionId) {
+async function findOperationIdBySessionId(logger, sessionId) {
     try {
         // Query DynamoDB GSI by paymentSessionId
-        const result = await dynamodb.query({
-            TableName: METADATA_TABLE,
-            IndexName: "paymentSessionId-index",
-            KeyConditionExpression: "paymentSessionId = :sessionId",
-            ExpressionAttributeValues: {
-                ":sessionId": sessionId
-            },
-            Limit: 1
-        }).promise();
+        const result = await logMetric(logger, 'query_operationid_by_sessionid', async () => {
+            return dynamodb.query({
+                TableName: METADATA_TABLE,
+                IndexName: "paymentSessionId-index",
+                KeyConditionExpression: "paymentSessionId = :sessionId",
+                ExpressionAttributeValues: {
+                    ":sessionId": sessionId
+                },
+                Limit: 1
+            }).promise();
+        });
 
         if (result.Items && result.Items.length > 0) {
+            logger.cache('operationId_lookup', true, { sessionId });
             return result.Items[0].operationId;
         }
 
-        console.warn(`No operationId found for sessionId: ${sessionId}`);
+        logger.cache('operationId_lookup', false, { sessionId });
         return null;
     } catch (error) {
-        console.error("Error finding operationId:", error);
+        logger.error("Error finding operationId", { error: error.message, sessionId, stack: error.stack }, { severity: 'error' });
         throw error;
     }
 }
 
 /**
  * Update metadata status for an operation
+ * @param {object} logger - Logger instance
  * @param {string} operationId - UUID of the operation
  * @param {string} status - New status ('paid', 'failed', 'pending', etc)
  * @param {string} detail - Additional detail (session ID or error message)
  */
-async function updateMetadataStatus(operationId, status, detail) {
+async function updateMetadataStatus(logger, operationId, status, detail) {
     try {
         // Update via DynamoDB UpdateItem (atomic)
         const updateParams = {
@@ -174,23 +179,26 @@ async function updateMetadataStatus(operationId, status, detail) {
             updateParams.ExpressionAttributeValues[":failureReason"] = detail;
         }
 
-        await dynamodb.update(updateParams).promise();
+        await logMetric(logger, 'update_metadata_status', async () => {
+            return dynamodb.update(updateParams).promise();
+        });
 
-        console.log(`Updated metadata for operationId: ${operationId}, new status: ${status}`);
+        logger.database('update', METADATA_TABLE, 0, { operationId, status });
     } catch (error) {
-        console.error("Error updating metadata status:", error);
+        logger.error("Error updating metadata status", { error: error.message, operationId, status, stack: error.stack }, { severity: 'error' });
         throw error;
     }
 }
 
 /**
  * Enqueue website generation job to SQS
+ * @param {object} logger - Logger instance
  * @param {string} operationId - UUID of the operation
  */
-async function enqueueWebsiteGeneration(operationId) {
+async function enqueueWebsiteGeneration(logger, operationId) {
     try {
         if (!QUEUE_URL) {
-            console.warn("SQS_QUEUE_URL not configured, skipping queue enqueue");
+            logger.warn("SQS_QUEUE_URL not configured, skipping queue enqueue");
             return;
         }
 
@@ -212,10 +220,13 @@ async function enqueueWebsiteGeneration(operationId) {
             },
         };
 
-        await sqs.sendMessage(messageParams).promise();
-        console.log(`Enqueued website generation for operationId: ${operationId}`);
+        await logMetric(logger, 'enqueue_website_generation', async () => {
+            return sqs.sendMessage(messageParams).promise();
+        });
+
+        logger.info('Enqueued website generation', { operationId });
     } catch (error) {
-        console.error("Error enqueuing website generation:", error);
+        logger.error("Error enqueuing website generation", { error: error.message, operationId, stack: error.stack }, { severity: 'error' });
         throw error;
     }
 }

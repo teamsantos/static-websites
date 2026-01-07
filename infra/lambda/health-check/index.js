@@ -1,4 +1,5 @@
 import AWS from "aws-sdk";
+import { createLogger, logMetric } from "../../shared/logger.js";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const sqs = new AWS.SQS();
@@ -20,7 +21,9 @@ const QUEUE_URL = process.env.SQS_QUEUE_URL;
  * Returns 200 OK with detailed health info if system is healthy
  * Returns 503 Service Unavailable if critical services are down
  */
-export const handler = async (event) => {
+export const handler = async (event, context) => {
+    const logger = createLogger('health-check', context);
+    
     const health = {
         timestamp: new Date().toISOString(),
         status: "healthy",
@@ -29,14 +32,16 @@ export const handler = async (event) => {
     };
 
     try {
+        logger.info('Health check started');
+
         // Check DynamoDB
-        await checkDynamoDB(health);
+        await checkDynamoDB(logger, health);
 
         // Check SQS Queue
-        await checkSQSQueue(health);
+        await checkSQSQueue(logger, health);
 
         // Check CloudWatch Metrics (error rates)
-        await checkErrorMetrics(health);
+        await checkErrorMetrics(logger, health);
 
         // Determine overall status
         if (health.errors.length > 0) {
@@ -44,6 +49,11 @@ export const handler = async (event) => {
         }
 
         const statusCode = health.status === "unhealthy" ? 503 : 200;
+
+        logger.info('Health check completed', { 
+            status: health.status, 
+            errorCount: health.errors.length 
+        });
 
         return {
             statusCode,
@@ -54,7 +64,7 @@ export const handler = async (event) => {
             body: JSON.stringify(health),
         };
     } catch (error) {
-        console.error("Health check error:", error);
+        logger.error("Health check error", { error: error.message, stack: error.stack }, { severity: 'error' });
         return {
             statusCode: 503,
             headers: { "Content-Type": "application/json" },
@@ -70,11 +80,25 @@ export const handler = async (event) => {
 /**
  * Check DynamoDB connectivity and basic performance
  */
-async function checkDynamoDB(health) {
+async function checkDynamoDB(logger, health) {
     try {
-        const startTime = Date.now();
+        await logMetric(logger, 'health_check_dynamodb', async () => {
+            const startTime = Date.now();
 
-        // Try to scan a single item from the metadata table
+            // Try to scan a single item from the metadata table
+            await dynamodb.query({
+                TableName: METADATA_TABLE,
+                Limit: 1,
+                KeyConditionExpression: "operationId = :pk",
+                ExpressionAttributeValues: {
+                    ":pk": "health-check"
+                }
+            }).promise();
+
+            return Date.now() - startTime;
+        });
+
+        const startTime = Date.now();
         await dynamodb.query({
             TableName: METADATA_TABLE,
             Limit: 1,
@@ -83,7 +107,6 @@ async function checkDynamoDB(health) {
                 ":pk": "health-check"
             }
         }).promise();
-
         const latency = Date.now() - startTime;
 
         health.checks.dynamodb = {
@@ -109,13 +132,14 @@ async function checkDynamoDB(health) {
             message: error.message,
             severity: "critical"
         });
+        logger.error('DynamoDB health check failed', { error: error.message });
     }
 }
 
 /**
  * Check SQS queue status and message backlog
  */
-async function checkSQSQueue(health) {
+async function checkSQSQueue(logger, health) {
     try {
         if (!QUEUE_URL) {
             health.checks.sqs = {
@@ -126,10 +150,12 @@ async function checkSQSQueue(health) {
         }
 
         // Get queue attributes
-        const attrs = await sqs.getQueueAttributes({
-            QueueUrl: QUEUE_URL,
-            AttributeNames: ["ApproximateNumberOfMessages", "ApproximateNumberOfMessagesNotVisible"]
-        }).promise();
+        const attrs = await logMetric(logger, 'health_check_sqs', async () => {
+            return sqs.getQueueAttributes({
+                QueueUrl: QUEUE_URL,
+                AttributeNames: ["ApproximateNumberOfMessages", "ApproximateNumberOfMessagesNotVisible"]
+            }).promise();
+        });
 
         const visibleMessages = parseInt(attrs.Attributes.ApproximateNumberOfMessages);
         const invisibleMessages = parseInt(attrs.Attributes.ApproximateNumberOfMessagesNotVisible);
@@ -168,32 +194,35 @@ async function checkSQSQueue(health) {
             message: error.message,
             severity: "critical"
         });
+        logger.error('SQS health check failed', { error: error.message });
     }
 }
 
 /**
  * Check Lambda error metrics from CloudWatch
  */
-async function checkErrorMetrics(health) {
+async function checkErrorMetrics(logger, health) {
     try {
         // Get Lambda error count from last 5 minutes
         const endTime = new Date();
         const startTime = new Date(endTime - 5 * 60 * 1000);
 
-        const errorMetrics = await cloudwatch.getMetricStatistics({
-            Namespace: "AWS/Lambda",
-            MetricName: "Errors",
-            StartTime: startTime,
-            EndTime: endTime,
-            Period: 300, // 5 minute period
-            Statistics: ["Sum"],
-            Dimensions: [
-                {
-                    Name: "FunctionName",
-                    Value: "generate-website"
-                }
-            ]
-        }).promise();
+        const errorMetrics = await logMetric(logger, 'health_check_lambda_metrics', async () => {
+            return cloudwatch.getMetricStatistics({
+                Namespace: "AWS/Lambda",
+                MetricName: "Errors",
+                StartTime: startTime,
+                EndTime: endTime,
+                Period: 300, // 5 minute period
+                Statistics: ["Sum"],
+                Dimensions: [
+                    {
+                        Name: "FunctionName",
+                        Value: "generate-website"
+                    }
+                ]
+            }).promise();
+        });
 
         const errorCount = errorMetrics.Datapoints.reduce((sum, dp) => sum + dp.Sum, 0);
 
@@ -215,5 +244,6 @@ async function checkErrorMetrics(health) {
             status: "unknown",
             message: error.message
         };
+        logger.warn('Lambda error metrics check unavailable', { error: error.message });
     }
 }

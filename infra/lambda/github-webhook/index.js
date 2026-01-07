@@ -1,5 +1,6 @@
 import AWS from "aws-sdk";
 import crypto from "crypto";
+import { createLogger, logMetric } from "../../shared/logger.js";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE || "websites-metadata";
@@ -13,13 +14,15 @@ const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
  *
  * Security: Verifies webhook signature (HMAC-SHA256) to prevent spoofed events
  */
-export const handler = async (event) => {
+export const handler = async (event, context) => {
+    const logger = createLogger('github-webhook', context);
+    
     try {
         // Verify GitHub webhook signature
         const signature = event.headers['x-hub-signature-256'];
         
         if (!signature) {
-            console.warn('Missing GitHub signature header');
+            logger.warn('Missing GitHub signature header');
             return {
                 statusCode: 400,
                 body: JSON.stringify({ error: 'Missing GitHub signature' }),
@@ -35,7 +38,7 @@ export const handler = async (event) => {
             .digest("hex");
 
         if (!crypto.timingSafeEqual(signature, computed)) {
-            console.warn('GitHub webhook signature verification failed');
+            logger.error('GitHub webhook signature verification failed', {}, { severity: 'security' });
             return {
                 statusCode: 403,
                 body: JSON.stringify({ error: 'Signature verification failed' }),
@@ -47,14 +50,14 @@ export const handler = async (event) => {
         try {
             payload = JSON.parse(body);
         } catch (error) {
-            console.error('Failed to parse webhook payload:', error);
+            logger.error('Failed to parse webhook payload', { error: error.message });
             return {
                 statusCode: 400,
                 body: JSON.stringify({ error: 'Invalid JSON payload' }),
             };
         }
 
-        console.log(`GitHub webhook event: ${payload.action || 'unknown'}, ref: ${payload.ref || 'unknown'}`);
+        logger.info('GitHub webhook event received', { action: payload.action, ref: payload.ref });
 
         // Only process push events to master branch
         if (payload.ref === 'refs/heads/master' && payload.pusher) {
@@ -62,16 +65,19 @@ export const handler = async (event) => {
             const projectName = extractProjectNameFromCommit(payload);
             
             if (projectName) {
+                logger.debug('Extracted project name from commit', { projectName });
+                
                 // Find operationId by project name
-                const operationId = await findOperationIdByProjectName(projectName);
+                const operationId = await findOperationIdByProjectName(logger, projectName);
                 
                 if (operationId) {
                     // Update status to "deployed"
-                    await updateDeploymentStatus(operationId, payload.after, payload.pusher.email);
-                    console.log(`Marked operationId ${operationId} as deployed for project: ${projectName}`);
+                    await updateDeploymentStatus(logger, operationId, payload.after, payload.pusher.email);
                 } else {
-                    console.warn(`No operationId found for project: ${projectName}`);
+                    logger.warn('No operationId found for project', { projectName });
                 }
+            } else {
+                logger.debug('Could not extract project name from commit');
             }
         }
 
@@ -80,7 +86,7 @@ export const handler = async (event) => {
             body: JSON.stringify({ success: true, received: true }),
         };
     } catch (error) {
-        console.error('Error processing GitHub webhook:', error);
+        logger.error('Error processing GitHub webhook', { error: error.message, stack: error.stack }, { severity: 'error' });
         // Return 200 to prevent GitHub retries on unexpected errors
         return {
             statusCode: 200,
@@ -119,50 +125,53 @@ function extractProjectNameFromCommit(payload) {
 
 /**
  * Find operationId by project name
+ * @param {object} logger - Logger instance
  * @param {string} projectName - Name of the project
  * @returns {Promise<string|null>} - operationId if found
  */
-async function findOperationIdByProjectName(projectName) {
+async function findOperationIdByProjectName(logger, projectName) {
     try {
         // Query by project name (requires projectName attribute in table)
         // For now, we query by status=completed and filter by projectName
-        const result = await dynamodb.query({
-            TableName: METADATA_TABLE,
-            IndexName: "status-createdAt-index",
-            KeyConditionExpression: "#status = :status",
-            ExpressionAttributeNames: {
-                "#status": "status"
-            },
-            ExpressionAttributeValues: {
-                ":status": "completed"
-            },
-            FilterExpression: "projectName = :projectName",
-            ExpressionAttributeValues: {
-                ":projectName": projectName
-            },
-            Limit: 1,
-            ScanIndexForward: false, // Get most recent first
-        }).promise();
+        const result = await logMetric(logger, 'query_operationid_by_projectname', async () => {
+            return dynamodb.query({
+                TableName: METADATA_TABLE,
+                IndexName: "status-createdAt-index",
+                KeyConditionExpression: "#status = :status",
+                ExpressionAttributeNames: {
+                    "#status": "status"
+                },
+                ExpressionAttributeValues: {
+                    ":status": "completed",
+                    ":projectName": projectName
+                },
+                FilterExpression: "projectName = :projectName",
+                Limit: 1,
+                ScanIndexForward: false, // Get most recent first
+            }).promise();
+        });
 
         if (result.Items && result.Items.length > 0) {
+            logger.cache('operationId_by_projectname', true, { projectName });
             return result.Items[0].operationId;
         }
 
-        console.warn(`No operationId found for projectName: ${projectName}`);
+        logger.cache('operationId_by_projectname', false, { projectName });
         return null;
     } catch (error) {
-        console.error("Error finding operationId by projectName:", error);
+        logger.error("Error finding operationId by projectName", { error: error.message, projectName, stack: error.stack }, { severity: 'error' });
         throw error;
     }
 }
 
 /**
  * Update deployment status for an operation
+ * @param {object} logger - Logger instance
  * @param {string} operationId - UUID of the operation
  * @param {string} commitSha - Git commit SHA
  * @param {string} email - Pusher email
  */
-async function updateDeploymentStatus(operationId, commitSha, email) {
+async function updateDeploymentStatus(logger, operationId, commitSha, email) {
     try {
         const updateParams = {
             TableName: METADATA_TABLE,
@@ -179,10 +188,13 @@ async function updateDeploymentStatus(operationId, commitSha, email) {
             }
         };
 
-        await dynamodb.update(updateParams).promise();
-        console.log(`Updated operationId: ${operationId} to deployed status`);
+        await logMetric(logger, 'update_deployment_status', async () => {
+            return dynamodb.update(updateParams).promise();
+        });
+
+        logger.info('Updated deployment status', { operationId, commitSha, deployedByEmail: email });
     } catch (error) {
-        console.error("Error updating deployment status:", error);
+        logger.error("Error updating deployment status", { error: error.message, operationId, stack: error.stack }, { severity: 'error' });
         throw error;
     }
 }
