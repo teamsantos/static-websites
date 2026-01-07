@@ -219,6 +219,99 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, c
     }
 }
 
+/**
+ * Upload generated index.html to S3
+ * 
+ * @param {string} html - Generated HTML content
+ * @param {string} projectName - Project name (used in S3 path)
+ * @returns {Promise<string>} - S3 path of uploaded file
+ */
+async function uploadIndexHtmlToS3(html, projectName) {
+    try {
+        const bucketName = process.env.S3_BUCKET_NAME;
+        const s3Key = `projects/${projectName}/index.html`;
+        
+        console.log(`[S3] Uploading index.html for project: ${projectName}`);
+        
+        const uploadResponse = await s3.putObject({
+            Bucket: bucketName,
+            Key: s3Key,
+            Body: html,
+            ContentType: 'text/html',
+            CacheControl: 'public, max-age=300', // 5 minute cache for HTML
+            Metadata: {
+                'deployment-date': new Date().toISOString(),
+                'project-name': projectName,
+            }
+        }).promise();
+        
+        const s3Path = `https://${bucketName}.s3.eu-south-2.amazonaws.com/${s3Key}`;
+        console.log(`[S3] Successfully uploaded index.html to: ${s3Path}`);
+        
+        return s3Path;
+    } catch (error) {
+        console.error(`[S3] Error uploading index.html:`, error);
+        throw error;
+    }
+}
+
+/**
+ * Invalidate CloudFront cache for the project
+ * 
+ * @param {string} projectName - Project name to invalidate
+ * @returns {Promise<string>} - Invalidation ID
+ */
+async function invalidateCloudFront(projectName) {
+    try {
+        // Get CloudFront distribution ID from CloudFormation stack
+        const cloudformation = new AWS.CloudFormation();
+        
+        console.log(`[CloudFront] Getting distribution ID for project: ${projectName}`);
+        
+        const stackResponse = await cloudformation.describeStacks({
+            StackName: 'MultiTenantDistribution'
+        }).promise();
+        
+        const distributionId = stackResponse.Stacks[0].Outputs.find(
+            output => output.OutputKey === 'DistributionId'
+        )?.OutputValue;
+        
+        if (!distributionId) {
+            console.warn(`[CloudFront] Could not find distribution ID, skipping invalidation`);
+            return null;
+        }
+        
+        const cloudfront = new AWS.CloudFront();
+        
+        const invalidationParams = {
+            DistributionId: distributionId,
+            InvalidationBatch: {
+                Paths: {
+                    Quantity: 4,
+                    Items: [
+                        `/projects/${projectName}/index.html`,
+                        `/projects/${projectName}/images/*`,
+                        `/projects/${projectName}/css/*`,
+                        `/projects/${projectName}/js/*`
+                    ]
+                },
+                CallerReference: `${projectName}-${Date.now()}`
+            }
+        };
+        
+        const invalidationResponse = await cloudfront.createInvalidation(invalidationParams).promise();
+        
+        console.log(`[CloudFront] Invalidation created: ${invalidationResponse.Invalidation.Id}`);
+        
+        return invalidationResponse.Invalidation.Id;
+    } catch (error) {
+        console.error(`[CloudFront] Error invalidating cache:`, error);
+        // Don't throw - cache invalidation failure shouldn't block deployment
+        console.warn(`[CloudFront] Continuing without cache invalidation`);
+        return null;
+    }
+}
+
 
 /**
  * Core website generation logic (used by both API Gateway and SQS handlers)
@@ -371,6 +464,18 @@ async function generateWebsiteCore(operationId) {
             ref: 'heads/master',
             sha: commit.sha,
         });
+    }
+
+    // Upload generated index.html to S3
+    console.log(`[Deployment] Starting S3 upload for project: ${projectName}`);
+    const s3Path = await uploadIndexHtmlToS3(html, projectName);
+    console.log(`[Deployment] Successfully uploaded to S3: ${s3Path}`);
+
+    // Invalidate CloudFront cache
+    console.log(`[Deployment] Invalidating CloudFront cache for project: ${projectName}`);
+    const invalidationId = await invalidateCloudFront(projectName);
+    if (invalidationId) {
+        console.log(`[Deployment] CloudFront cache invalidation initiated: ${invalidationId}`);
     }
 
     // Send email only for new projects
