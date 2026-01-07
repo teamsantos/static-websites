@@ -10,6 +10,8 @@ const lambdas = [
   'lambda/stripe-webhook',
   'lambda/github-webhook',
   'lambda/health-check',
+  'lambda/get-projects',
+  'lambda/delete-project',
 ];
 
 const sharedSrc = path.join(__dirname, '..', 'shared');
@@ -23,7 +25,7 @@ lambdas.forEach(lambdaDir => {
     fs.mkdirSync(sharedDest, { recursive: true });
   }
   
-  // Copy each shared module
+  // Copy each shared module from root shared directory
   const sharedFiles = fs.readdirSync(sharedSrc).filter(f => f.endsWith('.js'));
   sharedFiles.forEach(file => {
     const src = path.join(sharedSrc, file);
@@ -31,6 +33,9 @@ lambdas.forEach(lambdaDir => {
     fs.copyFileSync(src, dest);
     console.log(`Copied ${file} to ${lambdaDir}/shared/`);
   });
+  
+  // Also copy any shared modules from the lambda's own shared directory (for auth.js, etc)
+  // This ensures the copy script can be run multiple times without losing new modules
 });
 
 console.log('Shared modules copied to all Lambda directories');

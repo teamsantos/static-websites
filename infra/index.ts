@@ -14,6 +14,7 @@ import { GitHubWebhookStack } from "./GitHubWebhookStack";
 import { HealthCheckStack } from "./HealthCheckStack";
 import { DashboardStack } from "./DashboardStack";
 import { AlertingStack } from "./AlertingStack";
+import { ProjectManagementStack } from "./ProjectManagementStack";
 
 const app = new cdk.App();
 
@@ -252,6 +253,21 @@ new AlertingStack(app, "AlertingStack", {
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "Alerting",
+    },
+});
+
+// Create Project Management API (Phase 4.5)
+new ProjectManagementStack(app, "ProjectManagementStack", {
+    domain: config.domain,
+    metadataTable: dynamoDBStack.table,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "ProjectManagement",
     },
 });
 
