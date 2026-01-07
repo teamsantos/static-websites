@@ -50,6 +50,7 @@ const HealthCheckStack_1 = require("./HealthCheckStack");
 const DashboardStack_1 = require("./DashboardStack");
 const AlertingStack_1 = require("./AlertingStack");
 const ProjectManagementStack_1 = require("./ProjectManagementStack");
+const EmailTemplateStack_1 = require("./EmailTemplateStack");
 const app = new cdk.App();
 const config = {
     region: "eu-south-2",
@@ -160,6 +161,20 @@ new StepFunctionsStack_1.StepFunctionsStack(app, "StepFunctionsStack", {
         Purpose: "WorkflowOrchestration",
     },
 });
+// Create Email Template System (Phase 4.6) - Must be created before Stripe stack
+const emailTemplateStack = new EmailTemplateStack_1.EmailTemplateStack(app, "EmailTemplateStack", {
+    senderEmail: process.env.SENDER_EMAIL || "noreply@e-info.click",
+    frontendUrl: process.env.FRONTEND_URL || "https://editor.e-info.click",
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "EmailNotifications",
+    },
+});
 const stripeCheckoutStack = new PaymentSessionStack_1.StripeCheckoutStack(app, "StripeCheckoutStack", {
     domain: config.domain,
     stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
@@ -169,6 +184,7 @@ const stripeCheckoutStack = new PaymentSessionStack_1.StripeCheckoutStack(app, "
     metadataTable: dynamoDBStack.table,
     sqsQueueUrl: queueStack.queue.queueUrl,
     sqsQueueArn: queueStack.queue.queueArn,
+    emailTemplateStack: emailTemplateStack,
     env: {
         account: account,
         region: config.region,

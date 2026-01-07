@@ -64,10 +64,15 @@ class StripeCheckoutStack extends cdk.Stack {
                 FRONTEND_URL: props.frontendUrl,
                 S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
+                SEND_EMAIL_FUNCTION: props.emailTemplateStack?.sendEmailFunctionName || "send-email",
             },
             timeout: cdk.Duration.seconds(30),
         });
         this.paymentSessionFunctionName = checkoutFunction.functionName;
+        // Grant permission to invoke send-email Lambda
+        if (props.emailTemplateStack) {
+            props.emailTemplateStack.grantInvoke(checkoutFunction);
+        }
         // Lambda for Stripe Webhook
         const webhookFunction = new lambda.Function(this, "StripeWebhookFunction", {
             runtime: lambda.Runtime.NODEJS_18_X,

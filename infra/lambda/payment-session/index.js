@@ -8,7 +8,9 @@ import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const dynamodb = new AWS.DynamoDB.DocumentClient();
+const lambda = new AWS.Lambda();
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE || "websites-metadata";
+const SEND_EMAIL_FUNCTION = process.env.SEND_EMAIL_FUNCTION || "send-email";
 
 // Keep S3 for backwards compatibility if needed
 const s3 = new AWS.S3();
@@ -144,6 +146,12 @@ export const handler = async (event, context) => {
                 status: "pending",
             });
 
+            // ✅ Send payment confirmation email (async, don't wait for it)
+            await sendPaymentConfirmationEmail(logger, email, projectName, priceId, operationKey).catch(err => {
+                logger.warn('Failed to send payment confirmation email', { error: err.message, email });
+                // Don't fail the request if email fails
+            });
+
             return {
                 sessionId: session.id,
                 sessionUrl: session.url,
@@ -213,3 +221,35 @@ const corsHeaders = (origin) => ({
     "Access-Control-Allow-Methods": "POST,OPTIONS",
 });
 
+/**
+ * Invoke send-email Lambda to send payment confirmation
+ * This is async and doesn't block the response
+ */
+async function sendPaymentConfirmationEmail(logger, email, projectName, priceId, operationId) {
+    try {
+        // Map price ID to plan name (you may need to adjust this based on your Stripe setup)
+        const planName = priceId.includes('yearly') ? 'Annual Plan' : 'Monthly Plan';
+        const price = priceId.includes('yearly') ? '$99/year' : '$9.99/month';
+
+        const params = {
+            FunctionName: SEND_EMAIL_FUNCTION,
+            InvocationType: 'Event', // Async invocation
+            Payload: JSON.stringify({
+                type: 'payment-confirmation',
+                email,
+                data: {
+                    projectName,
+                    planName,
+                    price,
+                    operationId,
+                },
+            }),
+        };
+
+        await lambda.invoke(params).promise();
+        logger.info('Payment confirmation email queued', { email, projectName });
+    } catch (error) {
+        logger.warn('Failed to queue payment confirmation email', { error: error.message, email });
+        // Don't throw - email failures shouldn't block payment flow
+    }
+}

@@ -15,6 +15,7 @@ import { HealthCheckStack } from "./HealthCheckStack";
 import { DashboardStack } from "./DashboardStack";
 import { AlertingStack } from "./AlertingStack";
 import { ProjectManagementStack } from "./ProjectManagementStack";
+import { EmailTemplateStack } from "./EmailTemplateStack";
 
 const app = new cdk.App();
 
@@ -141,6 +142,21 @@ new StepFunctionsStack(app, "StepFunctionsStack", {
     },
 });
 
+// Create Email Template System (Phase 4.6) - Must be created before Stripe stack
+const emailTemplateStack = new EmailTemplateStack(app, "EmailTemplateStack", {
+    senderEmail: process.env.SENDER_EMAIL || "noreply@e-info.click",
+    frontendUrl: process.env.FRONTEND_URL || "https://editor.e-info.click",
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "EmailNotifications",
+    },
+});
+
 const stripeCheckoutStack = new StripeCheckoutStack(app, "StripeCheckoutStack", {
     domain: config.domain,
     stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
@@ -150,6 +166,7 @@ const stripeCheckoutStack = new StripeCheckoutStack(app, "StripeCheckoutStack", 
     metadataTable: dynamoDBStack.table,
     sqsQueueUrl: queueStack.queue.queueUrl,
     sqsQueueArn: queueStack.queue.queueArn,
+    emailTemplateStack: emailTemplateStack,
     env: {
         account: account,
         region: config.region,
@@ -270,6 +287,7 @@ new ProjectManagementStack(app, "ProjectManagementStack", {
         Purpose: "ProjectManagement",
     },
 });
+
 
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
 const templatesParam = app.node.tryGetContext("templates") as string | undefined;

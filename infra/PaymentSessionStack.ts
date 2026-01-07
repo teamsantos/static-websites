@@ -7,6 +7,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import { EmailTemplateStack } from "./EmailTemplateStack";
 
 interface StripeCheckoutProps extends cdk.StackProps {
   domain?: string;
@@ -17,6 +18,7 @@ interface StripeCheckoutProps extends cdk.StackProps {
   metadataTable?: dynamodb.Table;
   sqsQueueUrl?: string;
   sqsQueueArn?: string;
+  emailTemplateStack?: EmailTemplateStack;
 }
 
 export class StripeCheckoutStack extends cdk.Stack {
@@ -48,10 +50,16 @@ export class StripeCheckoutStack extends cdk.Stack {
          FRONTEND_URL: props.frontendUrl,
          S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
          DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
+         SEND_EMAIL_FUNCTION: props.emailTemplateStack?.sendEmailFunctionName || "send-email",
        },
        timeout: cdk.Duration.seconds(30),
      });
     this.paymentSessionFunctionName = checkoutFunction.functionName;
+
+    // Grant permission to invoke send-email Lambda
+    if (props.emailTemplateStack) {
+      props.emailTemplateStack.grantInvoke(checkoutFunction);
+    }
 
     // Lambda for Stripe Webhook
     const webhookFunction = new lambda.Function(this, "StripeWebhookFunction", {
