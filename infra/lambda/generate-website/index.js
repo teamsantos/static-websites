@@ -1,10 +1,14 @@
 import AWS from "aws-sdk";
 import { JSDOM } from "jsdom";
 import { Octokit } from "octokit";
+import { validateImages, validateLanguageStrings, validateColorsObject } from "../../shared/validators.js";
 
 const ses = new AWS.SES({ region: process.env.AWS_SES_REGION });
 const s3 = new AWS.S3();
+const dynamodb = new AWS.DynamoDB.DocumentClient();
 const secretsManager = new AWS.SecretsManager();
+const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE || "websites-metadata";
+const QUEUE_URL = process.env.SQS_QUEUE_URL;
 
 // Cache secrets to avoid fetching on every invocation
 let cachedGithubToken = null;
@@ -253,7 +257,239 @@ function injectContent(element, langs, images, textColors, sectionBackgrounds) {
     }
 }
 
-export const handler = async (event) => {
+/**
+ * Core website generation logic (used by both API Gateway and SQS handlers)
+ */
+async function generateWebsiteCore(operationId) {
+    // Fetch metadata from DynamoDB
+    const metadataResponse = await dynamodb.get({
+        TableName: METADATA_TABLE,
+        Key: { operationId }
+    }).promise();
+
+    if (!metadataResponse.Item) {
+        throw new Error(`Operation ID '${operationId}' not found in metadata table`);
+    }
+
+    const metadata = metadataResponse.Item;
+    const { images, langs, templateId, email, projectName, textColors, sectionBackgrounds } = metadata;
+
+    // Validate metadata
+    if (!images || !langs || !templateId || !email || !projectName) {
+        throw new Error('Invalid metadata: missing required fields (images, langs, templateId, email, projectName)');
+    }
+
+    // Process images: upload new ones to S3 and update paths
+    const processedImages = await processImages(images, projectName);
+
+    // Get secrets from AWS Secrets Manager
+    const { githubToken, githubOwner, githubRepo } = await getSecrets();
+
+    const octokit = new Octokit({
+        auth: githubToken,
+    });
+
+    const owner = githubOwner;
+    const repo = githubRepo;
+
+    let isUpdate = false;
+    try {
+        // Check if project exists
+        const path = `projects/${projectName}`;
+        await octokit.rest.repos.getContent({
+            owner,
+            repo,
+            path,
+        });
+
+        // If no error, project exists, this is an update
+        isUpdate = true;
+    } catch (error) {
+        if (error.status !== 404) {
+            throw error;
+        }
+        // 404 means not exists, this is a create
+    }
+
+    // Generate HTML from template and custom data
+    const html = await generateHtmlFromTemplate(templateId, processedImages, langs, textColors, sectionBackgrounds, octokit, owner, repo);
+
+    if (isUpdate) {
+        // For updates, just update the index.html file
+        const commitMessage = `Update ${projectName} project`;
+
+        // Fetch the current file to get its SHA
+        const currentFile = await octokit.rest.repos.getContent({
+            owner,
+            repo,
+            path: `projects/${projectName}/index.html`,
+        });
+
+        const updateResponse = await octokit.rest.repos.createOrUpdateFileContents({
+            owner,
+            repo,
+            path: `projects/${projectName}/index.html`,
+            message: commitMessage,
+            content: Buffer.from(html).toString('base64'),
+            sha: currentFile.data.sha,
+        });
+
+        console.log(`[DEBUG] Successfully updated index.html for project: ${projectName}`);
+    } else {
+        // For new projects, create both files in a single commit
+        const commitMessage = `Add ${projectName} project`;
+
+        // Get the current branch reference
+        const { data: ref } = await octokit.rest.git.getRef({
+            owner,
+            repo,
+            ref: 'heads/master',
+        });
+
+        const baseSha = ref.object.sha;
+
+        // Get the base commit
+        const { data: baseCommit } = await octokit.rest.git.getCommit({
+            owner,
+            repo,
+            commit_sha: baseSha,
+        });
+
+        // Create blobs for both files
+        const [htmlBlob, emailBlob] = await Promise.all([
+            octokit.rest.git.createBlob({
+                owner,
+                repo,
+                content: Buffer.from(html).toString('base64'),
+                encoding: 'base64',
+            }),
+            octokit.rest.git.createBlob({
+                owner,
+                repo,
+                content: Buffer.from(email).toString('base64'),
+                encoding: 'base64',
+            }),
+        ]);
+
+        // Create tree with both files
+        const { data: tree } = await octokit.rest.git.createTree({
+            owner,
+            repo,
+            base_tree: baseCommit.tree.sha,
+            tree: [
+                {
+                    path: `projects/${projectName}/index.html`,
+                    mode: '100644',
+                    type: 'blob',
+                    sha: htmlBlob.data.sha,
+                },
+                {
+                    path: `projects/${projectName}/.email`,
+                    mode: '100644',
+                    type: 'blob',
+                    sha: emailBlob.data.sha,
+                },
+            ],
+        });
+
+        // Create commit
+        const { data: commit } = await octokit.rest.git.createCommit({
+            owner,
+            repo,
+            message: commitMessage,
+            tree: tree.sha,
+            parents: [baseSha],
+        });
+
+        // Update branch reference
+        await octokit.rest.git.updateRef({
+            owner,
+            repo,
+            ref: 'heads/master',
+            sha: commit.sha,
+        });
+    }
+
+    // Send email only for new projects
+    if (!isUpdate) {
+        const params = {
+            Source: process.env.FROM_EMAIL,
+            Destination: {
+                ToAddresses: [email],
+            },
+            Message: {
+                Subject: {
+                    Data: 'Your website is ready',
+                },
+                Body: {
+                    Text: {
+                        Data: ` Your website has been successfully deployed and is now ready to use.
+
+ You can access your website at the following URL:
+ https://${projectName}.e-info.click
+
+ You can edit your website via:
+ https://editor.e-info.click/?project=${projectName}
+ If you have any questions or need assistance, please don't hesitate to contact us.
+
+ Best regards,
+ E-info team.`
+                    },
+                },
+            },
+        };
+
+        await ses.sendEmail(params).promise();
+    }
+
+    return { success: true, websiteUrl: `https://${projectName}.e-info.click` };
+}
+
+/**
+ * SQS Event Handler
+ * Processes messages from SQS queue (called by Lambda event source mapping)
+ */
+async function handleSQSEvent(event) {
+    const batchItemFailures = [];
+
+    for (const record of event.Records) {
+        try {
+            console.log(`[SQS] Processing message: ${record.messageId}`);
+            
+            let messageBody;
+            try {
+                messageBody = JSON.parse(record.body);
+            } catch (error) {
+                console.error(`[SQS] Failed to parse message body for ${record.messageId}:`, error);
+                batchItemFailures.push({ itemId: record.messageId });
+                continue;
+            }
+
+            const { operationId } = messageBody;
+            if (!operationId) {
+                console.error(`[SQS] Missing operationId in message ${record.messageId}`);
+                batchItemFailures.push({ itemId: record.messageId });
+                continue;
+            }
+
+            // Generate website
+            await generateWebsiteCore(operationId);
+            console.log(`[SQS] Successfully processed operationId: ${operationId}`);
+
+        } catch (error) {
+            console.error(`[SQS] Error processing message ${record.messageId}:`, error);
+            batchItemFailures.push({ itemId: record.messageId });
+        }
+    }
+
+    return { batchItemFailures };
+}
+
+/**
+ * API Gateway Event Handler
+ * Processes HTTP requests from API Gateway
+ */
+async function handleAPIGatewayEvent(event) {
     // Handle CORS preflight OPTIONS requests
     if (event.httpMethod === 'OPTIONS') {
         return {
@@ -324,188 +560,7 @@ export const handler = async (event) => {
     }
 
     try {
-         // Fetch metadata from S3
-         const metadata = await getMetadataFromS3(operationId);
-
-         const { images, langs, templateId, email, projectName, textColors, sectionBackgrounds } = metadata;
-
-         // Validate metadata
-         // if (!images || !langs || !templateId || !email || !projectName || !sections) {
-         if (!images || !langs || !templateId || !email || !projectName) {
-             return {
-                 statusCode: 400,
-                 headers: {
-                     'Access-Control-Allow-Origin': origin || '*',
-                     'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                     'Access-Control-Allow-Methods': 'POST,OPTIONS',
-                 },
-                 body: JSON.stringify({ error: 'Invalid metadata: missing required fields (images, langs, templateId, email, name)' }),
-             };
-         }
-
-         // Process images: upload new ones to S3 and update paths
-         const processedImages = await processImages(images, projectName);
-
-         // Get secrets from AWS Secrets Manager
-         const { githubToken, githubOwner, githubRepo } = await getSecrets();
-
-         const octokit = new Octokit({
-             auth: githubToken,
-         });
-
-         const owner = githubOwner;
-         const repo = githubRepo;
-
-         let isUpdate = false;
-         try {
-             // Check if project exists
-             const path = `projects/${projectName}`;
-             await octokit.rest.repos.getContent({
-                 owner,
-                 repo,
-                 path,
-             });
-
-             // If no error, project exists, this is an update
-             isUpdate = true;
-         } catch (error) {
-             if (error.status !== 404) {
-                 throw error;
-             }
-             // 404 means not exists, this is a create
-         }
-
-         // Generate HTML from template and custom data
-         const html = await generateHtmlFromTemplate(templateId, processedImages, langs, textColors, sectionBackgrounds, octokit, owner, repo);
-
-        if (isUpdate) {
-            // For updates, just update the index.html file
-            const commitMessage = `Update ${projectName} project`;
-
-            // Fetch the current file to get its SHA
-            const currentFile = await octokit.rest.repos.getContent({
-                owner,
-                repo,
-                path: `projects/${projectName}/index.html`,
-            });
-
-            const updateResponse = await octokit.rest.repos.createOrUpdateFileContents({
-                owner,
-                repo,
-                path: `projects/${projectName}/index.html`,
-                message: commitMessage,
-                content: Buffer.from(html).toString('base64'),
-                sha: currentFile.data.sha,
-            });
-
-            console.log(`[DEBUG] Successfully updated index.html for project: ${projectName}`);
-        } else {
-            // For new projects, create both files in a single commit
-            const commitMessage = `Add ${projectName} project`;
-
-            // Get the current branch reference
-            const { data: ref } = await octokit.rest.git.getRef({
-                owner,
-                repo,
-                ref: 'heads/master',
-            });
-
-            const baseSha = ref.object.sha;
-
-            // Get the base commit
-            const { data: baseCommit } = await octokit.rest.git.getCommit({
-                owner,
-                repo,
-                commit_sha: baseSha,
-            });
-
-            // Create blobs for both files
-            const [htmlBlob, emailBlob] = await Promise.all([
-                octokit.rest.git.createBlob({
-                    owner,
-                    repo,
-                    content: Buffer.from(html).toString('base64'),
-                    encoding: 'base64',
-                }),
-                octokit.rest.git.createBlob({
-                    owner,
-                    repo,
-                    content: Buffer.from(email).toString('base64'),
-                    encoding: 'base64',
-                }),
-            ]);
-
-            // Create tree with both files
-            const { data: tree } = await octokit.rest.git.createTree({
-                owner,
-                repo,
-                base_tree: baseCommit.tree.sha,
-                tree: [
-                    {
-                        path: `projects/${projectName}/index.html`,
-                        mode: '100644',
-                        type: 'blob',
-                        sha: htmlBlob.data.sha,
-                    },
-                    {
-                        path: `projects/${projectName}/.email`,
-                        mode: '100644',
-                        type: 'blob',
-                        sha: emailBlob.data.sha,
-                    },
-                ],
-            });
-
-            // Create commit
-            const { data: commit } = await octokit.rest.git.createCommit({
-                owner,
-                repo,
-                message: commitMessage,
-                tree: tree.sha,
-                parents: [baseSha],
-            });
-
-            // Update branch reference
-            await octokit.rest.git.updateRef({
-                owner,
-                repo,
-                ref: 'heads/master',
-                sha: commit.sha,
-            });
-        }
-
-        // Send email only for new projects
-        if (!isUpdate) {
-            const params = {
-                Source: process.env.FROM_EMAIL,
-                Destination: {
-                    ToAddresses: [email],
-                },
-                Message: {
-                    Subject: {
-                        Data: 'Your website is ready',
-                    },
-                    Body: {
-                        Text: {
-                            Data: ` Your website has been successfully deployed and is now ready to use.
-
-You can access your website at the following URL:
-https://${projectName}.e-info.click
-
-You can edit your website via:
-https://editor.e-info.click/?project=${projectName}
-If you have any questions or need assistance, please don't hesitate to contact us.
-
-Best regards,
-E-info team.`
-                        },
-                    },
-                },
-            };
-
-            await ses.sendEmail(params).promise();
-        }
-
+        const result = await generateWebsiteCore(operationId);
         return {
             statusCode: 200,
             headers: {
@@ -513,14 +568,11 @@ E-info team.`
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
                 'Access-Control-Allow-Methods': 'POST,OPTIONS',
             },
-            body: JSON.stringify({
-                success: true,
-                websiteUrl: `https://${projectName}.e-info.click`
-            }),
+            body: JSON.stringify(result),
         };
 
     } catch (error) {
-        console.error('Error in generate-website handler:', error);
+        console.error('Error in generate-website API handler:', error);
         console.error('Error stack:', error.stack);
         return {
             statusCode: 500,
@@ -535,4 +587,20 @@ E-info team.`
             }),
         };
     }
+}
+
+/**
+ * Main Handler
+ * Routes to appropriate handler based on event source
+ */
+export const handler = async (event) => {
+    // Detect event source: SQS events have 'Records' with 'eventSource' === 'aws:sqs'
+    if (event.Records && event.Records[0]?.eventSource === 'aws:sqs') {
+        console.log('[HANDLER] Routing to SQS event handler');
+        return await handleSQSEvent(event);
+    }
+
+    // Otherwise, treat as API Gateway event
+    console.log('[HANDLER] Routing to API Gateway event handler');
+    return await handleAPIGatewayEvent(event);
 };

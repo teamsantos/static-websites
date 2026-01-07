@@ -6,12 +6,17 @@ import * as logs from "aws-cdk-lib/aws-logs";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
 interface StripeCheckoutProps extends cdk.StackProps {
   domain?: string;
   stripeSecretKey: string;
   frontendUrl: string;
   s3Bucket?: string;
+  stripeWebhookSecret?: string;
+  metadataTable?: dynamodb.Table;
+  sqsQueueUrl?: string;
+  sqsQueueArn?: string;
 }
 
 export class StripeCheckoutStack extends cdk.Stack {
@@ -39,13 +44,36 @@ export class StripeCheckoutStack extends cdk.Stack {
         STRIPE_SECRET_KEY: props.stripeSecretKey,
         FRONTEND_URL: props.frontendUrl,
         S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
+        DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
       },
       timeout: cdk.Duration.seconds(30),
+      reservedConcurrentExecutions: 100, // Limit concurrent executions to prevent runaway costs
+    });
+
+    // Lambda for Stripe Webhook
+    const webhookFunction = new lambda.Function(this, "StripeWebhookFunction", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      code: lambda.Code.fromAsset("lambda/stripe-webhook"),
+      handler: "index.handler",
+      environment: {
+        STRIPE_SECRET_KEY: props.stripeSecretKey,
+        STRIPE_WEBHOOK_SECRET: props.stripeWebhookSecret || "",
+        S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
+        DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
+        SQS_QUEUE_URL: props.sqsQueueUrl || "",
+      },
+      timeout: cdk.Duration.seconds(30),
+      reservedConcurrentExecutions: 100, // Limit concurrent executions
     });
 
     // Set CloudWatch log retention to 30 days
     new logs.LogRetention(this, 'StripeCheckoutLogRetention', {
       logGroupName: checkoutFunction.logGroup.logGroupName,
+      retention: logs.RetentionDays.ONE_MONTH,
+    });
+
+    new logs.LogRetention(this, 'StripeWebhookLogRetention', {
+      logGroupName: webhookFunction.logGroup.logGroupName,
       retention: logs.RetentionDays.ONE_MONTH,
     });
 
@@ -65,6 +93,39 @@ export class StripeCheckoutStack extends cdk.Stack {
           resources: [
             `arn:aws:s3:::${props.s3Bucket}/metadata.json`,
           ],
+        })
+      );
+
+      // Webhook needs same S3 permissions
+      webhookFunction.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ["s3:ListBucket"],
+          resources: [`arn:aws:s3:::${props.s3Bucket}`],
+        })
+      );
+
+      webhookFunction.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ["s3:GetObject", "s3:PutObject"],
+          resources: [
+            `arn:aws:s3:::${props.s3Bucket}/metadata.json`,
+          ],
+        })
+      );
+    }
+
+    // Grant DynamoDB permissions for lambdas
+    if (props.metadataTable) {
+      props.metadataTable.grantReadWriteData(checkoutFunction);
+      props.metadataTable.grantReadWriteData(webhookFunction);
+    }
+
+    // Grant SQS send permissions to webhook Lambda
+    if (props.sqsQueueArn) {
+      webhookFunction.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ["sqs:SendMessage"],
+          resources: [props.sqsQueueArn],
         })
       );
     }
@@ -123,6 +184,26 @@ export class StripeCheckoutStack extends cdk.Stack {
           { statusCode: "200" },
           { statusCode: "400" },
           { statusCode: "403" },
+          { statusCode: "500" },
+        ],
+      }
+    );
+
+    // /webhook endpoint for Stripe events
+    const webhookResource = api.root.addResource("webhook");
+    webhookResource.addMethod(
+      "POST",
+      new apigateway.LambdaIntegration(webhookFunction, {
+        integrationResponses: [
+          { statusCode: "200" },
+          { statusCode: "400" },
+          { statusCode: "500" },
+        ],
+      }),
+      {
+        methodResponses: [
+          { statusCode: "200" },
+          { statusCode: "400" },
           { statusCode: "500" },
         ],
       }

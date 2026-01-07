@@ -40,6 +40,10 @@ const CreateProjectStack_1 = require("./CreateProjectStack");
 const ProjectStack_1 = require("./ProjectStack");
 const PaymentSessionStack_1 = require("./PaymentSessionStack");
 const MultiTenantDistributionStack_1 = require("./MultiTenantDistributionStack");
+const DynamoDBMetadataStack_1 = require("./DynamoDBMetadataStack");
+const WAFStack_1 = require("./WAFStack");
+const BudgetAlertStack_1 = require("./BudgetAlertStack");
+const QueueStack_1 = require("./QueueStack");
 const app = new cdk.App();
 const config = {
     region: "eu-south-2",
@@ -66,6 +70,18 @@ const multiTenantDistribution = new MultiTenantDistributionStack_1.MultiTenantDi
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "MultiTenantDistribution",
+    },
+});
+// Create DynamoDB metadata table for website operations
+const dynamoDBStack = new DynamoDBMetadataStack_1.DynamoDBMetadataStack(app, "DynamoDBMetadata", {
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "MetadataStorage",
     },
 });
 // Create the shared S3 bucket AFTER MultiTenantDistribution
@@ -104,19 +120,62 @@ const createProjectStack = new CreateProjectStack_1.CreateProjectStack(app, "Cre
     domain: config.domain,
     certificateRegion: config.certificateRegion,
     s3Bucket: config.s3Bucket,
+    metadataTable: dynamoDBStack.table,
     env: {
         account: account,
         region: config.region,
+    },
+});
+// Create SQS queue for asynchronous website generation
+const queueStack = new QueueStack_1.QueueStack(app, "QueueStack", {
+    generateWebsiteLambda: createProjectStack.generateWebsiteFunction,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "AsyncWebsiteGeneration",
     },
 });
 new PaymentSessionStack_1.StripeCheckoutStack(app, "StripeCheckoutStack", {
     domain: config.domain,
     stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
     frontendUrl: process.env.FRONTEND_URL || "",
+    stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
     s3Bucket: config.s3Bucket,
+    metadataTable: dynamoDBStack.table,
+    sqsQueueUrl: queueStack.queue.queueUrl,
+    sqsQueueArn: queueStack.queue.queueArn,
     env: {
         account: account,
         region: config.region,
+    },
+});
+// Create WAF for rate limiting
+new WAFStack_1.WAFStack(app, "WAFStack", {
+    env: {
+        account: account,
+        region: "us-east-1", // WAF must be in us-east-1 for CloudFront
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "RateLimiting",
+    },
+});
+// Create Budget Alerts for cost controls
+new BudgetAlertStack_1.BudgetAlertStack(app, "BudgetAlertStack", {
+    dailyBudgetUSD: 10,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "CostControls",
     },
 });
 const projectsParam = app.node.tryGetContext("projects");

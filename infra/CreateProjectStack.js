@@ -69,9 +69,11 @@ class CreateProjectStack extends cdk.Stack {
                 // GITHUB_CONFIG_SECRET_ARN: githubConfigSecret.secretArn,
                 FROM_EMAIL: 'noreply@e-info.click',
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
-                S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites"
+                S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
+                DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata"
             },
             timeout: cdk.Duration.seconds(30),
+            reservedConcurrentExecutions: 100, // Cost control: limit concurrent executions
         });
         // Set CloudWatch log retention to 30 days
         new logs.LogRetention(this, 'CreateProjectLogRetention', {
@@ -103,10 +105,14 @@ class CreateProjectStack extends cdk.Stack {
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
                 FROM_EMAIL: 'noreply@e-info.click',
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
-                S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites"
+                S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
+                DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata"
             },
-            timeout: cdk.Duration.seconds(60),
+            timeout: cdk.Duration.seconds(300), // 5 minutes - account for slow GitHub operations
+            reservedConcurrentExecutions: 100, // Cost control: limit concurrent executions
         });
+        // Export the function for use by QueueStack
+        this.generateWebsiteFunction = generateWebsiteFunction;
         // Set CloudWatch log retention to 30 days
         new logs.LogRetention(this, 'GenerateWebsiteLogRetention', {
             logGroupName: generateWebsiteFunction.logGroup.logGroupName,
@@ -127,6 +133,11 @@ class CreateProjectStack extends cdk.Stack {
             actions: ['s3:GetObject', 's3:PutObject'],
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
         }));
+        // Grant DynamoDB permissions for lambdas
+        if (props.metadataTable) {
+            props.metadataTable.grantReadWriteData(createProjectFunction);
+            props.metadataTable.grantReadWriteData(generateWebsiteFunction);
+        }
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
             defaultCorsPreflightOptions: {

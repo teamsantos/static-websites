@@ -5,6 +5,10 @@ import { CreateProjectStack } from "./CreateProjectStack";
 import { ProjectSite } from "./ProjectStack";
 import { StripeCheckoutStack } from "./PaymentSessionStack";
 import { MultiTenantDistributionStack } from "./MultiTenantDistributionStack";
+import { DynamoDBMetadataStack } from "./DynamoDBMetadataStack";
+import { WAFStack } from "./WAFStack";
+import { BudgetAlertStack } from "./BudgetAlertStack";
+import { QueueStack } from "./QueueStack";
 
 const app = new cdk.App();
 
@@ -42,6 +46,19 @@ const multiTenantDistribution = new MultiTenantDistributionStack(
         },
     }
 );
+
+// Create DynamoDB metadata table for website operations
+const dynamoDBStack = new DynamoDBMetadataStack(app, "DynamoDBMetadata", {
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "MetadataStorage",
+    },
+});
 
 // Create the shared S3 bucket AFTER MultiTenantDistribution
 // and pass the distribution so it can create the correct bucket policy
@@ -81,9 +98,24 @@ const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
     domain: config.domain,
     certificateRegion: config.certificateRegion,
     s3Bucket: config.s3Bucket,
+    metadataTable: dynamoDBStack.table,
     env: {
         account: account,
         region: config.region,
+    },
+});
+
+// Create SQS queue for asynchronous website generation
+const queueStack = new QueueStack(app, "QueueStack", {
+    generateWebsiteLambda: createProjectStack.generateWebsiteFunction,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "AsyncWebsiteGeneration",
     },
 });
 
@@ -91,10 +123,41 @@ new StripeCheckoutStack(app, "StripeCheckoutStack", {
     domain: config.domain,
     stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
     frontendUrl: process.env.FRONTEND_URL || "",
+    stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
     s3Bucket: config.s3Bucket,
+    metadataTable: dynamoDBStack.table,
+    sqsQueueUrl: queueStack.queue.queueUrl,
+    sqsQueueArn: queueStack.queue.queueArn,
     env: {
         account: account,
         region: config.region,
+    },
+});
+
+// Create WAF for rate limiting
+new WAFStack(app, "WAFStack", {
+    env: {
+        account: account,
+        region: "us-east-1", // WAF must be in us-east-1 for CloudFront
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "RateLimiting",
+    },
+});
+
+// Create Budget Alerts for cost controls
+new BudgetAlertStack(app, "BudgetAlertStack", {
+    dailyBudgetUSD: 10,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "CostControls",
     },
 });
 

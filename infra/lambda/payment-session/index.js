@@ -1,11 +1,15 @@
 import AWS from "aws-sdk";
 import Stripe from "stripe";
 import { v4 as uuidv4 } from "uuid";
+import { validatePaymentSessionRequest } from "../../shared/validators.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const dynamodb = new AWS.DynamoDB.DocumentClient();
+const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE || "websites-metadata";
+
+// Keep S3 for backwards compatibility if needed
 const s3 = new AWS.S3();
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || "teamsantos-static-websites";
-const METADATA_KEY = "metadata.json";
 
 export const handler = async (event) => {
     if (event.httpMethod === "OPTIONS") {
@@ -54,11 +58,14 @@ export const handler = async (event) => {
 
     const { email, projectName, images, priceId, langs, textColors, sectionBackgrounds, templateId } = requestBody;
 
-    if (!email || !projectName || !images || !priceId, !langs || !textColors || !sectionBackgrounds || !templateId) {
+    // SECURITY: Comprehensive input validation
+    const validation = validatePaymentSessionRequest(requestBody);
+    if (!validation.valid) {
+        console.warn(`Validation failed: ${validation.error}`);
         return {
             statusCode: 400,
             headers: corsHeaders(origin),
-            body: JSON.stringify({ error: "Missing required fields: email, name, html, priceId" }),
+            body: JSON.stringify({ error: validation.error }),
         };
     }
 
@@ -113,28 +120,20 @@ export const handler = async (event) => {
 
 async function saveMetadata(operationKey, entry) {
     try {
-        // Try to fetch existing metadata.json
-        let metadata = {};
-        try {
-            const existing = await s3.getObject({ Bucket: BUCKET_NAME, Key: METADATA_KEY }).promise();
-            metadata = JSON.parse(existing.Body.toString("utf-8"));
-        } catch (err) {
-            if (err.code !== "NoSuchKey") {
-                console.error("Error reading metadata.json:", err);
-                throw err;
+        // Calculate TTL: 7 days from now (Unix timestamp)
+        const ttl = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60);
+
+        // Save to DynamoDB (atomic write)
+        await dynamodb.put({
+            TableName: METADATA_TABLE,
+            Item: {
+                operationId: operationKey,
+                ...entry,
+                expiresAt: ttl, // DynamoDB TTL for auto-cleanup
             }
-        }
-
-        // Add or update the new entry
-        metadata[operationKey] = entry;
-
-        // Upload updated JSON file
-        await s3.putObject({
-            Bucket: BUCKET_NAME,
-            Key: METADATA_KEY,
-            Body: JSON.stringify(metadata, null, 2),
-            ContentType: "application/json",
         }).promise();
+
+        console.log(`Metadata saved to DynamoDB for operationId: ${operationKey}`);
     } catch (error) {
         console.error("Failed to store metadata:", error);
         throw error;
