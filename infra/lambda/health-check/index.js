@@ -1,5 +1,6 @@
 import AWS from "aws-sdk";
 import { createLogger, logMetric } from "../../shared/logger.js";
+import { initSentry, captureException, addBreadcrumb } from "../../shared/sentry.js";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const sqs = new AWS.SQS();
@@ -22,6 +23,7 @@ const QUEUE_URL = process.env.SQS_QUEUE_URL;
  * Returns 503 Service Unavailable if critical services are down
  */
 export const handler = async (event, context) => {
+    initSentry('health-check', context);
     const logger = createLogger('health-check', context);
     
     const health = {
@@ -65,6 +67,18 @@ export const handler = async (event, context) => {
         };
     } catch (error) {
         logger.error("Health check error", { error: error.message, stack: error.stack }, { severity: 'error' });
+        
+        captureException(error, {
+            operation: 'health_check'
+        });
+
+        addBreadcrumb({
+            category: 'error',
+            message: 'Health check failed',
+            level: 'error',
+            data: { error: error.message }
+        });
+
         return {
             statusCode: 503,
             headers: { "Content-Type": "application/json" },

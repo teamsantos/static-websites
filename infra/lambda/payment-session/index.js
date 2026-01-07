@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { validatePaymentSessionRequest } from "../../shared/validators.js";
 import { generateIdempotencyKey, withIdempotency } from "../../shared/idempotency.js";
 import { createLogger, logMetric } from "../../shared/logger.js";
+import { initSentry, captureException, addBreadcrumb } from "../../shared/sentry.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const dynamodb = new AWS.DynamoDB.DocumentClient();
@@ -14,6 +15,7 @@ const s3 = new AWS.S3();
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || "teamsantos-static-websites";
 
 export const handler = async (event, context) => {
+    initSentry('payment-session', context);
     const logger = createLogger('payment-session', context);
     if (event.httpMethod === "OPTIONS") {
         logger.debug('CORS preflight request', { method: event.httpMethod });
@@ -69,6 +71,12 @@ export const handler = async (event, context) => {
     const validation = validatePaymentSessionRequest(requestBody);
     if (!validation.valid) {
         logger.warn('Validation failed', { error: validation.error, email });
+        addBreadcrumb({
+            category: 'validation',
+            message: 'Payment request validation failed',
+            level: 'warning',
+            data: { error: validation.error }
+        });
         return {
             statusCode: 400,
             headers: corsHeaders(origin),
@@ -89,6 +97,13 @@ export const handler = async (event, context) => {
         const result = await logMetric(logger, 'create_checkout_session', async () => {
             const operationKey = uuidv4();
 
+            addBreadcrumb({
+                category: 'stripe',
+                message: 'Creating Stripe checkout session',
+                level: 'info',
+                data: { operationId: operationKey, email }
+            });
+
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ["card"],
                 mode: "subscription",
@@ -104,6 +119,13 @@ export const handler = async (event, context) => {
             });
 
             logger.info('Stripe session created', { sessionId: session.id, email, operationId: operationKey });
+
+            addBreadcrumb({
+                category: 'stripe',
+                message: 'Stripe session created successfully',
+                level: 'info',
+                data: { sessionId: session.id, operationId: operationKey }
+            });
 
             // ✅ Save metadata to DynamoDB
             await saveMetadata(logger, operationKey, {
@@ -135,6 +157,20 @@ export const handler = async (event, context) => {
         };
     } catch (error) {
         logger.error('Stripe session creation failed', { error: error.message, email, stack: error.stack }, { severity: 'error' });
+        
+        captureException(error, {
+            email,
+            projectName,
+            operation: 'create_checkout_session'
+        });
+
+        addBreadcrumb({
+            category: 'error',
+            message: 'Stripe session creation failed',
+            level: 'error',
+            data: { error: error.message }
+        });
+
         return {
             statusCode: 500,
             headers: corsHeaders(origin),

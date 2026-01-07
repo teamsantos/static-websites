@@ -1,6 +1,7 @@
 import AWS from "aws-sdk";
 import crypto from "crypto";
 import { createLogger, logMetric } from "../../shared/logger.js";
+import { initSentry, captureException, addBreadcrumb } from "../../shared/sentry.js";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE || "websites-metadata";
@@ -15,6 +16,7 @@ const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
  * Security: Verifies webhook signature (HMAC-SHA256) to prevent spoofed events
  */
 export const handler = async (event, context) => {
+    initSentry('github-webhook', context);
     const logger = createLogger('github-webhook', context);
     
     try {
@@ -39,6 +41,20 @@ export const handler = async (event, context) => {
 
         if (!crypto.timingSafeEqual(signature, computed)) {
             logger.error('GitHub webhook signature verification failed', {}, { severity: 'security' });
+            
+            captureException(new Error('GitHub webhook signature verification failed'), {
+                operation: 'webhook_signature_verification'
+            }, {
+                level: 'warning',
+                tags: { webhook_type: 'github' }
+            });
+
+            addBreadcrumb({
+                category: 'github_webhook',
+                message: 'Signature verification failed',
+                level: 'error'
+            });
+
             return {
                 statusCode: 403,
                 body: JSON.stringify({ error: 'Signature verification failed' }),
@@ -87,6 +103,18 @@ export const handler = async (event, context) => {
         };
     } catch (error) {
         logger.error('Error processing GitHub webhook', { error: error.message, stack: error.stack }, { severity: 'error' });
+        
+        captureException(error, {
+            operation: 'process_github_webhook'
+        });
+
+        addBreadcrumb({
+            category: 'error',
+            message: 'Error processing webhook',
+            level: 'error',
+            data: { error: error.message }
+        });
+
         // Return 200 to prevent GitHub retries on unexpected errors
         return {
             statusCode: 200,

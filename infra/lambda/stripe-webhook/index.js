@@ -2,6 +2,7 @@ import AWS from "aws-sdk";
 import Stripe from "stripe";
 import crypto from "crypto";
 import { createLogger, logMetric } from "../../shared/logger.js";
+import { initSentry, captureException, addBreadcrumb } from "../../shared/sentry.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const dynamodb = new AWS.DynamoDB.DocumentClient();
@@ -24,6 +25,7 @@ const METADATA_KEY = "metadata.json";
  * Critical: Verify webhook signature to prevent spoofed events
  */
 export const handler = async (event, context) => {
+    initSentry('stripe-webhook', context);
     const logger = createLogger('stripe-webhook', context);
     
     try {
@@ -50,6 +52,20 @@ export const handler = async (event, context) => {
             );
         } catch (err) {
             logger.error('Webhook signature verification failed', { error: err.message }, { severity: 'security' });
+            
+            captureException(err, {
+                operation: 'webhook_signature_verification'
+            }, {
+                level: 'warning',
+                tags: { webhook_type: 'stripe' }
+            });
+
+            addBreadcrumb({
+                category: 'stripe_webhook',
+                message: 'Signature verification failed',
+                level: 'error'
+            });
+
             return {
                 statusCode: 400,
                 body: JSON.stringify({ error: 'Webhook signature verification failed' }),
@@ -57,6 +73,13 @@ export const handler = async (event, context) => {
         }
 
         logger.info('Processing Stripe event', { eventType: stripeEvent.type, eventId: stripeEvent.id });
+
+        addBreadcrumb({
+            category: 'stripe_webhook',
+            message: `Processing ${stripeEvent.type} event`,
+            level: 'info',
+            data: { eventId: stripeEvent.id }
+        });
 
         // Handle specific event types
         switch (stripeEvent.type) {
@@ -105,6 +128,18 @@ export const handler = async (event, context) => {
         };
     } catch (error) {
         logger.error('Error processing Stripe webhook', { error: error.message, stack: error.stack }, { severity: 'error' });
+        
+        captureException(error, {
+            operation: 'process_stripe_webhook'
+        });
+
+        addBreadcrumb({
+            category: 'error',
+            message: 'Error processing webhook',
+            level: 'error',
+            data: { error: error.message }
+        });
+
         // Return 200 to prevent Stripe retries on unexpected errors
         // but log the error for manual review
         return {
