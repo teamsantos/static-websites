@@ -15,6 +15,7 @@ interface CreateProjectProps extends cdk.StackProps {
     certificateRegion?: string;
     s3Bucket?: string;
     metadataTable?: dynamodb.Table;
+    idempotencyTable?: dynamodb.Table;
 }
 
 export class CreateProjectStack extends cdk.Stack {
@@ -46,12 +47,11 @@ export class CreateProjectStack extends cdk.Stack {
             environment: {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                // GITHUB_TOKEN_SECRET_ARN: githubTokenSecret.secretArn,
-                // GITHUB_CONFIG_SECRET_ARN: githubConfigSecret.secretArn,
                 FROM_EMAIL: 'noreply@e-info.click',
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
-                DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata"
+                DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
+                DYNAMODB_IDEMPOTENCY_TABLE: props.idempotencyTable?.tableName || "request-idempotency"
             },
             timeout: cdk.Duration.seconds(30),
             reservedConcurrentExecutions: 100, // Cost control: limit concurrent executions
@@ -131,6 +131,11 @@ export class CreateProjectStack extends cdk.Stack {
         if (props.metadataTable) {
             props.metadataTable.grantReadWriteData(createProjectFunction);
             props.metadataTable.grantReadWriteData(generateWebsiteFunction);
+        }
+
+        // Grant idempotency table permissions
+        if (props.idempotencyTable) {
+            props.idempotencyTable.grantReadWriteData(createProjectFunction);
         }
 
         const api = new apigateway.RestApi(this, 'CreateProjectApi', {

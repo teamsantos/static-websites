@@ -11,6 +11,7 @@ import { BudgetAlertStack } from "./BudgetAlertStack";
 import { QueueStack } from "./QueueStack";
 import { StepFunctionsStack } from "./StepFunctionsStack";
 import { GitHubWebhookStack } from "./GitHubWebhookStack";
+import { HealthCheckStack } from "./HealthCheckStack";
 
 const app = new cdk.App();
 
@@ -101,6 +102,7 @@ const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
     certificateRegion: config.certificateRegion,
     s3Bucket: config.s3Bucket,
     metadataTable: dynamoDBStack.table,
+    idempotencyTable: dynamoDBStack.idempotencyTable,
     env: {
         account: account,
         region: config.region,
@@ -191,6 +193,20 @@ new GitHubWebhookStack(app, "GitHubWebhookStack", {
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "DeploymentTracking",
+    },
+});
+
+// Create health check endpoint
+new HealthCheckStack(app, "HealthCheckStack", {
+    queueUrl: queueStack.queue.queueUrl,
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "HealthMonitoring",
     },
 });
 

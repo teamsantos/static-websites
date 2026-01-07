@@ -22,6 +22,7 @@ interface DynamoDBMetadataStackProps extends cdk.StackProps {
  */
 export class DynamoDBMetadataStack extends cdk.Stack {
   public table: dynamodb.Table;
+  public idempotencyTable: dynamodb.Table;
 
   constructor(scope: cdk.App, id: string, props?: DynamoDBMetadataStackProps) {
     super(scope, id, props);
@@ -93,6 +94,9 @@ export class DynamoDBMetadataStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       timeToLiveAttribute: "expiresAt", // Auto-cleanup after 24h
     });
+
+    // Export for use by other stacks
+    this.idempotencyTable = idempotencyTable;
 
     // CloudWatch Alarms for monitoring
     const readThrottleAlarm = new cdk.aws_cloudwatch.Alarm(

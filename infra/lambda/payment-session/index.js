@@ -2,6 +2,7 @@ import AWS from "aws-sdk";
 import Stripe from "stripe";
 import { v4 as uuidv4 } from "uuid";
 import { validatePaymentSessionRequest } from "../../shared/validators.js";
+import { generateIdempotencyKey, withIdempotency } from "../../shared/idempotency.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const dynamodb = new AWS.DynamoDB.DocumentClient();
@@ -69,44 +70,57 @@ export const handler = async (event) => {
         };
     }
 
-    const operationKey = uuidv4();
+    // IDEMPOTENCY: Generate key from request to prevent duplicates
+    const idempotencyKey = generateIdempotencyKey({
+        method: "POST",
+        path: "/checkout-session",
+        userId: email,
+        body: { email, projectName, priceId, templateId }
+    });
 
     try {
-         const session = await stripe.checkout.sessions.create({
-             payment_method_types: ["card"],
-             mode: "subscription",
-             customer_email: email,
-             line_items: [
-                 {
-                     price: priceId,
-                     quantity: 1,
-                 },
-             ],
-             success_url: `${process.env.FRONTEND_URL}/success?operation_id=${operationKey}`,
-             cancel_url: `${process.env.FRONTEND_URL}/cancel?operation_id=${operationKey}`,
-         });
+        // Use idempotency wrapper: returns cached result if request was already processed
+        const result = await withIdempotency(idempotencyKey, async () => {
+            const operationKey = uuidv4();
 
-        // ✅ Save metadata to S3
-        await saveMetadata(operationKey, {
-            email,
-            projectName,
-            images,
-            langs,
-            textColors,
-            sectionBackgrounds,
-            templateId, 
-            createdAt: new Date().toISOString(),
-            paymentSessionId: session.id,
-            status: "pending",
-        });
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ["card"],
+                mode: "subscription",
+                customer_email: email,
+                line_items: [
+                    {
+                        price: priceId,
+                        quantity: 1,
+                    },
+                ],
+                success_url: `${process.env.FRONTEND_URL}/success?operation_id=${operationKey}`,
+                cancel_url: `${process.env.FRONTEND_URL}/cancel?operation_id=${operationKey}`,
+            });
+
+            // ✅ Save metadata to DynamoDB
+            await saveMetadata(operationKey, {
+                email,
+                projectName,
+                images,
+                langs,
+                textColors,
+                sectionBackgrounds,
+                templateId, 
+                createdAt: new Date().toISOString(),
+                paymentSessionId: session.id,
+                status: "pending",
+            });
+
+            return {
+                sessionId: session.id,
+                sessionUrl: session.url,
+            };
+        }, 24); // Cache for 24 hours
 
         return {
             statusCode: 200,
             headers: corsHeaders(origin),
-            body: JSON.stringify({
-                sessionId: session.id,
-                sessionUrl: session.url,
-            }),
+            body: JSON.stringify(result),
         };
     } catch (error) {
         console.error("Stripe session creation failed:", error);
