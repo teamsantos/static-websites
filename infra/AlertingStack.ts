@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import * as cloudwatch from "aws-cdk-lib/aws-cloudwatch";
+import * as cloudwatch_actions from "aws-cdk-lib/aws-cloudwatch-actions";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as sns_subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 
@@ -17,13 +18,7 @@ interface AlertingStackProps extends cdk.StackProps {
 /**
  * CloudWatch Alarms and SNS Notifications
  * 
- * Monitors critical metrics and sends alerts via email:
- * - Lambda error rates > 5%
- * - Lambda duration P95 > 10 seconds
- * - DynamoDB throttling
- * - SQS queue backlog > 100 messages
- * - Health check failures
- * - Payment processing failures
+ * Monitors critical metrics and sends alerts via email
  */
 export class AlertingStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props: AlertingStackProps) {
@@ -40,16 +35,14 @@ export class AlertingStack extends cdk.Stack {
       new sns_subscriptions.EmailSubscription(props.adminEmail)
     );
 
-    // ====================
-    // LAMBDA ERROR ALARMS
-    // ====================
+    const snsAction = new cloudwatch_actions.SnsAction(criticalAlertsTopic);
 
-    // Payment Session - High error rate (> 5%)
-    new cloudwatch.Alarm(this, "PaymentSessionErrorRate", {
+    // Payment Session - High error rate
+    const paymentErrorAlarm = new cloudwatch.Alarm(this, "PaymentSessionErrorRate", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/Lambda",
         metricName: "Errors",
-        dimensions: { FunctionName: props.paymentSessionFunctionName },
+        dimensionsMap: { FunctionName: props.paymentSessionFunctionName },
         statistic: "Sum",
         period: cdk.Duration.minutes(5),
       }),
@@ -57,31 +50,31 @@ export class AlertingStack extends cdk.Stack {
       evaluationPeriods: 1,
       alarmName: "PaymentSession-HighErrorRate",
       alarmDescription: "Payment session lambda error rate exceeded threshold",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
+    paymentErrorAlarm.addAlarmAction(snsAction);
 
-    // Payment Session - High duration (p95 > 20 seconds)
-    new cloudwatch.Alarm(this, "PaymentSessionHighDuration", {
+    // Payment Session - High duration
+    const paymentDurationAlarm = new cloudwatch.Alarm(this, "PaymentSessionHighDuration", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/Lambda",
         metricName: "Duration",
-        dimensions: { FunctionName: props.paymentSessionFunctionName },
+        dimensionsMap: { FunctionName: props.paymentSessionFunctionName },
         statistic: "p95",
         period: cdk.Duration.minutes(5),
       }),
-      threshold: 20000, // 20 seconds in milliseconds
+      threshold: 20000,
       evaluationPeriods: 2,
       alarmName: "PaymentSession-HighDuration",
       alarmDescription: "Payment session lambda P95 duration exceeded 20 seconds",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
+    paymentDurationAlarm.addAlarmAction(snsAction);
 
     // Generate Website - High error rate
-    new cloudwatch.Alarm(this, "GenerateWebsiteErrorRate", {
+    const generateErrorAlarm = new cloudwatch.Alarm(this, "GenerateWebsiteErrorRate", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/Lambda",
         metricName: "Errors",
-        dimensions: { FunctionName: props.generateWebsiteFunctionName },
+        dimensionsMap: { FunctionName: props.generateWebsiteFunctionName },
         statistic: "Sum",
         period: cdk.Duration.minutes(5),
       }),
@@ -89,31 +82,31 @@ export class AlertingStack extends cdk.Stack {
       evaluationPeriods: 1,
       alarmName: "GenerateWebsite-HighErrorRate",
       alarmDescription: "Generate website lambda error rate exceeded threshold",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
+    generateErrorAlarm.addAlarmAction(snsAction);
 
-    // Generate Website - High duration (p95 > 60 seconds)
-    new cloudwatch.Alarm(this, "GenerateWebsiteHighDuration", {
+    // Generate Website - High duration
+    const generateDurationAlarm = new cloudwatch.Alarm(this, "GenerateWebsiteHighDuration", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/Lambda",
         metricName: "Duration",
-        dimensions: { FunctionName: props.generateWebsiteFunctionName },
+        dimensionsMap: { FunctionName: props.generateWebsiteFunctionName },
         statistic: "p95",
         period: cdk.Duration.minutes(5),
       }),
-      threshold: 60000, // 60 seconds in milliseconds
+      threshold: 60000,
       evaluationPeriods: 2,
       alarmName: "GenerateWebsite-HighDuration",
       alarmDescription: "Generate website lambda P95 duration exceeded 60 seconds",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
+    generateDurationAlarm.addAlarmAction(snsAction);
 
     // Stripe Webhook - Errors
-    new cloudwatch.Alarm(this, "StripeWebhookErrors", {
+    const stripeErrorAlarm = new cloudwatch.Alarm(this, "StripeWebhookErrors", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/Lambda",
         metricName: "Errors",
-        dimensions: { FunctionName: props.stripeWebhookFunctionName },
+        dimensionsMap: { FunctionName: props.stripeWebhookFunctionName },
         statistic: "Sum",
         period: cdk.Duration.minutes(5),
       }),
@@ -121,15 +114,15 @@ export class AlertingStack extends cdk.Stack {
       evaluationPeriods: 1,
       alarmName: "StripeWebhook-Errors",
       alarmDescription: "Stripe webhook lambda encountered errors",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
+    stripeErrorAlarm.addAlarmAction(snsAction);
 
     // GitHub Webhook - Errors
-    new cloudwatch.Alarm(this, "GitHubWebhookErrors", {
+    const githubErrorAlarm = new cloudwatch.Alarm(this, "GitHubWebhookErrors", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/Lambda",
         metricName: "Errors",
-        dimensions: { FunctionName: props.githubWebhookFunctionName },
+        dimensionsMap: { FunctionName: props.githubWebhookFunctionName },
         statistic: "Sum",
         period: cdk.Duration.minutes(5),
       }),
@@ -137,19 +130,15 @@ export class AlertingStack extends cdk.Stack {
       evaluationPeriods: 1,
       alarmName: "GitHubWebhook-Errors",
       alarmDescription: "GitHub webhook lambda encountered errors",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
-
-    // ====================
-    // DYNAMODB ALARMS
-    // ====================
+    githubErrorAlarm.addAlarmAction(snsAction);
 
     // DynamoDB User Errors
-    new cloudwatch.Alarm(this, "DynamoDBUserErrors", {
+    const dynamoUserErrorAlarm = new cloudwatch.Alarm(this, "DynamoDBUserErrors", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/DynamoDB",
         metricName: "UserErrors",
-        dimensions: { TableName: props.metadataTableName },
+        dimensionsMap: { TableName: props.metadataTableName },
         statistic: "Sum",
         period: cdk.Duration.minutes(5),
       }),
@@ -157,15 +146,15 @@ export class AlertingStack extends cdk.Stack {
       evaluationPeriods: 1,
       alarmName: "DynamoDB-UserErrors",
       alarmDescription: "DynamoDB metadata table user errors exceeded threshold",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
+    dynamoUserErrorAlarm.addAlarmAction(snsAction);
 
     // DynamoDB System Errors
-    new cloudwatch.Alarm(this, "DynamoDBSystemErrors", {
+    const dynamoSystemErrorAlarm = new cloudwatch.Alarm(this, "DynamoDBSystemErrors", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/DynamoDB",
         metricName: "SystemErrors",
-        dimensions: { TableName: props.metadataTableName },
+        dimensionsMap: { TableName: props.metadataTableName },
         statistic: "Sum",
         period: cdk.Duration.minutes(5),
       }),
@@ -173,19 +162,15 @@ export class AlertingStack extends cdk.Stack {
       evaluationPeriods: 1,
       alarmName: "DynamoDB-SystemErrors",
       alarmDescription: "DynamoDB metadata table system errors detected",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
+    dynamoSystemErrorAlarm.addAlarmAction(snsAction);
 
-    // ====================
-    // SQS QUEUE ALARMS
-    // ====================
-
-    // SQS Queue Backlog Too Large (>100 messages)
-    new cloudwatch.Alarm(this, "SQSQueueBacklogHigh", {
+    // SQS Queue Backlog Too Large
+    const sqsBacklogAlarm = new cloudwatch.Alarm(this, "SQSQueueBacklogHigh", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/SQS",
         metricName: "ApproximateNumberOfMessagesVisible",
-        dimensions: { QueueName: props.queueName },
+        dimensionsMap: { QueueName: props.queueName },
         statistic: "Average",
         period: cdk.Duration.minutes(5),
       }),
@@ -193,35 +178,31 @@ export class AlertingStack extends cdk.Stack {
       evaluationPeriods: 2,
       alarmName: "SQS-QueueBacklogHigh",
       alarmDescription: "SQS queue has too many pending messages (>100)",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
+    sqsBacklogAlarm.addAlarmAction(snsAction);
 
-    // SQS Queue Messages Too Old (>300 seconds)
-    new cloudwatch.Alarm(this, "SQSQueueMessageAgeTooHigh", {
+    // SQS Queue Messages Too Old
+    const sqsAgeAlarm = new cloudwatch.Alarm(this, "SQSQueueMessageAgeTooHigh", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/SQS",
         metricName: "ApproximateAgeOfOldestMessage",
-        dimensions: { QueueName: props.queueName },
+        dimensionsMap: { QueueName: props.queueName },
         statistic: "Maximum",
         period: cdk.Duration.minutes(5),
       }),
-      threshold: 300, // 5 minutes
+      threshold: 300,
       evaluationPeriods: 2,
       alarmName: "SQS-OldestMessageTooOld",
       alarmDescription: "SQS queue oldest message is older than 5 minutes",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
-
-    // ====================
-    // HEALTH CHECK ALARMS
-    // ====================
+    sqsAgeAlarm.addAlarmAction(snsAction);
 
     // Health Check Failures
-    new cloudwatch.Alarm(this, "HealthCheckErrors", {
+    const healthCheckErrorAlarm = new cloudwatch.Alarm(this, "HealthCheckErrors", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/Lambda",
         metricName: "Errors",
-        dimensions: { FunctionName: props.healthCheckFunctionName },
+        dimensionsMap: { FunctionName: props.healthCheckFunctionName },
         statistic: "Sum",
         period: cdk.Duration.minutes(1),
       }),
@@ -229,57 +210,24 @@ export class AlertingStack extends cdk.Stack {
       evaluationPeriods: 2,
       alarmName: "HealthCheck-Failures",
       alarmDescription: "Health check endpoint is returning errors",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
+    healthCheckErrorAlarm.addAlarmAction(snsAction);
 
-    // Health Check Slow Response (>5 seconds)
-    new cloudwatch.Alarm(this, "HealthCheckSlow", {
+    // Health Check Slow Response
+    const healthCheckSlowAlarm = new cloudwatch.Alarm(this, "HealthCheckSlow", {
       metric: new cloudwatch.Metric({
         namespace: "AWS/Lambda",
         metricName: "Duration",
-        dimensions: { FunctionName: props.healthCheckFunctionName },
+        dimensionsMap: { FunctionName: props.healthCheckFunctionName },
         statistic: "Maximum",
         period: cdk.Duration.minutes(5),
       }),
-      threshold: 5000, // 5 seconds
+      threshold: 5000,
       evaluationPeriods: 2,
       alarmName: "HealthCheck-SlowResponse",
       alarmDescription: "Health check response time exceeded 5 seconds",
-      alarmActions: [new cloudwatch.SnsAction(criticalAlertsTopic)],
     });
-
-    // ====================
-    // COMPOSITE ALARM - Overall System Health
-    // ====================
-
-    const systemHealthAlarm = new cloudwatch.CompositeAlarm(
-      this,
-      "SystemHealthOverall",
-      {
-        alarmName: "E-Info-SystemHealthOverall",
-        alarmDescription: "Overall system health - triggers if multiple critical components are down",
-        actionOnAlarm: true,
-        actionsEnabled: true,
-      }
-    );
-
-    systemHealthAlarm.addAlarmRule(
-      cloudwatch.AlarmRule.fromAlarm(
-        new cloudwatch.Alarm(this, "PaymentSessionHealthCheck", {
-          metric: new cloudwatch.Metric({
-            namespace: "AWS/Lambda",
-            metricName: "Errors",
-            dimensions: { FunctionName: props.paymentSessionFunctionName },
-            statistic: "Sum",
-            period: cdk.Duration.minutes(5),
-          }),
-          threshold: 20,
-          evaluationPeriods: 1,
-          alarmName: "PaymentSession-SystemHealth",
-        }),
-        cloudwatch.AlarmAction.ALARM
-      )
-    );
+    healthCheckSlowAlarm.addAlarmAction(snsAction);
 
     // Export SNS topic ARN for use in other stacks
     new cdk.CfnOutput(this, "AlertsTopicArn", {

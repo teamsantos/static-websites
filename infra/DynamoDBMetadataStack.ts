@@ -27,19 +27,19 @@ export class DynamoDBMetadataStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: DynamoDBMetadataStackProps) {
     super(scope, id, props);
 
-    // Main table for website metadata
-    this.table = new dynamodb.Table(this, "WebsitesMetadata", {
-      tableName: "websites-metadata",
-      partitionKey: {
-        name: "operationId",
-        type: dynamodb.AttributeType.STRING,
-      },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // On-demand pricing
-      removalPolicy: cdk.RemovalPolicy.RETAIN, // Never delete table on stack delete
-      pointInTimeRecovery: true, // Backup/recovery capability
-      timeToLiveAttribute: "expiresAt", // Auto-cleanup after 7 days
-      stream: dynamodb.StreamSpecification.NEW_AND_OLD_IMAGES, // For SQS integration later
-    });
+     // Main table for website metadata
+     this.table = new dynamodb.Table(this, "WebsitesMetadata", {
+       tableName: "websites-metadata",
+       partitionKey: {
+         name: "operationId",
+         type: dynamodb.AttributeType.STRING,
+       },
+       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // On-demand pricing
+       removalPolicy: cdk.RemovalPolicy.RETAIN, // Never delete table on stack delete
+       pointInTimeRecovery: true, // Backup/recovery capability
+       timeToLiveAttribute: "expiresAt", // Auto-cleanup after 7 days
+       stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES, // For DynamoDB Streams
+     });
 
     // Global Secondary Index: Query by email + sort by createdAt
     // Use case: "Show me all websites created by user@example.com"
@@ -98,28 +98,30 @@ export class DynamoDBMetadataStack extends cdk.Stack {
     // Export for use by other stacks
     this.idempotencyTable = idempotencyTable;
 
-    // CloudWatch Alarms for monitoring
-    const readThrottleAlarm = new cdk.aws_cloudwatch.Alarm(
-      this,
-      "MetadataReadThrottleAlarm",
-      {
-        metric: this.table.metricReadThrottleEvents(),
-        threshold: 1,
-        evaluationPeriods: 1,
-        alarmDescription: "DynamoDB metadata table read throttle",
-      }
-    );
+     // CloudWatch Alarms for monitoring
+     const readThrottleAlarm = new cdk.aws_cloudwatch.Alarm(
+       this,
+       "MetadataReadThrottleAlarm",
+       {
+         metric: this.table.metric("ReadThrottleEvents"),
+         threshold: 1,
+         evaluationPeriods: 1,
+         alarmDescription: "DynamoDB metadata table read throttle",
+         alarmName: "MetadataReadThrottle",
+       }
+     );
 
-    const writeThrottleAlarm = new cdk.aws_cloudwatch.Alarm(
-      this,
-      "MetadataWriteThrottleAlarm",
-      {
-        metric: this.table.metricWriteThrottleEvents(),
-        threshold: 1,
-        evaluationPeriods: 1,
-        alarmDescription: "DynamoDB metadata table write throttle",
-      }
-    );
+     const writeThrottleAlarm = new cdk.aws_cloudwatch.Alarm(
+       this,
+       "MetadataWriteThrottleAlarm",
+       {
+         metric: this.table.metric("WriteThrottleEvents"),
+         threshold: 1,
+         evaluationPeriods: 1,
+         alarmDescription: "DynamoDB metadata table write throttle",
+         alarmName: "MetadataWriteThrottle",
+       }
+     );
 
     // Outputs for other stacks to reference
     new cdk.CfnOutput(this, "MetadataTableName", {

@@ -38,24 +38,23 @@ export class StepFunctionsStack extends cdk.Stack {
     const generateWebsiteLambda = props?.generateWebsiteLambda;
 
     // Define state machine steps
-    // Step 1: Get metadata from DynamoDB
-    const getMetadataStep = new sfnTasks.DynamoGetItem(this, "GetMetadataFromDynamoDB", {
-      table: metadataTable!,
-      key: {
-        operationId: stepfunctions.TaskInput.fromJsonPathAt("$.operationId"),
-      },
-      resultPath: "$.metadata",
-    });
+     // Step 1: Get metadata from DynamoDB
+     const getMetadataStep = new sfnTasks.DynamoGetItem(this, "GetMetadataFromDynamoDB", {
+       table: metadataTable!,
+       key: {
+         operationId: sfnTasks.DynamoAttributeValue.fromString(stepfunctions.JsonPath.stringAt("$.operationId")),
+       },
+       resultPath: "$.metadata",
+     });
 
-    // Step 2: Validate metadata
-    const validateMetadataStep = new stepfunctions.Pass(this, "ValidateMetadata", {
-      resultPath: "$.validation",
-      result: stepfunctions.Result.fromObject({
-        success: true,
-        message: "Metadata validation passed",
-      }),
-      outputPath: "$",
-    });
+     // Step 2: Validate metadata
+     const validateMetadataStep = new stepfunctions.Pass(this, "ValidateMetadata", {
+       resultPath: "$.validation",
+       result: stepfunctions.Result.fromObject({
+         success: true,
+         message: "Metadata validation passed",
+       }),
+     });
 
     // Step 3: Call generate-website Lambda
     const invokeGenerateWebsiteStep = new sfnTasks.LambdaInvoke(
@@ -80,84 +79,81 @@ export class StepFunctionsStack extends cdk.Stack {
       backoffRate: 2,
     });
 
-    // Step 4: Update status to 'completed' in DynamoDB
-    const updateCompletedStatusStep = new sfnTasks.DynamoUpdateItem(
-      this,
-      "UpdateCompletedStatus",
-      {
-        table: metadataTable!,
-        key: {
-          operationId: stepfunctions.TaskInput.fromJsonPathAt("$.operationId"),
-        },
-        updateExpression: "SET #status = :status, #completedAt = :completedAt",
-        expressionAttributeNames: {
-          "#status": "status",
-          "#completedAt": "completedAt",
-        },
-        expressionAttributeValues: {
-          ":status": stepfunctions.TaskInput.fromText("completed"),
-          ":completedAt": stepfunctions.TaskInput.fromText(
-            new Date().toISOString()
-          ),
-        },
-        resultPath: stepfunctions.JsonPath.DISCARD,
-      }
-    );
+     // Step 4: Update status to 'completed' in DynamoDB
+     const updateCompletedStatusStep = new sfnTasks.DynamoUpdateItem(
+       this,
+       "UpdateCompletedStatus",
+       {
+         table: metadataTable!,
+         key: {
+           operationId: sfnTasks.DynamoAttributeValue.fromString(stepfunctions.JsonPath.stringAt("$.operationId")),
+         },
+         updateExpression: "SET #status = :status, #completedAt = :completedAt",
+         expressionAttributeNames: {
+           "#status": "status",
+           "#completedAt": "completedAt",
+         },
+         expressionAttributeValues: {
+           ":status": sfnTasks.DynamoAttributeValue.fromString("completed"),
+           ":completedAt": sfnTasks.DynamoAttributeValue.fromString(
+             new Date().toISOString()
+           ),
+         },
+         resultPath: stepfunctions.JsonPath.DISCARD,
+       }
+     );
 
-    // Step 5: Handle errors - Update status to 'failed'
-    const updateFailedStatusStep = new sfnTasks.DynamoUpdateItem(
-      this,
-      "UpdateFailedStatus",
-      {
-        table: metadataTable!,
-        key: {
-          operationId: stepfunctions.TaskInput.fromJsonPathAt("$.operationId"),
-        },
-        updateExpression: "SET #status = :status, #failureReason = :failureReason",
-        expressionAttributeNames: {
-          "#status": "status",
-          "#failureReason": "failureReason",
-        },
-        expressionAttributeValues: {
-          ":status": stepfunctions.TaskInput.fromText("failed"),
-          ":failureReason": stepfunctions.TaskInput.fromJsonPathAt("$.error"),
-        },
-        resultPath: stepfunctions.JsonPath.DISCARD,
-      }
-    );
+     // Step 5: Handle errors - Update status to 'failed'
+     const updateFailedStatusStep = new sfnTasks.DynamoUpdateItem(
+       this,
+       "UpdateFailedStatus",
+       {
+         table: metadataTable!,
+         key: {
+           operationId: sfnTasks.DynamoAttributeValue.fromString(stepfunctions.JsonPath.stringAt("$.operationId")),
+         },
+         updateExpression: "SET #status = :status, #failureReason = :failureReason",
+         expressionAttributeNames: {
+           "#status": "status",
+           "#failureReason": "failureReason",
+         },
+         expressionAttributeValues: {
+           ":status": sfnTasks.DynamoAttributeValue.fromString("failed"),
+           ":failureReason": sfnTasks.DynamoAttributeValue.fromString(stepfunctions.JsonPath.stringAt("$.error")),
+         },
+         resultPath: stepfunctions.JsonPath.DISCARD,
+       }
+     );
 
-    // Build the state machine definition
-    const definition = getMetadataStep
-      .next(validateMetadataStep)
-      .next(invokeGenerateWebsiteStep)
-      .next(updateCompletedStatusStep)
-      .next(
-        new stepfunctions.Pass(this, "Success", {
-          result: stepfunctions.Result.fromObject({
-            statusCode: 200,
-            message: "Website generation completed successfully",
-          }),
-          end: true,
-        })
-      );
+     // Build the state machine definition
+     const failureState = updateFailedStatusStep.next(
+       new stepfunctions.Pass(this, "Failure", {
+         result: stepfunctions.Result.fromObject({
+           statusCode: 500,
+           message: "Website generation failed",
+         }),
+         resultPath: "$.result",
+       })
+     );
 
-    // Catch errors and update failed status
-    const errorCatcher = new stepfunctions.Catch(this, "CatchGenerationError", {
-      errors: ["States.ALL"],
-      handler: updateFailedStatusStep.next(
-        new stepfunctions.Pass(this, "Failure", {
-          result: stepfunctions.Result.fromObject({
-            statusCode: 500,
-            message: "Website generation failed",
-          }),
-          resultPath: "$.result",
-          end: true,
-        })
-      ),
-      resultPath: "$.error",
-    });
+     const successState = new stepfunctions.Pass(this, "Success", {
+       result: stepfunctions.Result.fromObject({
+         statusCode: 200,
+         message: "Website generation completed successfully",
+       }),
+     });
 
-    definition.addCatch(errorCatcher);
+     const definition = getMetadataStep
+       .next(validateMetadataStep)
+       .next(invokeGenerateWebsiteStep)
+       .next(updateCompletedStatusStep)
+       .next(successState);
+
+     // Add error handling to the invoke step
+     invokeGenerateWebsiteStep.addCatch(failureState, {
+       errors: ["States.ALL"],
+       resultPath: "$.error",
+     });
 
     // Create the state machine
     this.stateMachine = new stepfunctions.StateMachine(this, "WebsiteGenerationStateMachine", {
