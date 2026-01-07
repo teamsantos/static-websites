@@ -44,18 +44,17 @@ export class GitHubWebhookStack extends cdk.Stack {
       region: "us-east-1",
     });
 
-    // Lambda for GitHub webhook
-    const webhookFunction = new lambda.Function(this, "GitHubWebhookFunction", {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset("lambda/github-webhook"),
-      handler: "index.handler",
-      environment: {
-        DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
-        GITHUB_WEBHOOK_SECRET: props.githubWebhookSecret || "",
-      },
-      timeout: cdk.Duration.seconds(30),
-      reservedConcurrentExecutions: 50, // Lower limit - webhooks are infrequent
-    });
+     // Lambda for GitHub webhook
+     const webhookFunction = new lambda.Function(this, "GitHubWebhookFunction", {
+       runtime: lambda.Runtime.NODEJS_18_X,
+       code: lambda.Code.fromAsset("lambda/github-webhook"),
+       handler: "index.handler",
+       environment: {
+         DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
+         GITHUB_WEBHOOK_SECRET: props.githubWebhookSecret || "",
+       },
+       timeout: cdk.Duration.seconds(30),
+     });
     this.githubWebhookFunctionName = webhookFunction.functionName;
 
     // Set CloudWatch log retention

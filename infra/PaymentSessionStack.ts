@@ -43,15 +43,14 @@ export class StripeCheckoutStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_18_X,
       code: lambda.Code.fromAsset("lambda/payment-session"),
       handler: "index.handler",
-      environment: {
-        STRIPE_SECRET_KEY: props.stripeSecretKey,
-        FRONTEND_URL: props.frontendUrl,
-        S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
-        DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
-      },
-      timeout: cdk.Duration.seconds(30),
-      reservedConcurrentExecutions: 100, // Limit concurrent executions to prevent runaway costs
-    });
+       environment: {
+         STRIPE_SECRET_KEY: props.stripeSecretKey,
+         FRONTEND_URL: props.frontendUrl,
+         S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
+         DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
+       },
+       timeout: cdk.Duration.seconds(30),
+     });
     this.paymentSessionFunctionName = checkoutFunction.functionName;
 
     // Lambda for Stripe Webhook
@@ -59,16 +58,15 @@ export class StripeCheckoutStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_18_X,
       code: lambda.Code.fromAsset("lambda/stripe-webhook"),
       handler: "index.handler",
-      environment: {
-        STRIPE_SECRET_KEY: props.stripeSecretKey,
-        STRIPE_WEBHOOK_SECRET: props.stripeWebhookSecret || "",
-        S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
-        DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
-        SQS_QUEUE_URL: props.sqsQueueUrl || "",
-      },
-      timeout: cdk.Duration.seconds(30),
-      reservedConcurrentExecutions: 100, // Limit concurrent executions
-    });
+       environment: {
+         STRIPE_SECRET_KEY: props.stripeSecretKey,
+         STRIPE_WEBHOOK_SECRET: props.stripeWebhookSecret || "",
+         S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
+         DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
+         SQS_QUEUE_URL: props.sqsQueueUrl || "",
+       },
+       timeout: cdk.Duration.seconds(30),
+     });
     this.stripeWebhookFunctionName = webhookFunction.functionName;
 
     // Set CloudWatch log retention to 30 days

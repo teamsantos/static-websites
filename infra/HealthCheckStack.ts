@@ -38,16 +38,15 @@ export class HealthCheckStack extends cdk.Stack {
     // Lambda for health check
     const healthCheckFunction = new lambda.Function(this, "HealthCheckFunction", {
       runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset("lambda/health-check"),
-      handler: "index.handler",
-      environment: {
-        DYNAMODB_METADATA_TABLE: "websites-metadata",
-        SQS_QUEUE_URL: props?.queueUrl || "",
-      },
-      timeout: cdk.Duration.seconds(10),
-      memorySize: 256,
-      reservedConcurrentExecutions: 10,
-    });
+       code: lambda.Code.fromAsset("lambda/health-check"),
+       handler: "index.handler",
+       environment: {
+         DYNAMODB_METADATA_TABLE: "websites-metadata",
+         SQS_QUEUE_URL: props?.queueUrl || "",
+       },
+       timeout: cdk.Duration.seconds(10),
+       memorySize: 256,
+     });
     this.healthCheckFunctionName = healthCheckFunction.functionName;
 
     // Set CloudWatch log retention
