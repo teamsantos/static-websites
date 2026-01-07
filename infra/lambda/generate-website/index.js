@@ -1,10 +1,10 @@
 import AWS from "aws-sdk";
 import AWSXRay from "aws-xray-sdk-core";
 import { Octokit } from "octokit";
-import { validateImages, validateLanguageStrings, validateColorsObject } from "../../shared/validators.js";
-import { injectContent, validateContentBeforeInjection } from "../../shared/templateInjection.js";
-import { optimizeImage, uploadOptimizedImages, generateSrcset } from "../../shared/imageOptimization.js";
-import { getTemplate, cacheTemplate, getLanguageFile, cacheLanguageFile, getCacheStats } from "../../shared/cache.js";
+import { validateImages, validateLanguageStrings, validateColorsObject } from "./shared/validators.js";
+import { injectContent, validateContentBeforeInjection } from "./shared/templateInjection.js";
+import { optimizeImage, uploadOptimizedImages, generateSrcset } from "./shared/imageOptimization.js";
+import { getTemplate, cacheTemplate, getLanguageFile, cacheLanguageFile, getCacheStats } from "./shared/cache.js";
 
 // Enable X-Ray tracing for AWS SDK (if enabled)
 if (process.env.XRAY_ENABLED === 'true') {

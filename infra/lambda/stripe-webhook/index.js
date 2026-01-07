@@ -1,8 +1,8 @@
 import AWS from "aws-sdk";
 import Stripe from "stripe";
 import crypto from "crypto";
-import { createLogger, logMetric } from "../../shared/logger.js";
-import { initSentry, captureException, addBreadcrumb } from "../../shared/sentry.js";
+import { createLogger, logMetric } from "./shared/logger.js";
+import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const dynamodb = new AWS.DynamoDB.DocumentClient();

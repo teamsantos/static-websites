@@ -1,10 +1,10 @@
 import AWS from "aws-sdk";
 import Stripe from "stripe";
 import { v4 as uuidv4 } from "uuid";
-import { validatePaymentSessionRequest } from "../../shared/validators.js";
-import { generateIdempotencyKey, withIdempotency } from "../../shared/idempotency.js";
-import { createLogger, logMetric } from "../../shared/logger.js";
-import { initSentry, captureException, addBreadcrumb } from "../../shared/sentry.js";
+import { validatePaymentSessionRequest } from "./shared/validators.js";
+import { generateIdempotencyKey, withIdempotency } from "./shared/idempotency.js";
+import { createLogger, logMetric } from "./shared/logger.js";
+import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const dynamodb = new AWS.DynamoDB.DocumentClient();

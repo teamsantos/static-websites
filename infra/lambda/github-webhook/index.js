@@ -1,7 +1,7 @@
 import AWS from "aws-sdk";
 import crypto from "crypto";
-import { createLogger, logMetric } from "../../shared/logger.js";
-import { initSentry, captureException, addBreadcrumb } from "../../shared/sentry.js";
+import { createLogger, logMetric } from "./shared/logger.js";
+import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE || "websites-metadata";
