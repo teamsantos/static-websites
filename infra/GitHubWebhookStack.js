@@ -75,7 +75,6 @@ class GitHubWebhookStack extends cdk.Stack {
                 GITHUB_WEBHOOK_SECRET: props.githubWebhookSecret || "",
             },
             timeout: cdk.Duration.seconds(30),
-            reservedConcurrentExecutions: 50, // Lower limit - webhooks are infrequent
         });
         this.githubWebhookFunctionName = webhookFunction.functionName;
         // Set CloudWatch log retention

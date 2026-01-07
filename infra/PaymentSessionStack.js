@@ -66,7 +66,6 @@ class StripeCheckoutStack extends cdk.Stack {
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
             },
             timeout: cdk.Duration.seconds(30),
-            reservedConcurrentExecutions: 100, // Limit concurrent executions to prevent runaway costs
         });
         this.paymentSessionFunctionName = checkoutFunction.functionName;
         // Lambda for Stripe Webhook
@@ -82,7 +81,6 @@ class StripeCheckoutStack extends cdk.Stack {
                 SQS_QUEUE_URL: props.sqsQueueUrl || "",
             },
             timeout: cdk.Duration.seconds(30),
-            reservedConcurrentExecutions: 100, // Limit concurrent executions
         });
         this.stripeWebhookFunctionName = webhookFunction.functionName;
         // Set CloudWatch log retention to 30 days

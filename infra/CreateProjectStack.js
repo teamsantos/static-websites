@@ -76,7 +76,6 @@ class CreateProjectStack extends cdk.Stack {
                 DYNAMODB_IDEMPOTENCY_TABLE: props.idempotencyTable?.tableName || "request-idempotency"
             },
             timeout: cdk.Duration.seconds(30),
-            reservedConcurrentExecutions: 100, // Cost control: limit concurrent executions
         });
         // Set CloudWatch log retention to 30 days
         new logs.LogRetention(this, 'CreateProjectLogRetention', {
@@ -112,7 +111,6 @@ class CreateProjectStack extends cdk.Stack {
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata"
             },
             timeout: cdk.Duration.seconds(300), // 5 minutes - account for slow GitHub operations
-            reservedConcurrentExecutions: 100, // Cost control: limit concurrent executions
         });
         // Export the function for use by QueueStack
         this.generateWebsiteFunction = generateWebsiteFunction;

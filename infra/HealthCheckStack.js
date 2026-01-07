@@ -74,7 +74,6 @@ class HealthCheckStack extends cdk.Stack {
             },
             timeout: cdk.Duration.seconds(10),
             memorySize: 256,
-            reservedConcurrentExecutions: 10,
         });
         this.healthCheckFunctionName = healthCheckFunction.functionName;
         // Set CloudWatch log retention
