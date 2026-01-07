@@ -153,17 +153,17 @@ class ProjectManagementStack extends cdk.Stack {
         // ============================================================
         // Outputs
         // ============================================================
-        new cdk.CfnOutput(this, "APIEndpoint", {
+        new cdk.CfnOutput(this, "APIEndpointOutput", {
             value: this.api.url,
             description: "Project Management API endpoint",
             exportName: "ProjectManagementAPIEndpoint",
         });
-        new cdk.CfnOutput(this, "GetProjectsFunction", {
+        new cdk.CfnOutput(this, "GetProjectsFunctionOutput", {
             value: getProjectsFunction.functionArn,
             description: "Get Projects Lambda ARN",
             exportName: "GetProjectsFunctionArn",
         });
-        new cdk.CfnOutput(this, "DeleteProjectFunction", {
+        new cdk.CfnOutput(this, "DeleteProjectFunctionOutput", {
             value: deleteProjectFunction.functionArn,
             description: "Delete Project Lambda ARN",
             exportName: "DeleteProjectFunctionArn",
