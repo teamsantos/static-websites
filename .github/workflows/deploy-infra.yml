@@ -142,6 +142,7 @@ jobs:
             CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=$region \
             npx cdk bootstrap "aws://$ACCOUNT_ID/$region" \
               --require-approval never \
+              --force \
               --verbose
             
             # Verify bootstrap was successful and show version
