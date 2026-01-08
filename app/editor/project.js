@@ -2,9 +2,36 @@
 export class ProjectManager {
     constructor(editor) {
         this.editor = editor;
+        this._lastCreateProjectTime = 0;
+        this._lastSaveWithCodeTime = 0;
+        this._debounceCooldown = 5000; // 5 seconds
+    }
+
+    /**
+     * Debounce check - returns true if action is allowed, false if in cooldown
+     * @param {string} actionKey - The key to track ('create' or 'save')
+     * @returns {boolean}
+     */
+    _canExecute(actionKey) {
+        const now = Date.now();
+        const lastTimeKey = actionKey === 'create' ? '_lastCreateProjectTime' : '_lastSaveWithCodeTime';
+        const lastTime = this[lastTimeKey];
+
+        if (now - lastTime < this._debounceCooldown) {
+            const remainingTime = Math.ceil((this._debounceCooldown - (now - lastTime)) / 1000);
+            this.editor.ui.showStatus(`Please wait ${remainingTime} seconds before trying again`, 'error');
+            return false;
+        }
+
+        this[lastTimeKey] = now;
+        return true;
     }
 
     async createProject() {
+        // Debounce check - prevent rapid repeated calls
+        if (!this._canExecute('create')) {
+            return;
+        }
         const email = document.getElementById('creator-email').value.trim();
         const projectName = document.getElementById('project-name').value.trim();
 
@@ -135,6 +162,11 @@ export class ProjectManager {
     // }
 
     saveWithCode() {
+        // Debounce check - prevent rapid repeated calls
+        if (!this._canExecute('save')) {
+            return;
+        }
+
         const code = document.getElementById('verification-code').value.trim();
 
         // For demo purposes, accept '1234' as valid code
