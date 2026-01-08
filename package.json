@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && EDITOR_BUILD=true vite build",
+    "build:template": "node helpers/buildTemplate.js",
+    "build:templates": "node helpers/buildTemplate.js",
     "preview": "vite preview",
     "editor": "npx http-server . -p 3000 -c-1"
   },
