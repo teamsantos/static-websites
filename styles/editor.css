@@ -1162,3 +1162,27 @@ body {
 .section-controls:hover {
     opacity: 1 !important;
 }
+
+/* ============================================================================
+   Template Scope Wrapper - Isolates Tailwind and Template Styles
+   ========================================================================== */
+
+.template-scope-wrapper {
+    /* Position as a block element to contain all template content */
+    display: block;
+    position: relative;
+    width: 100%;
+    /* Inherit background from container, but allow templates to override */
+    background: inherit;
+}
+
+/* Ensure Tailwind styles work properly within the template scope */
+.template-scope-wrapper * {
+    /* Allow Tailwind and template styles to control all properties */
+}
+
+/* Prevent editor styles from leaking into template */
+.template-scope-wrapper [data-editable],
+.template-scope-wrapper .editable-element {
+    /* Templates can define these */
+}

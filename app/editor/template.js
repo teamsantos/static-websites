@@ -91,25 +91,35 @@ export class TemplateManager {
              footerToRemove.remove();
          }
  
-         // Extract and apply CSS styles from the template
-         this.extractAndApplyStyles(doc);
- 
+         // Create a wrapper div for isolated Tailwind scope
+         const scopeWrapper = document.createElement('div');
+         scopeWrapper.className = 'template-scope-wrapper';
+         scopeWrapper.setAttribute('data-template-style', 'true');
+         
          // Display the template in the DOM first so CSS styles are applied
          const templateContainer = document.getElementById('template-content');
          templateContainer.innerHTML = '';
-         templateContainer.appendChild(doc.body);
+         templateContainer.appendChild(scopeWrapper);
+ 
+         // Extract and apply CSS styles from the template (pass scopeWrapper to it)
+         this.extractAndApplyStyles(doc, scopeWrapper);
+ 
+         // Move body content into the scope wrapper
+         while (doc.body.firstChild) {
+             scopeWrapper.appendChild(doc.body.firstChild);
+         }
  
          // Add padding to prevent editor overlay from blocking content
-         templateContainer.style.paddingTop = '56px';
+         scopeWrapper.style.paddingTop = '56px';
  
          // Now that the template is in the live DOM and CSS styles are applied,
          // load text/image files and process editable elements
          // This must happen AFTER appendChild so getComputedStyle() works correctly
-         this.editor.elements.loadTranslationFiles(templateContainer);
-         this.editor.elements.loadImageFiles(templateContainer);
+         this.editor.elements.loadTranslationFiles(scopeWrapper);
+         this.editor.elements.loadImageFiles(scopeWrapper);
  
          // Process editable elements
-         this.editor.elements.processEditableElements(templateContainer);
+         this.editor.elements.processEditableElements(scopeWrapper);
  
          // Initialize section management
          this.editor.sections.initializeSections();
@@ -117,31 +127,113 @@ export class TemplateManager {
          this.editor.ui.showStatus('Template ready for editing!', 'success');
      }
 
-    extractAndApplyStyles(doc) {
-        // Extract styles from template head
-        const styleElements = doc.querySelectorAll('style');
-        const linkElements = doc.querySelectorAll('link[rel="stylesheet"]');
+    extractAndApplyStyles(doc, scopeWrapper) {
+         // Extract styles from template head
+         const styleElements = doc.querySelectorAll('style');
+         const linkElements = doc.querySelectorAll('link[rel="stylesheet"]');
+         const scriptElements = doc.querySelectorAll('script');
 
-        // Add style elements
-        styleElements.forEach(styleElement => {
-            const newStyle = document.createElement('style');
-            newStyle.setAttribute('data-template-style', 'true');
-            // Add higher specificity to template styles to avoid conflicts with editor
-            let cssContent = styleElement.textContent;
-            // Wrap body styles with template container specificity
-            cssContent = cssContent.replace(/body\s*\{/g, '#template-content body {');
-            cssContent = cssContent.replace(/html\s*\{/g, '#template-content html {');
-            newStyle.textContent = cssContent;
-            document.head.appendChild(newStyle);
-        });
+         // Add style elements - scoped to template wrapper
+         styleElements.forEach(styleElement => {
+             const newStyle = document.createElement('style');
+             newStyle.setAttribute('data-template-style', 'true');
+             let cssContent = styleElement.textContent;
+             
+             // Wrap body and html styles with template scope wrapper specificity
+             // This prevents them from affecting the editor page
+             cssContent = cssContent.replace(/\bbody\s*\{/g, '.template-scope-wrapper {');
+             cssContent = cssContent.replace(/\bhtml\s*\{/g, '.template-scope-wrapper {');
+             cssContent = cssContent.replace(/\:root\s*\{/g, '.template-scope-wrapper {');
+             
+             newStyle.textContent = cssContent;
+             document.head.appendChild(newStyle);
+         });
 
-        // Add link elements (external stylesheets)
-        linkElements.forEach(linkElement => {
-            const newLink = document.createElement('link');
-            newLink.setAttribute('data-template-style', 'true');
-            newLink.rel = 'stylesheet';
-            newLink.href = linkElement.href;
-            document.head.appendChild(newLink);
-        });
-    }
+         // Add link elements (external stylesheets) 
+         linkElements.forEach(linkElement => {
+             // Skip Tailwind CDN link as it will be handled via script
+             if (linkElement.href && (linkElement.href.includes('tailwind') || linkElement.href.includes('cdn.tailwind'))) {
+                 return;
+             }
+             const newLink = document.createElement('link');
+             newLink.setAttribute('data-template-style', 'true');
+             newLink.rel = 'stylesheet';
+             newLink.href = linkElement.href;
+             document.head.appendChild(newLink);
+         });
+
+         // Handle Tailwind scripts - inject into scope wrapper only
+         let hasTailwindConfig = false;
+         scriptElements.forEach(scriptElement => {
+             // Check if this is a Tailwind CDN script
+             if (scriptElement.src && scriptElement.src.includes('cdn.tailwindcss')) {
+                 // Load Tailwind CDN into the scope wrapper
+                 this.injectTailwindIntoScope(scopeWrapper);
+             } else if (scriptElement.textContent && scriptElement.textContent.includes('tailwind.config')) {
+                 // This is a Tailwind config script - inject it into the scope wrapper
+                 hasTailwindConfig = true;
+                 const newScript = document.createElement('script');
+                 newScript.setAttribute('data-template-style', 'true');
+                 newScript.textContent = this.scopeTailwindConfig(scriptElement.textContent);
+                 scopeWrapper.appendChild(newScript);
+             } else if (!scriptElement.src && scriptElement.textContent && scriptElement.type !== 'module') {
+                 // Inline scripts (non-module) - add to scope wrapper
+                 const newScript = document.createElement('script');
+                 newScript.setAttribute('data-template-style', 'true');
+                 newScript.type = scriptElement.type || 'text/javascript';
+                 newScript.textContent = scriptElement.textContent;
+                 scopeWrapper.appendChild(newScript);
+             } else if (scriptElement.type === 'module' && scriptElement.textContent) {
+                 // Module scripts - add to scope wrapper
+                 const newScript = document.createElement('script');
+                 newScript.setAttribute('data-template-style', 'true');
+                 newScript.type = 'module';
+                 newScript.textContent = scriptElement.textContent;
+                 scopeWrapper.appendChild(newScript);
+             }
+         });
+
+         // If Tailwind config was found but not loaded, ensure we still load Tailwind CDN
+         if (hasTailwindConfig) {
+             this.injectTailwindIntoScope(scopeWrapper);
+         }
+     }
+
+     scopeTailwindConfig(configScript) {
+         // Add important flag to scope Tailwind to the wrapper
+         // This modifies the config to make all utilities scoped
+         return configScript.replace(
+             /tailwind\.config\s*=\s*\{/,
+             `tailwind.config = {
+                 important: '.template-scope-wrapper',`
+         );
+     }
+
+     injectTailwindIntoScope(scopeWrapper) {
+         // Load Tailwind from CDN and inject it into the scope wrapper
+         const script = document.createElement('script');
+         script.setAttribute('data-template-style', 'true');
+         script.src = 'https://cdn.tailwindcss.com';
+         
+         // Configure Tailwind when it loads
+         script.onload = () => {
+             // Wait a tick for Tailwind to initialize
+             setTimeout(() => {
+                 if (window.tailwind) {
+                     // Override Tailwind config to scope styles
+                     window.tailwind.config = {
+                         important: '.template-scope-wrapper',
+                         corePlugins: {
+                             preflight: false, // Disable preflight to prevent global resets
+                         },
+                         theme: {
+                             extend: {},
+                         },
+                     };
+                 }
+             }, 50);
+         };
+         
+         scopeWrapper.appendChild(script);
+     }
 }
