@@ -63,12 +63,33 @@ class CertificateManager extends constructs_1.Construct {
         // Check if we already have this value in context (from cdk.context.json)
         const contextValue = this.node.tryGetContext(contextKey);
         let certificate;
+        let existingCertArn;
         // If context exists and has a valid ARN (not an error object), use existing certificate
         if (contextValue &&
             typeof contextValue === 'string' &&
             contextValue.startsWith('arn:aws:acm:')) {
+            existingCertArn = contextValue;
+        }
+        else if (!contextValue) {
+            // Context not available, try to fetch it
+            // This will trigger a context lookup and may require running cdk synth again
+            try {
+                const lookupValue = ssm.StringParameter.valueFromLookup(this, parameterPath);
+                // valueFromLookup returns a dummy value during first synthesis
+                if (lookupValue &&
+                    !lookupValue.includes('dummy-value') &&
+                    lookupValue.startsWith('arn:aws:acm:')) {
+                    existingCertArn = lookupValue;
+                }
+            }
+            catch {
+                // Parameter doesn't exist, we'll create a new certificate
+                existingCertArn = undefined;
+            }
+        }
+        if (existingCertArn) {
             // Use existing certificate from SSM parameter
-            certificate = acm.Certificate.fromCertificateArn(this, 'ExistingCertificate', contextValue);
+            certificate = acm.Certificate.fromCertificateArn(this, 'ExistingCertificate', existingCertArn);
             new cdk.CfnOutput(this, 'CertificateSource', {
                 value: 'Existing (from Parameter Store)',
                 description: 'Certificate source'

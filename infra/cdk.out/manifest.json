@@ -100,7 +100,7 @@
               "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "StringParameter2.valueFromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-ssm/lib/parameter.js:1:8254)",
-              "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:47:53)",
+              "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:57:53)",
               "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:32:29)",
               "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:38:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
@@ -291,7 +291,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/b7ccce47f3291843f99985ccf42eecae7e112a628951389fb5baa661f4f7be9c.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/409cf21a5d15535324a132ef5edeb09c425bd5fffcaad6264001592a413a77f6.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -362,13 +362,13 @@
         "/TemplateDistribution/CertManager": [
           {
             "type": "aws:cdk:error",
-            "data": "SSM parameter not available in account 941058531133, region us-east-1: /acm/certificates/e-info.click",
+            "data": "SSM parameter not available in account 941058531133, region us-east-1: /acm/certificates/template.e-info.click",
             "trace": [
               "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
               "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "StringParameter2.valueFromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-ssm/lib/parameter.js:1:8254)",
-              "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:47:53)",
+              "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:57:53)",
               "new TemplateDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/TemplateDistributionStack.ts:32:29)",
               "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:60:30)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
@@ -454,7 +454,7 @@
               "WrappedClass.addOrigin (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:14065)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
-              "new TemplateDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/TemplateDistributionStack.ts:102:29)",
+              "new TemplateDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/TemplateDistributionStack.ts:103:29)",
               "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:60:30)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
@@ -1438,7 +1438,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/8a689ed6cdc758ceebcb6aabb5339454bb600ae564abf365b7f27ee8df44ac33.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/735399392fc2cdf30e2ebed54c2cf35be1ed8785ec4cc50b68ab69bf28bcbcd5.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -3695,6 +3695,18 @@
         "account": "941058531133",
         "region": "us-east-1",
         "parameterName": "/acm/certificates/e-info.click",
+        "lookupRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-us-east-1"
+      }
+    },
+    {
+      "key": "ssm:account=941058531133:parameterName=/acm/certificates/template.e-info.click:region=us-east-1",
+      "provider": "ssm",
+      "props": {
+        "dummyValue": "dummy-value-for-/acm/certificates/template.e-info.click",
+        "ignoreErrorOnMissingContext": false,
+        "account": "941058531133",
+        "region": "us-east-1",
+        "parameterName": "/acm/certificates/template.e-info.click",
         "lookupRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-us-east-1"
       }
     },

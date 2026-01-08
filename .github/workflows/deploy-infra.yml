@@ -195,6 +195,72 @@ jobs:
           npx tsc
           echo "✅ CDK project built successfully"
 
+      - name: Handle orphaned SSM parameters
+        working-directory: infra
+        shell: bash
+        run: |
+          echo "🔍 Checking for orphaned SSM certificate parameters..."
+          
+          # List of SSM parameter paths that CertificateManager might create
+          PARAM_PATHS=(
+            "/acm/certificates/e-info.click"
+            "/acm/certificates/template.e-info.click"
+          )
+          
+          for PARAM_PATH in "${PARAM_PATHS[@]}"; do
+            echo "Checking parameter: $PARAM_PATH"
+            
+            # Check if SSM parameter exists
+            PARAM_VALUE=$(aws ssm get-parameter --name "$PARAM_PATH" --region us-east-1 --query "Parameter.Value" --output text 2>/dev/null || echo "NOT_FOUND")
+            
+            if [ "$PARAM_VALUE" != "NOT_FOUND" ]; then
+              echo "Found existing SSM parameter: $PARAM_PATH"
+              echo "Value: $PARAM_VALUE"
+              
+              # Check if the certificate ARN is valid
+              if [[ "$PARAM_VALUE" == arn:aws:acm:* ]]; then
+                # Verify certificate exists
+                CERT_STATUS=$(aws acm describe-certificate --certificate-arn "$PARAM_VALUE" --region us-east-1 --query "Certificate.Status" --output text 2>/dev/null || echo "NOT_FOUND")
+                
+                if [ "$CERT_STATUS" = "NOT_FOUND" ] || [ "$CERT_STATUS" = "EXPIRED" ] || [ "$CERT_STATUS" = "REVOKED" ]; then
+                  echo "Certificate is invalid or not found (status: $CERT_STATUS). Deleting orphaned SSM parameter..."
+                  aws ssm delete-parameter --name "$PARAM_PATH" --region us-east-1 || true
+                  echo "✅ Deleted orphaned SSM parameter: $PARAM_PATH"
+                else
+                  echo "Certificate is valid (status: $CERT_STATUS)"
+                  
+                  # Extract domain from parameter path for context key
+                  DOMAIN=$(echo "$PARAM_PATH" | sed 's|/acm/certificates/||')
+                  ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
+                  
+                  # Update cdk.context.json with the existing certificate ARN
+                  echo "Updating cdk.context.json with existing certificate..."
+                  CONTEXT_KEY="ssm:account=${ACCOUNT_ID}:parameterName=${PARAM_PATH}:region=us-east-1"
+                  
+                  # Read existing context or create new one
+                  if [ -f cdk.context.json ]; then
+                    # Add/update the SSM parameter value in context
+                    jq --arg key "$CONTEXT_KEY" --arg value "$PARAM_VALUE" '. + {($key): $value}' cdk.context.json > cdk.context.json.tmp
+                    mv cdk.context.json.tmp cdk.context.json
+                  else
+                    echo "{\"$CONTEXT_KEY\": \"$PARAM_VALUE\"}" > cdk.context.json
+                  fi
+                  
+                  echo "✅ Updated cdk.context.json with certificate ARN"
+                  cat cdk.context.json
+                fi
+              else
+                echo "SSM parameter value is not a valid ACM ARN. Deleting..."
+                aws ssm delete-parameter --name "$PARAM_PATH" --region us-east-1 || true
+                echo "✅ Deleted invalid SSM parameter: $PARAM_PATH"
+              fi
+            else
+              echo "SSM parameter not found: $PARAM_PATH (this is OK for fresh deployments)"
+            fi
+          done
+          
+          echo "✅ SSM parameter check completed"
+
       # - name: Preview infrastructure changes
       #   working-directory: infra
       #   shell: bash

@@ -1,10 +1,2 @@
 {
-  "hosted-zone:account=396913706953:domainName=e-info.click:region=us-east-1": {
-    "Id": "/hostedzone/Z0068973FIJHW12TF0OH",
-    "Name": "e-info.click."
-  },
-  "hosted-zone:account=396913706953:domainName=e-info.click:region=eu-south-2": {
-    "Id": "/hostedzone/Z0068973FIJHW12TF0OH",
-    "Name": "e-info.click."
-  }
 }
