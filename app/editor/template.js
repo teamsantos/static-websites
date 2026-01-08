@@ -127,7 +127,7 @@ export class TemplateManager {
          this.editor.ui.showStatus('Template ready for editing!', 'success');
      }
 
-    extractAndApplyStyles(doc, scopeWrapper) {
+     extractAndApplyStyles(doc, scopeWrapper) {
          // Extract styles from template head
          const styleElements = doc.querySelectorAll('style');
          const linkElements = doc.querySelectorAll('link[rel="stylesheet"]');
@@ -144,6 +144,9 @@ export class TemplateManager {
              cssContent = cssContent.replace(/\bbody\s*\{/g, '.template-scope-wrapper {');
              cssContent = cssContent.replace(/\bhtml\s*\{/g, '.template-scope-wrapper {');
              cssContent = cssContent.replace(/\:root\s*\{/g, '.template-scope-wrapper {');
+             
+             // Wrap any top-level * (universal selector) with scope
+             cssContent = cssContent.replace(/^\s*\*\s*\{/gm, '.template-scope-wrapper, .template-scope-wrapper * {');
              
              newStyle.textContent = cssContent;
              document.head.appendChild(newStyle);
@@ -210,30 +213,47 @@ export class TemplateManager {
      }
 
      injectTailwindIntoScope(scopeWrapper) {
-         // Load Tailwind from CDN and inject it into the scope wrapper
+         // Create an isolated style container that will hold Tailwind styles
+         const styleContainer = document.createElement('div');
+         styleContainer.setAttribute('data-template-style', 'true');
+         styleContainer.style.display = 'none'; // Hide the container itself
+         
+         // Pre-configure Tailwind BEFORE loading the script
+         // This is critical to prevent global style pollution
+         window.tailwind = window.tailwind || {};
+         
+         // Create the tailwind config object
+         const tailwindConfig = {
+             important: '.template-scope-wrapper',
+             corePlugins: {
+                 preflight: false, // CRITICAL: Disable preflight to prevent global CSS resets
+             },
+             theme: {
+                 extend: {},
+             },
+         };
+         
+         // Store the config globally so the script can read it
+         window.tailwind.config = tailwindConfig;
+         
+         // Create and append the Tailwind CDN script
          const script = document.createElement('script');
          script.setAttribute('data-template-style', 'true');
          script.src = 'https://cdn.tailwindcss.com';
+         script.defer = true;
          
-         // Configure Tailwind when it loads
+         // After script loads, reapply config to ensure it's used
          script.onload = () => {
-             // Wait a tick for Tailwind to initialize
              setTimeout(() => {
                  if (window.tailwind) {
-                     // Override Tailwind config to scope styles
-                     window.tailwind.config = {
-                         important: '.template-scope-wrapper',
-                         corePlugins: {
-                             preflight: false, // Disable preflight to prevent global resets
-                         },
-                         theme: {
-                             extend: {},
-                         },
-                     };
+                     window.tailwind.config = tailwindConfig;
                  }
-             }, 50);
+             }, 100);
          };
          
+         // Append script to scope wrapper, NOT to document head
+         // This ensures Tailwind can only see elements within the wrapper
          scopeWrapper.appendChild(script);
+         scopeWrapper.insertBefore(styleContainer, script);
      }
 }

@@ -1169,11 +1169,21 @@ body {
 
 .template-scope-wrapper {
     /* Position as a block element to contain all template content */
-    display: block;
+    display: block !important;
     position: relative;
     width: 100%;
     /* Inherit background from container, but allow templates to override */
     background: inherit;
+    /* CSS containment to prevent style leakage */
+    contain: layout style paint;
+}
+
+/* Reset any editor styles that might have affected template */
+.template-scope-wrapper body {
+    /* Template body should not be affected by editor body styles */
+    color: inherit;
+    background: transparent;
+    font-size: inherit;
 }
 
 /* Ensure Tailwind styles work properly within the template scope */
@@ -1185,4 +1195,11 @@ body {
 .template-scope-wrapper [data-editable],
 .template-scope-wrapper .editable-element {
     /* Templates can define these */
+}
+
+/* Override any remaining global styles that might leak */
+.template-scope-wrapper {
+    font-family: inherit;
+    font-size: 16px;
+    color: inherit;
 }
