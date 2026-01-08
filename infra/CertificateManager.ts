@@ -52,40 +52,33 @@ export class CertificateManager extends Construct {
         const wildcardDomain = `*.${certDomain}`;
         const parameterPath = props.parameterPath || `/acm/certificates/${certDomain}`;
 
-        // Try to get existing certificate ARN from Parameter Store
+        // Build the context key that CDK uses for SSM lookups
+        const account = cdk.Stack.of(this).account;
+        const region = cdk.Stack.of(this).region;
+        const contextKey = `ssm:account=${account}:parameterName=${parameterPath}:region=${region}`;
+        
+        // Check if we already have this value in context (from cdk.context.json)
+        const contextValue = this.node.tryGetContext(contextKey);
+        
         let certificate: acm.ICertificate;
 
-        try {
-            // Attempt to lookup existing parameter
-            const existingArn = ssm.StringParameter.valueFromLookup(
+        // If context exists and has a valid ARN (not an error object), use existing certificate
+        if (contextValue && 
+            typeof contextValue === 'string' && 
+            contextValue.startsWith('arn:aws:acm:')) {
+            // Use existing certificate from SSM parameter
+            certificate = acm.Certificate.fromCertificateArn(
                 this,
-                parameterPath
+                'ExistingCertificate',
+                contextValue
             );
 
-            // Check if we got a real ARN (not a placeholder)
-            if (existingArn && existingArn.startsWith('arn:aws:acm:')) {
-                // Use existing certificate
-                certificate = acm.Certificate.fromCertificateArn(
-                    this,
-                    'ExistingCertificate',
-                    existingArn
-                );
-
-                new cdk.CfnOutput(this, 'CertificateSource', {
-                    value: 'Existing (from Parameter Store)',
-                    description: 'Certificate source'
-                });
-            } else {
-                // Create new certificate
-                certificate = this.createNewCertificate(
-                    wildcardDomain,
-                    certDomain,
-                    props.hostedZone,
-                    parameterPath
-                );
-            }
-        } catch (error) {
-            // Parameter doesn't exist, create new certificate
+            new cdk.CfnOutput(this, 'CertificateSource', {
+                value: 'Existing (from Parameter Store)',
+                description: 'Certificate source'
+            });
+        } else {
+            // Create new certificate (parameter doesn't exist or context not available)
             certificate = this.createNewCertificate(
                 wildcardDomain,
                 certDomain,
@@ -114,7 +107,7 @@ export class CertificateManager extends Construct {
         // Create new certificate that covers both wildcard and root domain
         const newCertificate = new acm.Certificate(this, 'WildcardCertificate', {
             domainName: wildcardDomain,
-            subjectAlternativeNames: [domainName], // Include the root domain (e.g., e-info.click)
+            subjectAlternativeNames: [domainName], // Include the root domain (e.g., template.e-info.click)
             validation: acm.CertificateValidation.fromDns(hostedZone),
         });
 
