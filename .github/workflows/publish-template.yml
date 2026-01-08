@@ -287,21 +287,21 @@ jobs:
       #     npx cdk diff --all \
       #       --context "templates=${{ steps.format-templates.outputs.templates-comma }}" || true
 
-      - name: Deploy infrastructure
-        working-directory: infra
-        shell: bash
-        run: |
-          echo "🚀 Deploying infrastructure for templates: ${{ steps.format-templates.outputs.templates-comma }}"
-          ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
-          
-          # Deploy all stacks at once with comma-separated templates
-          CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
-          npx cdk deploy --all \
-            --context "templates=${{ steps.format-templates.outputs.templates-comma }}" \
-            --require-approval never \
-            --verbose
-          
-          echo "✅ Successfully deployed infrastructure for all templates"
+      # - name: Deploy infrastructure
+      #   working-directory: infra
+      #   shell: bash
+      #   run: |
+      #     echo "🚀 Deploying infrastructure for templates: ${{ steps.format-templates.outputs.templates-comma }}"
+      #     ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
+      #
+      #     # Deploy all stacks at once with comma-separated templates
+      #     CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=us-east-1 \
+      #     npx cdk deploy --all \
+      #       --context "templates=${{ steps.format-templates.outputs.templates-comma }}" \
+      #       --require-approval never \
+      #       --verbose
+      #
+      #     echo "✅ Successfully deployed infrastructure for all templates"
 
       - name: Build templates
         shell: bash

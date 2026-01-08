@@ -12,6 +12,12 @@
     "description": "Experience cutting-edge dental care with our expert team. Comprehensive services from routine checkups to advanced cosmetic dentistry."
   },
   {
+    "name": "coffee",
+    "comingSoon": false,
+    "title": "Brewstone Coffee - Artisan Coffee Roasters",
+    "description": "Handcrafted coffee roasted with care. Discover the perfect cup at Brewstone Coffee with our curated menu and cozy atmosphere."
+  },
+  {
     "name": "modern-header",
     "comingSoon": false,
     "title": "Modern Header Template",
