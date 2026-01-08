@@ -302,67 +302,48 @@ jobs:
             fi
           done
 
-      - name: Invalidate CloudFront caches
+      - name: Invalidate CloudFront cache
         shell: bash
         run: |
-          echo "🔄 Invalidating CloudFront caches for updated templates..."
-          IFS=' ' read -ra TEMP_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
+          echo "Invalidating CloudFront cache for TemplateDistribution..."
           
-          for template in "${TEMP_ARR[@]}"; do
-            if [ -n "$template" ]; then
-              # Lowercase version for AWS resources
-              _template=$(echo "$template" | tr '[:upper:]' '[:lower:]')
-
-              echo "Invalidating cache for: $template"
-              
-
-              STACK_EXISTS=$(aws cloudformation describe-stacks \
-                --region us-east-1 \
-                --stack-name "Site-template-$_template" \
-                --query "Stacks[0].StackName" \
-                --output text 2>/dev/null || echo "")
-
-              if [ -z "$STACK_EXISTS" ]; then
-                echo "⚠️ Stack Site-template-$_template not found, skipping cache invalidation"
-                continue
-              fi
-
-              # Get distribution ID from stack outputs
-              DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
-                --region us-east-1 \
-                --stack-name "Site-template-$_template" \
-                --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' \
-                --output text 2>/dev/null)
-              
-              if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
-                echo "Creating invalidation for distribution: $DISTRIBUTION_ID"
-                aws cloudfront create-invalidation \
-                  --distribution-id "$DISTRIBUTION_ID" \
-                  --paths "/*" \
-                  --output table
-                echo "✅ Cache invalidated for $template"
-              else
-                echo "⚠️ No distribution ID found for $template"
-              fi
-            fi
-          done
+          # Get the TemplateDistribution distribution ID from stack outputs
+          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+            --region us-east-1 \
+            --stack-name "TemplateDistribution" \
+            --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' \
+            --output text 2>/dev/null)
+          
+          if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
+            echo "Creating invalidation for distribution: $DISTRIBUTION_ID"
+            aws cloudfront create-invalidation \
+              --distribution-id "$DISTRIBUTION_ID" \
+              --paths "/*" \
+              --output table
+            echo "Cache invalidated for all templates"
+          else
+            echo "No distribution ID found for TemplateDistribution stack"
+            exit 1
+          fi
 
       - name: Deployment Summary
         shell: bash
         run: |
-          echo "🎉 Deployment Summary"
+          echo "Deployment Summary"
           echo "===================="
           echo "Deployed templates: ${{ needs.detect-changes.outputs.templates }}"
           echo "Total templates: $(echo '${{ needs.detect-changes.outputs.templates }}' | wc -w)"
           echo ""
-          echo "🌐 Access your sites at:"
+          echo "Access your templates at:"
           IFS=' ' read -ra TEMP_ARR <<< "${{ needs.detect-changes.outputs.templates }}"
           for template in "${TEMP_ARR[@]}"; do
             if [ -n "$template" ]; then
-              echo "  • https://$template.e-info.click"
+              _template=$(echo "$template" | tr '[:upper:]' '[:lower:]')
+              echo "  - https://$_template.template.e-info.click"
             fi
           done
           echo ""
-          echo "📊 S3 bucket: $S3_BUCKET"
-          echo "🌍 Certificate region: us-east-1"
-          echo "🗂️ S3 region: eu-south-2"
+          echo "S3 bucket: $S3_BUCKET"
+          echo "Certificate region: us-east-1"
+          echo "S3 region: eu-south-2"
+          echo "Distribution: TemplateDistribution (shared multi-tenant)"

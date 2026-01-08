@@ -21,6 +21,13 @@ export interface CertificateManagerProps {
      * Default: /acm/certificates/{domainName}
      */
     parameterPath?: string;
+
+    /**
+     * Optional: Subdomain prefix for the wildcard certificate
+     * If provided, creates a certificate for *.{subDomain}.{domainName}
+     * e.g., subDomain: "template" with domainName: "e-info.click" creates *.template.e-info.click
+     */
+    subDomain?: string;
 }
 
 export class CertificateManager extends Construct {
@@ -36,8 +43,14 @@ export class CertificateManager extends Construct {
             return parts.join('.');
         }
         const baseDomain = getBaseDomain(props.domainName);
-        const wildcardDomain = `*.${baseDomain}`;
-        const parameterPath = props.parameterPath || `/acm/certificates/${baseDomain}`;
+        
+        // If subDomain is provided, create certificate for *.{subDomain}.{baseDomain}
+        // Otherwise, create certificate for *.{baseDomain}
+        const certDomain = props.subDomain 
+            ? `${props.subDomain}.${baseDomain}` 
+            : baseDomain;
+        const wildcardDomain = `*.${certDomain}`;
+        const parameterPath = props.parameterPath || `/acm/certificates/${certDomain}`;
 
         // Try to get existing certificate ARN from Parameter Store
         let certificate: acm.ICertificate;
@@ -66,7 +79,7 @@ export class CertificateManager extends Construct {
                 // Create new certificate
                 certificate = this.createNewCertificate(
                     wildcardDomain,
-                    baseDomain,
+                    certDomain,
                     props.hostedZone,
                     parameterPath
                 );
@@ -75,7 +88,7 @@ export class CertificateManager extends Construct {
             // Parameter doesn't exist, create new certificate
             certificate = this.createNewCertificate(
                 wildcardDomain,
-                baseDomain,
+                certDomain,
                 props.hostedZone,
                 parameterPath
             );

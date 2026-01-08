@@ -49,7 +49,7 @@
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
               "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:27:47)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:26:33)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:38:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",
@@ -102,7 +102,7 @@
               "StringParameter2.valueFromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-ssm/lib/parameter.js:1:8254)",
               "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:47:53)",
               "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:32:29)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:26:33)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:38:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",
@@ -187,7 +187,7 @@
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
               "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:105:29)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:26:33)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:38:33)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",
@@ -269,6 +269,428 @@
       },
       "displayName": "MultiTenantDistribution"
     },
+    "TemplateDistribution.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "TemplateDistribution.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "TemplateDistribution": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/us-east-1",
+      "properties": {
+        "templateFile": "TemplateDistribution.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "TemplateDistribution"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/b7ccce47f3291843f99985ccf42eecae7e112a628951389fb5baa661f4f7be9c.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "TemplateDistribution.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "TemplateDistribution.assets"
+      ],
+      "metadata": {
+        "/TemplateDistribution": [
+          {
+            "type": "aws:cdk:error",
+            "data": "Found zones: [] for dns:e-info.click, privateZone:undefined, vpcId:undefined, but wanted exactly 1 zone",
+            "trace": [
+              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
+              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
+              "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
+              "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
+              "new TemplateDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/TemplateDistributionStack.ts:27:47)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:60:30)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
+              "node:internal/modules/cjs/loader:1871:10",
+              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
+              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
+              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
+              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
+            ]
+          },
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "TemplateDistribution"
+              }
+            ]
+          }
+        ],
+        "/TemplateDistribution/CertManager": [
+          {
+            "type": "aws:cdk:error",
+            "data": "SSM parameter not available in account 941058531133, region us-east-1: /acm/certificates/e-info.click",
+            "trace": [
+              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
+              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
+              "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
+              "StringParameter2.valueFromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-ssm/lib/parameter.js:1:8254)",
+              "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:47:53)",
+              "new TemplateDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/TemplateDistributionStack.ts:32:29)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:60:30)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
+              "node:internal/modules/cjs/loader:1871:10",
+              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
+              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
+              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
+              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
+            ]
+          }
+        ],
+        "/TemplateDistribution/CertManager/WildcardCertificate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertManagerWildcardCertificate24DD7CEC"
+          }
+        ],
+        "/TemplateDistribution/CertManager/CertificateParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertManagerCertificateParameter462FB0B2"
+          }
+        ],
+        "/TemplateDistribution/CertManager/CertificateSource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertManagerCertificateSource5157F320"
+          }
+        ],
+        "/TemplateDistribution/CertManager/ParameterPath": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertManagerParameterPath2828ED5A"
+          }
+        ],
+        "/TemplateDistribution/CertManager/CertificateArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertManagerCertificateArnFB493BE6"
+          }
+        ],
+        "/TemplateDistribution/OAC/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OAC5B452445"
+          }
+        ],
+        "/TemplateDistribution/TemplatePathRewriteFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TemplatePathRewriteFunction4AFAEC82"
+          }
+        ],
+        "/TemplateDistribution/CorsPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CorsPolicyA1BBCACE"
+          }
+        ],
+        "/TemplateDistribution/Distribution/Origin1": [
+          {
+            "type": "aws:cdk:warning",
+            "data": "Cannot update bucket policy of an imported bucket. You will need to update the policy manually instead.\nSee the \"Setting up OAC with imported S3 buckets\" section of module's README for more info. [ack: @aws-cdk/aws-cloudfront-origins:updateImportedBucketPolicyOac]",
+            "trace": [
+              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
+              "Annotations.addWarningV2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:896)",
+              "S3BucketOriginWithOAC.bind (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront-origins/lib/s3-bucket-origin.js:2:282)",
+              "WrappedClass.addOrigin (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:14065)",
+              "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
+              "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
+              "new TemplateDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/TemplateDistributionStack.ts:102:29)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:60:30)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
+              "node:internal/modules/cjs/loader:1871:10",
+              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
+              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
+              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
+              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
+            ]
+          }
+        ],
+        "/TemplateDistribution/Distribution/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Distribution830FAC52"
+          }
+        ],
+        "/TemplateDistribution/TemplateWildcardAliasRecord/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TemplateWildcardAliasRecord6BD88143"
+          }
+        ],
+        "/TemplateDistribution/AWSCloudFrontPartitionHostedZoneIdMap": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AWSCloudFrontPartitionHostedZoneIdMap"
+          }
+        ],
+        "/TemplateDistribution/DistributionId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DistributionId"
+          }
+        ],
+        "/TemplateDistribution/DistributionDomainName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DistributionDomainName"
+          }
+        ],
+        "/TemplateDistribution/CertificateArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CertificateArn"
+          }
+        ],
+        "/TemplateDistribution/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/TemplateDistribution/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/TemplateDistribution/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "TemplateDistribution"
+    },
+    "DynamoDBMetadata.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "DynamoDBMetadata.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "DynamoDBMetadata": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/eu-south-2",
+      "properties": {
+        "templateFile": "DynamoDBMetadata.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "MetadataStorage"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/63a56ea958f5a801a457f5ce0b8a9eda12ce10f0a36a1cb12eb3690c2ab37a75.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "DynamoDBMetadata.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "DynamoDBMetadata.assets"
+      ],
+      "metadata": {
+        "/DynamoDBMetadata": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "MetadataStorage"
+              }
+            ]
+          }
+        ],
+        "/DynamoDBMetadata/WebsitesMetadata": [
+          {
+            "type": "aws:cdk:hasPhysicalName",
+            "data": {
+              "Ref": "WebsitesMetadata0BEFCF5A"
+            }
+          }
+        ],
+        "/DynamoDBMetadata/WebsitesMetadata/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebsitesMetadata0BEFCF5A"
+          }
+        ],
+        "/DynamoDBMetadata/Idempotency": [
+          {
+            "type": "aws:cdk:hasPhysicalName",
+            "data": {
+              "Ref": "IdempotencyC15CBC33"
+            }
+          }
+        ],
+        "/DynamoDBMetadata/Idempotency/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IdempotencyC15CBC33"
+          }
+        ],
+        "/DynamoDBMetadata/MetadataReadThrottleAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MetadataReadThrottleAlarm87A7691D"
+          }
+        ],
+        "/DynamoDBMetadata/MetadataWriteThrottleAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MetadataWriteThrottleAlarm3152A5B4"
+          }
+        ],
+        "/DynamoDBMetadata/MetadataTableName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MetadataTableName"
+          }
+        ],
+        "/DynamoDBMetadata/IdempotencyTableName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "IdempotencyTableName"
+          }
+        ],
+        "/DynamoDBMetadata/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/DynamoDBMetadata/Exports/Output{\"Fn::GetAtt\":[\"WebsitesMetadata0BEFCF5A\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttWebsitesMetadata0BEFCF5AArn7E227ED0"
+          }
+        ],
+        "/DynamoDBMetadata/Exports/Output{\"Fn::GetAtt\":[\"IdempotencyC15CBC33\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttIdempotencyC15CBC33ArnE239456F"
+          }
+        ],
+        "/DynamoDBMetadata/Exports/Output{\"Ref\":\"WebsitesMetadata0BEFCF5A\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefWebsitesMetadata0BEFCF5AF112BCF8"
+          }
+        ],
+        "/DynamoDBMetadata/Exports/Output{\"Ref\":\"IdempotencyC15CBC33\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefIdempotencyC15CBC335C6F7F1B"
+          }
+        ],
+        "/DynamoDBMetadata/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/DynamoDBMetadata/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "DynamoDBMetadata"
+    },
     "StaticWebsitesBucket.assets": {
       "type": "cdk:asset-manifest",
       "properties": {
@@ -291,7 +713,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/e7dbdc3121959cfc0159102336141a59e6cdb349f3fdab4fbc58b3d4ee7fb04b.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/7ef649f0127617243985e35101b8beb21edb8377740d002e48986a6f1f9570cf.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -358,12 +780,6 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "AWS679f53fac002430cb0da5b7982bd22872D164C4C"
-          }
-        ],
-        "/StaticWebsitesBucket/CloudFrontDistributionPolicy/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CloudFrontDistributionPolicy0E291C07"
           }
         ],
         "/StaticWebsitesBucket/BucketName": [
@@ -512,7 +928,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/f797ffb8369887431f2a401224c2134deca9b44140634b513282a9a04635f49f.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/2190674cbf542496fc12a5b8f6928dec4bcd7377d33c0edfe7efaaf28ab2d7e4.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -525,6 +941,8 @@
         }
       },
       "dependencies": [
+        "DynamoDBMetadata",
+        "QueueStack",
         "CreateProjectStack.assets"
       ],
       "metadata": {
@@ -537,8 +955,8 @@
               "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new CreateProjectStack (/Users/fmpi.santos/Projects/static-websites/infra/CreateProjectStack.ts:24:47)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:79:28)",
+              "new CreateProjectStack (/Users/fmpi.santos/Projects/static-websites/infra/CreateProjectStack.ts:34:47)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:126:28)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",
@@ -663,6 +1081,12 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "GenerateWebsiteFunctionLogRetention879B7670"
+          }
+        ],
+        "/CreateProjectStack/GenerateWebsiteFunction/SqsEventSource:QueueStackWebsiteGenerationQueueF420D203/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GenerateWebsiteFunctionSqsEventSourceQueueStackWebsiteGenerationQueueF420D20367513749"
           }
         ],
         "/CreateProjectStack/GenerateWebsiteLogRetention/Resource": [
@@ -815,6 +1239,18 @@
             "data": "CDKMetadata"
           }
         ],
+        "/CreateProjectStack/Exports/Output{\"Fn::GetAtt\":[\"GenerateWebsiteFunctionE00554AA\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttGenerateWebsiteFunctionE00554AAArn7C5CC3AC"
+          }
+        ],
+        "/CreateProjectStack/Exports/Output{\"Ref\":\"GenerateWebsiteFunctionE00554AA\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefGenerateWebsiteFunctionE00554AABE867BCE"
+          }
+        ],
         "/CreateProjectStack/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
@@ -829,6 +1265,404 @@
         ]
       },
       "displayName": "CreateProjectStack"
+    },
+    "QueueStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "QueueStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "QueueStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/eu-south-2",
+      "properties": {
+        "templateFile": "QueueStack.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "AsyncWebsiteGeneration"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/0902683058d16dd338ec962a2963f1a31fcc466f4c09dbb076889bab219d310a.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "QueueStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "QueueStack.assets"
+      ],
+      "metadata": {
+        "/QueueStack": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "AsyncWebsiteGeneration"
+              }
+            ]
+          }
+        ],
+        "/QueueStack/WebsiteGenerationDLQ/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebsiteGenerationDLQ2F773C26"
+          }
+        ],
+        "/QueueStack/WebsiteGenerationQueue/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebsiteGenerationQueueFD68F17D"
+          }
+        ],
+        "/QueueStack/DLQDepthAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DLQDepthAlarm5F8E21B8"
+          }
+        ],
+        "/QueueStack/QueueDepthAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QueueDepthAlarmD4A3A893"
+          }
+        ],
+        "/QueueStack/OldestMessageAgeAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "OldestMessageAgeAlarmA0D8ABE5"
+          }
+        ],
+        "/QueueStack/QueueUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QueueUrl"
+          }
+        ],
+        "/QueueStack/QueueArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "QueueArn"
+          }
+        ],
+        "/QueueStack/DLQUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DLQUrl"
+          }
+        ],
+        "/QueueStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/QueueStack/Exports/Output{\"Fn::GetAtt\":[\"WebsiteGenerationQueueFD68F17D\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttWebsiteGenerationQueueFD68F17DArnF4164C2E"
+          }
+        ],
+        "/QueueStack/Exports/Output{\"Fn::GetAtt\":[\"WebsiteGenerationDLQ2F773C26\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttWebsiteGenerationDLQ2F773C26Arn8CF4FE33"
+          }
+        ],
+        "/QueueStack/Exports/Output{\"Ref\":\"WebsiteGenerationQueueFD68F17D\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefWebsiteGenerationQueueFD68F17D7D456962"
+          }
+        ],
+        "/QueueStack/Exports/Output{\"Fn::GetAtt\":[\"WebsiteGenerationQueueFD68F17D\",\"QueueName\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttWebsiteGenerationQueueFD68F17DQueueName5DADC556"
+          }
+        ],
+        "/QueueStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/QueueStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "QueueStack"
+    },
+    "StepFunctionsStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "StepFunctionsStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "StepFunctionsStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/eu-south-2",
+      "properties": {
+        "templateFile": "StepFunctionsStack.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "WorkflowOrchestration"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/8a689ed6cdc758ceebcb6aabb5339454bb600ae564abf365b7f27ee8df44ac33.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "StepFunctionsStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "DynamoDBMetadata",
+        "CreateProjectStack",
+        "StepFunctionsStack.assets"
+      ],
+      "metadata": {
+        "/StepFunctionsStack": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "WorkflowOrchestration"
+              }
+            ]
+          }
+        ],
+        "/StepFunctionsStack/StateMachineLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StateMachineLogGroup15B91BCB"
+          }
+        ],
+        "/StepFunctionsStack/WebsiteGenerationStateMachine/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebsiteGenerationStateMachineRole44557F4B"
+          }
+        ],
+        "/StepFunctionsStack/WebsiteGenerationStateMachine/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebsiteGenerationStateMachineRoleDefaultPolicy28E6E670"
+          }
+        ],
+        "/StepFunctionsStack/WebsiteGenerationStateMachine/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebsiteGenerationStateMachine9B7C8D52"
+          }
+        ],
+        "/StepFunctionsStack/StateMachineArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StateMachineArn"
+          }
+        ],
+        "/StepFunctionsStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/StepFunctionsStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/StepFunctionsStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "StepFunctionsStack"
+    },
+    "EmailTemplateStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "EmailTemplateStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "EmailTemplateStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/eu-south-2",
+      "properties": {
+        "templateFile": "EmailTemplateStack.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "EmailNotifications"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/43d2b9786e3589ed89fecb240613b3042c4ee00b889ec8f1693a5e1d85794779.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "EmailTemplateStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "EmailTemplateStack.assets"
+      ],
+      "metadata": {
+        "/EmailTemplateStack": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "EmailNotifications"
+              }
+            ]
+          }
+        ],
+        "/EmailTemplateStack/SendEmailLogs/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SendEmailLogs21EB7BC6"
+          }
+        ],
+        "/EmailTemplateStack/SendEmailFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SendEmailFunctionServiceRole377037ED"
+          }
+        ],
+        "/EmailTemplateStack/SendEmailFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SendEmailFunctionServiceRoleDefaultPolicyC25CE35F"
+          }
+        ],
+        "/EmailTemplateStack/SendEmailFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SendEmailFunction93B2B000"
+          }
+        ],
+        "/EmailTemplateStack/SendEmailFunctionNameOutput": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SendEmailFunctionNameOutput"
+          }
+        ],
+        "/EmailTemplateStack/SendEmailFunctionArnOutput": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SendEmailFunctionArnOutput"
+          }
+        ],
+        "/EmailTemplateStack/SenderEmailOutput": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SenderEmailOutput"
+          }
+        ],
+        "/EmailTemplateStack/SESSandboxNote": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SESSandboxNote"
+          }
+        ],
+        "/EmailTemplateStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/EmailTemplateStack/Exports/Output{\"Fn::GetAtt\":[\"SendEmailFunction93B2B000\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttSendEmailFunction93B2B000Arn3EF99FAC"
+          }
+        ],
+        "/EmailTemplateStack/Exports/Output{\"Ref\":\"SendEmailFunction93B2B000\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefSendEmailFunction93B2B000A3FF70C7"
+          }
+        ],
+        "/EmailTemplateStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/EmailTemplateStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "EmailTemplateStack"
     },
     "StripeCheckoutStack.assets": {
       "type": "cdk:asset-manifest",
@@ -847,7 +1681,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/556dfb8b48a0745e7507b16f374c3e367cea4b8736672d02a835afadc8340d0d.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/dcfab659b2fbc4818810353936a6d1e04707cfb24450b92f3a9225bf94e5177d.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -860,6 +1694,9 @@
         }
       },
       "dependencies": [
+        "EmailTemplateStack",
+        "DynamoDBMetadata",
+        "QueueStack",
         "StripeCheckoutStack.assets"
       ],
       "metadata": {
@@ -872,8 +1709,8 @@
               "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
               "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
               "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new StripeCheckoutStack (/Users/fmpi.santos/Projects/static-websites/infra/PaymentSessionStack.ts:23:43)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:90:1)",
+              "new StripeCheckoutStack (/Users/fmpi.santos/Projects/static-websites/infra/PaymentSessionStack.ts:33:43)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:183:29)",
               "Module._compile (node:internal/modules/cjs/loader:1738:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "node:internal/modules/cjs/loader:1871:10",
@@ -952,6 +1789,30 @@
             "data": "StripeCheckoutFunctionLogRetention6694993A"
           }
         ],
+        "/StripeCheckoutStack/StripeWebhookFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeWebhookFunctionServiceRole35F96D1C"
+          }
+        ],
+        "/StripeCheckoutStack/StripeWebhookFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeWebhookFunctionServiceRoleDefaultPolicy3D21FCD4"
+          }
+        ],
+        "/StripeCheckoutStack/StripeWebhookFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeWebhookFunction73CC65ED"
+          }
+        ],
+        "/StripeCheckoutStack/StripeWebhookFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeWebhookFunctionLogRetentionFD2A8DBB"
+          }
+        ],
         "/StripeCheckoutStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -976,6 +1837,12 @@
             "data": "StripeCheckoutLogRetentionC6A66002"
           }
         ],
+        "/StripeCheckoutStack/StripeWebhookLogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeWebhookLogRetentionF69ACBE1"
+          }
+        ],
         "/StripeCheckoutStack/StripeApi/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -997,7 +1864,7 @@
         "/StripeCheckoutStack/StripeApi/Deployment/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "StripeApiDeployment43FB4EE154c00caa2ea4e6da99e0b175eec7ba0a"
+            "data": "StripeApiDeployment43FB4EE180c60ed3ce81f1a4c59770ee67a77cc3"
           }
         ],
         "/StripeCheckoutStack/StripeApi/DeploymentStage.prod/Resource": [
@@ -1048,6 +1915,36 @@
             "data": "StripeApicheckoutsessionPOST7DE3FCFD"
           }
         ],
+        "/StripeCheckoutStack/StripeApi/Default/webhook/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeApiwebhookA9B1326D"
+          }
+        ],
+        "/StripeCheckoutStack/StripeApi/Default/webhook/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeApiwebhookOPTIONSBF1168A1"
+          }
+        ],
+        "/StripeCheckoutStack/StripeApi/Default/webhook/POST/ApiPermission.StripeCheckoutStackStripeApiBA16A4EA.POST..webhook": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeApiwebhookPOSTApiPermissionStripeCheckoutStackStripeApiBA16A4EAPOSTwebhookB3DA8452"
+          }
+        ],
+        "/StripeCheckoutStack/StripeApi/Default/webhook/POST/ApiPermission.Test.StripeCheckoutStackStripeApiBA16A4EA.POST..webhook": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeApiwebhookPOSTApiPermissionTestStripeCheckoutStackStripeApiBA16A4EAPOSTwebhookC41EB78D"
+          }
+        ],
+        "/StripeCheckoutStack/StripeApi/Default/webhook/POST/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeApiwebhookPOST2CD313FF"
+          }
+        ],
         "/StripeCheckoutStack/StripeApiDomain/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -1072,6 +1969,18 @@
             "data": "CDKMetadata"
           }
         ],
+        "/StripeCheckoutStack/Exports/Output{\"Ref\":\"StripeCheckoutFunctionFAA66D03\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefStripeCheckoutFunctionFAA66D03CFAD860B"
+          }
+        ],
+        "/StripeCheckoutStack/Exports/Output{\"Ref\":\"StripeWebhookFunction73CC65ED\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefStripeWebhookFunction73CC65ED7615367B"
+          }
+        ],
         "/StripeCheckoutStack/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
@@ -1086,6 +1995,1211 @@
         ]
       },
       "displayName": "StripeCheckoutStack"
+    },
+    "WAFStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "WAFStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "WAFStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/us-east-1",
+      "properties": {
+        "templateFile": "WAFStack.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "RateLimiting"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/f9214d68890262452f88978f8f47c08eb002d75b8084e83d482ecc099125a9be.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "WAFStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "WAFStack.assets"
+      ],
+      "metadata": {
+        "/WAFStack": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "RateLimiting"
+              }
+            ]
+          }
+        ],
+        "/WAFStack/RateLimitACL": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RateLimitACL"
+          }
+        ],
+        "/WAFStack/WebACLArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WebACLArn"
+          }
+        ],
+        "/WAFStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/WAFStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/WAFStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "WAFStack"
+    },
+    "BudgetAlertStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "BudgetAlertStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "BudgetAlertStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/eu-south-2",
+      "properties": {
+        "templateFile": "BudgetAlertStack.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "CostControls"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/14fb75e12d86267096c221faf4f4d5a96bd88bc3d16a29d1c2a9ed6c5c4d7f42.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "BudgetAlertStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "BudgetAlertStack.assets"
+      ],
+      "metadata": {
+        "/BudgetAlertStack": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "CostControls"
+              }
+            ]
+          }
+        ],
+        "/BudgetAlertStack/AdminAlerts/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AdminAlerts685CDE10"
+          }
+        ],
+        "/BudgetAlertStack/EstimatedChargesAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EstimatedChargesAlarm6343F40C"
+          }
+        ],
+        "/BudgetAlertStack/HighLambdaErrorRateAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HighLambdaErrorRateAlarm9EE56058"
+          }
+        ],
+        "/BudgetAlertStack/AdminAlertsTopic": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AdminAlertsTopic"
+          }
+        ],
+        "/BudgetAlertStack/AdminAlertsTopicArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AdminAlertsTopicArn"
+          }
+        ],
+        "/BudgetAlertStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/BudgetAlertStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/BudgetAlertStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "BudgetAlertStack"
+    },
+    "GitHubWebhookStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "GitHubWebhookStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "GitHubWebhookStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/eu-south-2",
+      "properties": {
+        "templateFile": "GitHubWebhookStack.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "DeploymentTracking"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/adb714469a5ef1dece7561ac00e94205f8b9a988bc88430f3873b0ac7371c0c8.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "GitHubWebhookStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "DynamoDBMetadata",
+        "GitHubWebhookStack.assets"
+      ],
+      "metadata": {
+        "/GitHubWebhookStack": [
+          {
+            "type": "aws:cdk:error",
+            "data": "Found zones: [] for dns:e-info.click, privateZone:undefined, vpcId:undefined, but wanted exactly 1 zone",
+            "trace": [
+              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
+              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
+              "ContextProvider.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
+              "HostedZone2.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
+              "new GitHubWebhookStack (/Users/fmpi.santos/Projects/static-websites/infra/GitHubWebhookStack.ts:37:43)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:227:28)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
+              "node:internal/modules/cjs/loader:1871:10",
+              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
+              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
+              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
+              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
+              "Module._compile (node:internal/modules/cjs/loader:1738:14)",
+              "Object.<anonymous> (node:internal/modules/cjs/loader:1871:10)",
+              "Module.load (node:internal/modules/cjs/loader:1470:32)",
+              "Module._load (node:internal/modules/cjs/loader:1290:12)",
+              "TracingChannel.traceSync (node:diagnostics_channel:322:14)",
+              "wrapModuleLoad (node:internal/modules/cjs/loader:238:24)",
+              "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+              "node:internal/main/run_main_module:33:47"
+            ]
+          },
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "DeploymentTracking"
+              }
+            ]
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookCertificate/CertificateRequestorFunction": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-runtime-family",
+            "data": 0
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookCertificate/CertificateRequestorFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookCertificateCertificateRequestorFunctionServiceRoleEA987AAE"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookCertificate/CertificateRequestorFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookCertificateCertificateRequestorFunctionServiceRoleDefaultPolicy92CC96BB"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookCertificate/CertificateRequestorFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookCertificateCertificateRequestorFunction9764BB83"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookCertificate/CertificateRequestorResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookCertificateCertificateRequestorResource489870DF"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookFunctionServiceRoleFB95AE13"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookFunctionServiceRoleDefaultPolicy4AC25033"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookFunctionA7279CB5"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookFunctionLogRetention458A8F4F"
+          }
+        ],
+        "/GitHubWebhookStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+          }
+        ],
+        "/GitHubWebhookStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB"
+          }
+        ],
+        "/GitHubWebhookStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookLogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookLogRetentionDD240FBC"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApi2D780431"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/CloudWatchRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApiCloudWatchRole091D0A3F"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/Account": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApiAccount710DE531"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/Deployment/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApiDeployment97C3ADAF8a3105286230a0bdcc9d33f293ccf142"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/DeploymentStage.prod/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApiDeploymentStageprod1284D6B8"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/Endpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApiEndpointC76DEA86"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/Default/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApiOPTIONSEE698F76"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/Default/github/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApigithub1394AF76"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/Default/github/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApigithubOPTIONS3A4F196B"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/Default/github/POST/ApiPermission.GitHubWebhookStackGitHubWebhookApi2CED4F58.POST..github": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApigithubPOSTApiPermissionGitHubWebhookStackGitHubWebhookApi2CED4F58POSTgithub132A9198"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/Default/github/POST/ApiPermission.Test.GitHubWebhookStackGitHubWebhookApi2CED4F58.POST..github": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApigithubPOSTApiPermissionTestGitHubWebhookStackGitHubWebhookApi2CED4F58POSTgithub45E7394F"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApi/Default/github/POST/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApigithubPOST5E9D43E9"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookDomain/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookDomain79D3B2DA"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookApiMapping/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookApiMapping2740B286"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookAliasRecord/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookAliasRecord00C86655"
+          }
+        ],
+        "/GitHubWebhookStack/GitHubWebhookUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookUrl"
+          }
+        ],
+        "/GitHubWebhookStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/GitHubWebhookStack/Exports/Output{\"Ref\":\"GitHubWebhookFunctionA7279CB5\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefGitHubWebhookFunctionA7279CB5316C9338"
+          }
+        ],
+        "/GitHubWebhookStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/GitHubWebhookStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "GitHubWebhookStack"
+    },
+    "HealthCheckStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "HealthCheckStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "HealthCheckStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/eu-south-2",
+      "properties": {
+        "templateFile": "HealthCheckStack.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "HealthMonitoring"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/a1181d0a5c3a39fe3715594da9f8db703351eaebfe71bcd05a0a456d603e073d.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "HealthCheckStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "QueueStack",
+        "HealthCheckStack.assets"
+      ],
+      "metadata": {
+        "/HealthCheckStack": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "HealthMonitoring"
+              }
+            ]
+          }
+        ],
+        "/HealthCheckStack/HealthCheckFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckFunctionServiceRoleA640C67E"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckFunctionServiceRoleDefaultPolicy250D848A"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckFunctionC4679183"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckFunctionLogRetention95340FCF"
+          }
+        ],
+        "/HealthCheckStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+          }
+        ],
+        "/HealthCheckStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB"
+          }
+        ],
+        "/HealthCheckStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckLogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckLogRetentionAA2865E0"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApiA2C27605"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/CloudWatchRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApiCloudWatchRole7826F755"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/Account": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApiAccount3873E0BB"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/Deployment/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApiDeployment9A0D0C6F3693df94fb93f6a598a2918536e35551"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/DeploymentStage.prod/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApiDeploymentStageprod3CD303CF"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/Endpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApiEndpointE2D94437"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/Default/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApiOPTIONSE78AE98C"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/Default/health/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApihealth995775A5"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/Default/health/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApihealthOPTIONS4CC7A4CE"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/Default/health/GET/ApiPermission.HealthCheckStackHealthCheckApi4A63BAB5.GET..health": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApihealthGETApiPermissionHealthCheckStackHealthCheckApi4A63BAB5GEThealth27763FE4"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/Default/health/GET/ApiPermission.Test.HealthCheckStackHealthCheckApi4A63BAB5.GET..health": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApihealthGETApiPermissionTestHealthCheckStackHealthCheckApi4A63BAB5GEThealth433D7876"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckApi/Default/health/GET/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckApihealthGET7EC907AE"
+          }
+        ],
+        "/HealthCheckStack/HealthCheckUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckUrl"
+          }
+        ],
+        "/HealthCheckStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/HealthCheckStack/Exports/Output{\"Ref\":\"HealthCheckFunctionC4679183\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefHealthCheckFunctionC46791832701A52A"
+          }
+        ],
+        "/HealthCheckStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/HealthCheckStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "HealthCheckStack"
+    },
+    "DashboardStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "DashboardStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "DashboardStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/eu-south-2",
+      "properties": {
+        "templateFile": "DashboardStack.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "Monitoring"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/851d67b91cc45173554da3000cc90beb6f174a8040ef2c35f5ecb559ede547d1.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "DashboardStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "StripeCheckoutStack",
+        "CreateProjectStack",
+        "DynamoDBMetadata",
+        "QueueStack",
+        "HealthCheckStack",
+        "DashboardStack.assets"
+      ],
+      "metadata": {
+        "/DashboardStack": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "Monitoring"
+              }
+            ]
+          }
+        ],
+        "/DashboardStack/E-InfoDashboard/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EInfoDashboard682C2C53"
+          }
+        ],
+        "/DashboardStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/DashboardStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/DashboardStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "DashboardStack"
+    },
+    "AlertingStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "AlertingStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "AlertingStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/eu-south-2",
+      "properties": {
+        "templateFile": "AlertingStack.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "Alerting"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/440359b50407e5db786a0dc5c0b60febf5299a753af0df8f91668d4ada6ac373.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "AlertingStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "StripeCheckoutStack",
+        "CreateProjectStack",
+        "GitHubWebhookStack",
+        "DynamoDBMetadata",
+        "QueueStack",
+        "HealthCheckStack",
+        "AlertingStack.assets"
+      ],
+      "metadata": {
+        "/AlertingStack": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "Alerting"
+              }
+            ]
+          }
+        ],
+        "/AlertingStack/CriticalAlerts/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CriticalAlerts1F1E9D64"
+          }
+        ],
+        "/AlertingStack/CriticalAlerts/admin@e-info.click/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CriticalAlertsadmineinfoclick65BD4D41"
+          }
+        ],
+        "/AlertingStack/PaymentSessionErrorRate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PaymentSessionErrorRate7AFAFE60"
+          }
+        ],
+        "/AlertingStack/PaymentSessionHighDuration/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PaymentSessionHighDuration53711292"
+          }
+        ],
+        "/AlertingStack/GenerateWebsiteErrorRate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GenerateWebsiteErrorRate64EDBE77"
+          }
+        ],
+        "/AlertingStack/GenerateWebsiteHighDuration/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GenerateWebsiteHighDuration56C48849"
+          }
+        ],
+        "/AlertingStack/StripeWebhookErrors/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StripeWebhookErrors003245EC"
+          }
+        ],
+        "/AlertingStack/GitHubWebhookErrors/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GitHubWebhookErrorsA4DB61B0"
+          }
+        ],
+        "/AlertingStack/DynamoDBUserErrors/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBUserErrors954A3C62"
+          }
+        ],
+        "/AlertingStack/DynamoDBSystemErrors/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DynamoDBSystemErrorsF494CB7C"
+          }
+        ],
+        "/AlertingStack/SQSQueueBacklogHigh/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SQSQueueBacklogHigh0C8A8DA9"
+          }
+        ],
+        "/AlertingStack/SQSQueueMessageAgeTooHigh/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SQSQueueMessageAgeTooHighDA041F32"
+          }
+        ],
+        "/AlertingStack/HealthCheckErrors/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckErrors9FBFF94E"
+          }
+        ],
+        "/AlertingStack/HealthCheckSlow/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HealthCheckSlowC31029F5"
+          }
+        ],
+        "/AlertingStack/AlertsTopicArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AlertsTopicArn"
+          }
+        ],
+        "/AlertingStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/AlertingStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/AlertingStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "AlertingStack"
+    },
+    "ProjectManagementStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "ProjectManagementStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "ProjectManagementStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://941058531133/eu-south-2",
+      "properties": {
+        "templateFile": "ProjectManagementStack.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "production",
+          "ManagedBy": "CDK",
+          "Purpose": "ProjectManagement"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/4f0c50f8bc1cd528fd1765e639b3ad0fa60b7d71a20d5589f5d934fa467ff562.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "ProjectManagementStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "DynamoDBMetadata",
+        "ProjectManagementStack.assets"
+      ],
+      "metadata": {
+        "/ProjectManagementStack": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Purpose",
+                "Value": "ProjectManagement"
+              }
+            ]
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementLogs/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementLogs17DD6D23"
+          }
+        ],
+        "/ProjectManagementStack/GetProjectsFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GetProjectsFunctionServiceRole493246D8"
+          }
+        ],
+        "/ProjectManagementStack/GetProjectsFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GetProjectsFunctionServiceRoleDefaultPolicyE12EEAFF"
+          }
+        ],
+        "/ProjectManagementStack/GetProjectsFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GetProjectsFunctionE760ED82"
+          }
+        ],
+        "/ProjectManagementStack/DeleteProjectFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeleteProjectFunctionServiceRoleF165E20D"
+          }
+        ],
+        "/ProjectManagementStack/DeleteProjectFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeleteProjectFunctionServiceRoleDefaultPolicy4981D690"
+          }
+        ],
+        "/ProjectManagementStack/DeleteProjectFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeleteProjectFunction3D919FC3"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPI0B6EF44B"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/CloudWatchRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPICloudWatchRole240C3E51"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Account": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIAccount15BAC85A"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Deployment/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIDeployment1E4440EA0d4c5bc5c1c1be0142d32d8ca9c943c8"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/DeploymentStage.prod/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIDeploymentStageprodC2DD199B"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Endpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIEndpointB0AE2995"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Default/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIOPTIONS029FB496"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Default/projects/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIprojects0F364F4E"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Default/projects/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIprojectsOPTIONSD3360A3C"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Default/projects/GET/ApiPermission.ProjectManagementStackProjectManagementAPIA8D22B3E.GET..projects": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIprojectsGETApiPermissionProjectManagementStackProjectManagementAPIA8D22B3EGETprojects2CCE8EA5"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Default/projects/GET/ApiPermission.Test.ProjectManagementStackProjectManagementAPIA8D22B3E.GET..projects": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIprojectsGETApiPermissionTestProjectManagementStackProjectManagementAPIA8D22B3EGETprojectsF26F9A79"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Default/projects/GET/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIprojectsGETE9171B2E"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Default/projects/{id}/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIprojectsidBC7CCCCA"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Default/projects/{id}/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIprojectsidOPTIONSDB084C6D"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Default/projects/{id}/DELETE/ApiPermission.ProjectManagementStackProjectManagementAPIA8D22B3E.DELETE..projects.{id}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIprojectsidDELETEApiPermissionProjectManagementStackProjectManagementAPIA8D22B3EDELETEprojectsid828D2C58"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Default/projects/{id}/DELETE/ApiPermission.Test.ProjectManagementStackProjectManagementAPIA8D22B3E.DELETE..projects.{id}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIprojectsidDELETEApiPermissionTestProjectManagementStackProjectManagementAPIA8D22B3EDELETEprojectsid64EF3280"
+          }
+        ],
+        "/ProjectManagementStack/ProjectManagementAPI/Default/projects/{id}/DELETE/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProjectManagementAPIprojectsidDELETE9F064AAB"
+          }
+        ],
+        "/ProjectManagementStack/APIEndpointOutput": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "APIEndpointOutput"
+          }
+        ],
+        "/ProjectManagementStack/GetProjectsFunctionOutput": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GetProjectsFunctionOutput"
+          }
+        ],
+        "/ProjectManagementStack/DeleteProjectFunctionOutput": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DeleteProjectFunctionOutput"
+          }
+        ],
+        "/ProjectManagementStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/ProjectManagementStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/ProjectManagementStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "ProjectManagementStack"
     },
     "Tree": {
       "type": "cdk:tree",

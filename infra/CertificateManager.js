@@ -49,8 +49,13 @@ class CertificateManager extends constructs_1.Construct {
             return parts.join('.');
         }
         const baseDomain = getBaseDomain(props.domainName);
-        const wildcardDomain = `*.${baseDomain}`;
-        const parameterPath = props.parameterPath || `/acm/certificates/${baseDomain}`;
+        // If subDomain is provided, create certificate for *.{subDomain}.{baseDomain}
+        // Otherwise, create certificate for *.{baseDomain}
+        const certDomain = props.subDomain
+            ? `${props.subDomain}.${baseDomain}`
+            : baseDomain;
+        const wildcardDomain = `*.${certDomain}`;
+        const parameterPath = props.parameterPath || `/acm/certificates/${certDomain}`;
         // Try to get existing certificate ARN from Parameter Store
         let certificate;
         try {
@@ -67,12 +72,12 @@ class CertificateManager extends constructs_1.Construct {
             }
             else {
                 // Create new certificate
-                certificate = this.createNewCertificate(wildcardDomain, baseDomain, props.hostedZone, parameterPath);
+                certificate = this.createNewCertificate(wildcardDomain, certDomain, props.hostedZone, parameterPath);
             }
         }
         catch (error) {
             // Parameter doesn't exist, create new certificate
-            certificate = this.createNewCertificate(wildcardDomain, baseDomain, props.hostedZone, parameterPath);
+            certificate = this.createNewCertificate(wildcardDomain, certDomain, props.hostedZone, parameterPath);
         }
         this.certificate = certificate;
         this.certificateArn = certificate.certificateArn;

@@ -40,6 +40,7 @@ const CreateProjectStack_1 = require("./CreateProjectStack");
 const ProjectStack_1 = require("./ProjectStack");
 const PaymentSessionStack_1 = require("./PaymentSessionStack");
 const MultiTenantDistributionStack_1 = require("./MultiTenantDistributionStack");
+const TemplateDistributionStack_1 = require("./TemplateDistributionStack");
 const DynamoDBMetadataStack_1 = require("./DynamoDBMetadataStack");
 const WAFStack_1 = require("./WAFStack");
 const BudgetAlertStack_1 = require("./BudgetAlertStack");
@@ -62,7 +63,7 @@ const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('accou
 if (!account) {
     console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
 }
-// Create the shared multi-tenant CloudFront distribution FIRST
+// Create the shared multi-tenant CloudFront distribution for projects FIRST
 // This is required so we can get the OAC to pass to BucketStack
 const multiTenantDistribution = new MultiTenantDistributionStack_1.MultiTenantDistributionStack(app, "MultiTenantDistribution", {
     domainName: config.domain,
@@ -77,6 +78,23 @@ const multiTenantDistribution = new MultiTenantDistributionStack_1.MultiTenantDi
         ManagedBy: "CDK",
         Environment: "production",
         Purpose: "MultiTenantDistribution",
+    },
+});
+// Create the shared multi-tenant CloudFront distribution for templates
+// Routes *.template.e-info.click to /templates/<templateId>/index.html
+const templateDistribution = new TemplateDistributionStack_1.TemplateDistributionStack(app, "TemplateDistribution", {
+    domainName: config.domain,
+    hostedZoneDomainName: config.domain,
+    s3Bucket: config.s3Bucket,
+    region: config.region,
+    env: {
+        account: account,
+        region: config.certificateRegion,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "TemplateDistribution",
     },
 });
 // Create DynamoDB metadata table for website operations
@@ -339,42 +357,27 @@ else {
             totalStacks += projects.length;
         }
     }
-    // Handle templates
+    // Handle templates - No individual stacks needed!
+    // Templates are routed through the single TemplateDistribution stack
+    // which handles *.template.e-info.click -> /templates/<templateId>/index.html
     if (templatesParam) {
         const templates = templatesParam.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
         if (templates.length > 0) {
-            console.log(`Deploying ${templates.length} template(s): ${templates.join(", ")}`);
+            console.log(`Templates to deploy: ${templates.join(", ")}`);
+            console.log(`Templates are served via the shared TemplateDistribution stack.`);
+            console.log(`Access templates at: https://<templateId>.template.${config.domain}`);
             templates.forEach((template) => {
                 if (!/^[a-z0-9-]+$/.test(template)) {
                     console.warn(`Warning: Template name '${template}' may not be DNS-safe. Use lowercase letters, numbers, and hyphens only.`);
                 }
-                console.log(`Creating stack for template: ${template}.${config.domain}`);
-                new ProjectStack_1.ProjectSite(app, `Site-template-${template}`, {
-                    projectName: template,
-                    domainName: `${template}.templates.${config.domain}`,
-                    hostedZoneDomainName: config.domain,
-                    multiTenantDistribution: multiTenantDistribution,
-                    type: 'template',
-                    env: {
-                        account: account,
-                        region: config.certificateRegion,
-                    },
-                    tags: {
-                        Project: template,
-                        Type: 'template',
-                        Domain: `${template}.templates.${config.domain}`,
-                        ManagedBy: "CDK",
-                        Environment: "production",
-                    },
-                });
+                console.log(`  - https://${template}.template.${config.domain}`);
             });
-            totalStacks += templates.length;
         }
     }
     if (totalStacks > 0) {
-        console.log(`Created ${totalStacks} stack(s) successfully`);
+        console.log(`Created ${totalStacks} project stack(s) successfully`);
     }
-    else {
+    else if (!templatesParam) {
         console.error("No valid projects or templates found after parsing.");
     }
 }
