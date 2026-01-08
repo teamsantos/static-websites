@@ -375,17 +375,15 @@
                      throw new Error(`HTTP error! status: ${response.status}`);
                  }
 
-                 const data = await response.json();
+                  const data = await response.json();
 
-                 if (data.success && data.websiteUrl) {
-                     // Lambda returns immediately after triggering GitHub Actions
-                     // We need to verify the website is actually live before showing success
-                     console.log('Website generation triggered, waiting for deployment...');
-                     await waitForWebsiteLive(data.websiteUrl);
-                     showSuccess(data.websiteUrl);
-                 } else {
-                     throw new Error(data.error || 'Unknown error occurred');
-                 }
+                  if (data.success && data.websiteUrl) {
+                      // Lambda has successfully started the generation process
+                      console.log('Website generation started successfully');
+                      showSuccess(data.websiteUrl);
+                  } else {
+                      throw new Error(data.error || 'Unknown error occurred');
+                  }
 
              } catch (error) {
                  console.error('Error generating website:', error);
@@ -393,81 +391,6 @@
              }
          }
 
-          // Poll CloudFront until the website is actually live
-          // Since S3 is not publicly accessible, we check through CloudFront
-          // We validate that the response is genuine HTML, not S3 error XML
-          async function waitForWebsiteLive(websiteUrl) {
-              const maxAttempts = 300; // 5 minutes with 1s intervals
-              const delayMs = 1000; // 1 second between checks
-              
-              console.log(`Checking for website: ${websiteUrl}`);
-              
-              for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                  try {
-                      // Add cache-busting query parameter to bypass CloudFront and browser caches
-                      // This ensures each request goes to origin and doesn't hit cached responses
-                      const cacheBustUrl = `${websiteUrl}?t=${Date.now()}`;
-                      
-                      // Fetch the website (not just HEAD, need to check content)
-                      // Use 'no-cache' to tell caches to revalidate with origin
-                      const response = await fetch(cacheBustUrl, {
-                          method: 'GET',
-                          headers: {
-                              'Cache-Control': 'no-cache, no-store, must-revalidate',
-                              'Pragma': 'no-cache',
-                              'Expires': '0'
-                          }
-                      });
-                      
-                      // Get the response text for validation
-                      const text = await response.text();
-                      
-                      // Reject S3 XML error responses (NoSuchKey, etc.)
-                      if (text.includes('<Error>') || text.includes('NoSuchKey')) {
-                          if (attempt % 10 === 0) {
-                              console.log(`Attempt ${attempt + 1}/${maxAttempts}: S3 error - file not yet available in S3`);
-                          }
-                      } 
-                      // Check for valid HTML content
-                      else if (response.status === 200) {
-                          const contentType = response.headers.get('content-type');
-                          
-                          // Valid HTML response should have text/html content type
-                          if (contentType && contentType.includes('text/html')) {
-                              // Verify it's actual HTML (starts with DOCTYPE or html tag, and is substantial)
-                              // This filters out minimal error pages or partial content
-                              const htmlStart = text.trim().substring(0, 100).toLowerCase();
-                              if ((htmlStart.includes('<!doctype') || htmlStart.includes('<html')) 
-                                  && text.length > 200) {
-                                  console.log(`Website is live after ${attempt + 1} attempts (${(attempt + 1) * delayMs}ms)`);
-                                  console.log(`Content length: ${text.length} bytes`);
-                                  return;
-                              }
-                          }
-                          
-                          if (attempt % 10 === 0) {
-                              console.log(`Attempt ${attempt + 1}/${maxAttempts}: Received HTML but doesn't match expected structure (length: ${text.length})`);
-                          }
-                      } else {
-                          // Non-200 status
-                          if (attempt % 10 === 0) {
-                              console.log(`Attempt ${attempt + 1}/${maxAttempts}: Status ${response.status}`);
-                          }
-                      }
-                  } catch (error) {
-                      // Network error or timeout, keep trying
-                      if (attempt % 10 === 0) {
-                          console.log(`Attempt ${attempt + 1}/${maxAttempts}: Network error - ${error.message}`);
-                      }
-                  }
-                  
-                  // Wait before retrying
-                  await new Promise(resolve => setTimeout(resolve, delayMs));
-              }
-              
-              // If we get here, the website didn't come online within the timeout
-              throw new Error('Website deployment timed out. The file was not published within 5 minutes. Please try visiting the URL manually or contact support.');
-          }
 
         function showSuccess(url) {
             spinner.style.display = 'none';
