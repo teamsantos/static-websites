@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brewstone Coffee | Artisan Coffee Roasters</title>
+    <meta name="description" content="Handcrafted coffee, roasted with care. Experience the perfect cup at Brewstone Coffee.">
+    <link rel="icon" type="image/svg+xml" href="/public/icon.svg">
+    <link rel="icon" type="image/png" href="/public/icon-light-32x32.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/png" href="/public/icon-dark-32x32.png" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="/public/apple-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: 'oklch(0.97 0.01 80)',
+                        foreground: 'oklch(0.15 0.02 30)',
+                        card: 'oklch(0.99 0.005 80)',
+                        'card-foreground': 'oklch(0.15 0.02 30)',
+                        primary: 'oklch(0.25 0.05 50)',
+                        'primary-foreground': 'oklch(0.97 0.01 80)',
+                        secondary: 'oklch(0.92 0.02 70)',
+                        'secondary-foreground': 'oklch(0.25 0.05 50)',
+                        muted: 'oklch(0.94 0.015 75)',
+                        'muted-foreground': 'oklch(0.45 0.03 40)',
+                        accent: 'oklch(0.55 0.12 45)',
+                        'accent-foreground': 'oklch(0.97 0.01 80)',
+                        destructive: 'oklch(0.577 0.245 27.325)',
+                        border: 'oklch(0.88 0.02 70)',
+                        input: 'oklch(0.92 0.02 70)',
+                        ring: 'oklch(0.55 0.12 45)',
+                    },
+                    fontFamily: {
+                        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+                        serif: ['Playfair Display', 'Georgia', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-background: oklch(0.15 0.02 30);
+                --color-foreground: oklch(0.97 0.01 80);
+                --color-card: oklch(0.18 0.02 30);
+                --color-card-foreground: oklch(0.97 0.01 80);
+                --color-primary: oklch(0.97 0.01 80);
+                --color-primary-foreground: oklch(0.25 0.05 50);
+                --color-secondary: oklch(0.25 0.03 40);
+                --color-secondary-foreground: oklch(0.97 0.01 80);
+                --color-muted: oklch(0.25 0.03 40);
+                --color-muted-foreground: oklch(0.7 0.02 70);
+                --color-accent: oklch(0.65 0.12 45);
+                --color-border: oklch(0.3 0.02 40);
+                --color-input: oklch(0.3 0.02 40);
+            }
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground">
+    <main class="min-h-screen">
+        <!-- Header -->
+        <header class="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                <a href="/" class="font-serif text-2xl font-bold tracking-tight text-foreground">BREWSTONE</a>
+
+                <nav class="hidden md:flex items-center gap-8">
+                    <a href="#about" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">About</a>
+                    <a href="#menu" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Menu</a>
+                    <a href="#gallery" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Gallery</a>
+                    <a href="#contact" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Visit Us</a>
+                </nav>
+
+                <div class="hidden md:flex items-center gap-4">
+                    <button class="px-6 py-2 rounded-full bg-transparent border border-border text-foreground hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-medium">Order Online</button>
+                </div>
+
+                <button id="mobile-menu-toggle" class="md:hidden p-2 text-foreground" aria-label="Toggle menu">
+                    <svg id="menu-icon" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <svg id="close-icon" class="h-6 w-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden bg-background border-t border-border">
+                <nav class="flex flex-col p-6 gap-4">
+                    <a href="#about" class="text-lg font-medium text-foreground">About</a>
+                    <a href="#menu" class="text-lg font-medium text-foreground">Menu</a>
+                    <a href="#gallery" class="text-lg font-medium text-foreground">Gallery</a>
+                    <a href="#contact" class="text-lg font-medium text-foreground">Visit Us</a>
+                    <button class="mt-4 w-full px-6 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium">Order Online</button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="relative min-h-screen flex items-center pt-20">
+            <div class="absolute inset-0 z-0">
+                <img src="/public/warm-cozy-coffee-shop-interior-with-natural-light-.jpg" alt="Brewstone Coffee interior" class="w-full h-full object-cover opacity-20">
+                <div class="absolute inset-0 bg-gradient-to-b from-background/50 to-background"></div>
+            </div>
+
+            <div class="relative z-10 max-w-7xl mx-auto px-6 py-20 w-full">
+                <div class="max-w-4xl">
+                    <p class="text-sm font-medium tracking-widest uppercase text-accent mb-6">Artisan Coffee Roasters</p>
+                    <h1 class="font-serif text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.9] tracking-tight text-foreground mb-8 text-balance">
+                        Best Served<br><span class="italic font-normal">Fresh</span>
+                    </h1>
+                    <p class="text-lg md:text-xl text-muted-foreground max-w-xl mb-10 leading-relaxed">
+                        From bean to cup, we craft each pour with intention. Experience coffee the way it was meant to be — thoughtfully roasted, carefully brewed.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button class="px-8 py-3 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium inline-flex items-center justify-center gap-2">
+                            View Our Menu
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                        </button>
+                        <button class="px-8 py-3 rounded-full bg-transparent border border-foreground text-foreground hover:bg-foreground hover:text-background transition-colors font-medium">Find Our Café</button>
+                    </div>
+                </div>
+
+                <div class="absolute bottom-12 right-6 md:right-12 hidden lg:block">
+                    <div class="relative w-80 h-80">
+                        <img src="/public/beautiful-latte-art-in-ceramic-cup-top-view-warm-l.jpg" alt="Latte art" class="w-full h-full object-cover rounded-full shadow-2xl">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-24 md:py-32 bg-secondary">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="grid lg:grid-cols-2 gap-16 items-center">
+                    <div>
+                        <p class="text-sm font-medium tracking-widest uppercase text-accent mb-4">Our Story</p>
+                        <h2 class="font-serif text-4xl md:text-5xl font-bold leading-tight text-foreground mb-6 text-balance">Crafted with passion since 2015</h2>
+                        <p class="text-lg text-muted-foreground leading-relaxed mb-8">
+                            What started as a small roastery in Brooklyn has grown into a beloved neighborhood café. We believe great coffee is more than a drink — it's a ritual, a moment of pause, a connection to the hands that cultivated each bean.
+                        </p>
+                        <div class="grid sm:grid-cols-3 gap-8">
+                            <div>
+                                <svg class="h-8 w-8 text-accent mb-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                                <h3 class="font-semibold text-foreground mb-2">Single Origin</h3>
+                                <p class="text-sm text-muted-foreground">We source our beans directly from small farms across Ethiopia, Colombia, and Guatemala.</p>
+                            </div>
+                            <div>
+                                <svg class="h-8 w-8 text-accent mb-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.92 7.02C17.45 4.18 14.97 2 12 2c-2.97 0-5.45 2.18-5.92 5.02C4.97 7.55 3 9.88 3 12.5 3 16.04 5.96 19 9.5 19h8c3.04 0 5.5-2.46 5.5-5.5 0-2.62-1.97-4.95-4.58-5.48zM14 13v4h-4v-4H8l4-5 4 5h-2z"/></svg>
+                                <h3 class="font-semibold text-foreground mb-2">Sustainably Sourced</h3>
+                                <p class="text-sm text-muted-foreground">Every bean is ethically traded, supporting farming communities and the environment.</p>
+                            </div>
+                            <div>
+                                <svg class="h-8 w-8 text-accent mb-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                <h3 class="font-semibold text-foreground mb-2">Roasted With Love</h3>
+                                <p class="text-sm text-muted-foreground">Small-batch roasting ensures each cup carries the unique character of its origin.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="aspect-[4/5] rounded-2xl overflow-hidden">
+                            <img src="/public/barista-pouring-coffee-artistic-shot-warm-tones.jpg" alt="Barista at work" class="w-full h-full object-cover">
+                        </div>
+                        <div class="absolute -bottom-8 -left-8 w-48 h-48 bg-accent/10 rounded-2xl -z-10"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Menu Section -->
+        <section id="menu" class="py-24 md:py-32">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="text-center mb-16">
+                    <p class="text-sm font-medium tracking-widest uppercase text-accent mb-4">What We Serve</p>
+                    <h2 class="font-serif text-4xl md:text-5xl font-bold text-foreground text-balance">Our Menu</h2>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Espresso Category -->
+                    <div>
+                        <h3 class="font-serif text-2xl font-semibold text-foreground mb-6 pb-2 border-b border-border">Espresso</h3>
+                        <div class="space-y-4">
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Espresso</h4>
+                                    </div>
+                                    <span class="font-medium text-foreground">$3.50</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">Bold, concentrated, pure</p>
+                            </div>
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Americano</h4>
+                                    </div>
+                                    <span class="font-medium text-foreground">$4.00</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">Espresso with hot water</p>
+                            </div>
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Cortado</h4>
+                                        <span class="inline-flex items-center rounded-md border border-transparent bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">Popular</span>
+                                    </div>
+                                    <span class="font-medium text-foreground">$4.50</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">Espresso with equal parts steamed milk</p>
+                            </div>
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Flat White</h4>
+                                    </div>
+                                    <span class="font-medium text-foreground">$5.00</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">Velvety microfoam, double shot</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Signature Category -->
+                    <div>
+                        <h3 class="font-serif text-2xl font-semibold text-foreground mb-6 pb-2 border-b border-border">Signature</h3>
+                        <div class="space-y-4">
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Brewstone Latte</h4>
+                                        <span class="inline-flex items-center rounded-md border border-transparent bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">Popular</span>
+                                    </div>
+                                    <span class="font-medium text-foreground">$5.50</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">House blend with vanilla & oat milk</p>
+                            </div>
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Honey Lavender</h4>
+                                    </div>
+                                    <span class="font-medium text-foreground">$6.00</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">Lavender-infused espresso with local honey</p>
+                            </div>
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Cold Brew</h4>
+                                    </div>
+                                    <span class="font-medium text-foreground">$5.00</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">24-hour steeped, smooth & bold</p>
+                            </div>
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Matcha Latte</h4>
+                                    </div>
+                                    <span class="font-medium text-foreground">$5.50</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">Ceremonial grade matcha, oat milk</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pastries Category -->
+                    <div>
+                        <h3 class="font-serif text-2xl font-semibold text-foreground mb-6 pb-2 border-b border-border">Pastries</h3>
+                        <div class="space-y-4">
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Almond Croissant</h4>
+                                    </div>
+                                    <span class="font-medium text-foreground">$4.50</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">Flaky, buttery, fresh-baked</p>
+                            </div>
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Banana Bread</h4>
+                                        <span class="inline-flex items-center rounded-md border border-transparent bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">Popular</span>
+                                    </div>
+                                    <span class="font-medium text-foreground">$4.00</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">Walnut & chocolate chip</p>
+                            </div>
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Morning Bun</h4>
+                                    </div>
+                                    <span class="font-medium text-foreground">$4.25</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">Cinnamon sugar, orange zest</p>
+                            </div>
+                            <div class="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-medium text-foreground">Avocado Toast</h4>
+                                    </div>
+                                    <span class="font-medium text-foreground">$9.00</span>
+                                </div>
+                                <p class="text-sm text-muted-foreground">Sourdough, chili flakes, microgreens</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gallery Section -->
+        <section id="gallery" class="py-24 md:py-32 bg-secondary">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="text-center mb-16">
+                    <p class="text-sm font-medium tracking-widest uppercase text-accent mb-4">A Glimpse Inside</p>
+                    <h2 class="font-serif text-4xl md:text-5xl font-bold text-foreground text-balance">Our Space</h2>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="relative overflow-hidden rounded-xl group md:row-span-2">
+                        <img src="/public/espresso-machine-steam-artistic-shot.jpg" alt="Espresso machine" class="w-full h-full object-cover aspect-square group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300"></div>
+                    </div>
+                    <div class="relative overflow-hidden rounded-xl group">
+                        <img src="/public/coffee-beans-close-up-warm-lighting.jpg" alt="Coffee beans" class="w-full h-full object-cover aspect-square group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300"></div>
+                    </div>
+                    <div class="relative overflow-hidden rounded-xl group">
+                        <img src="/public/cozy-cafe-interior-plants-wooden-tables.jpg" alt="Café interior" class="w-full h-full object-cover aspect-square group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300"></div>
+                    </div>
+                    <div class="relative overflow-hidden rounded-xl group md:col-span-2">
+                        <img src="/public/fresh-croissant-and-latte-on-marble-table.jpg" alt="Pastry and coffee" class="w-full h-full object-cover aspect-square group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300"></div>
+                    </div>
+                    <div class="relative overflow-hidden rounded-xl group">
+                        <img src="/public/pour-over-coffee-brewing-glass-carafe.jpg" alt="Pour over brewing" class="w-full h-full object-cover aspect-square group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300"></div>
+                    </div>
+                    <div class="relative overflow-hidden rounded-xl group">
+                        <img src="/public/happy-customers-enjoying-coffee-in-cafe.jpg" alt="Customers enjoying coffee" class="w-full h-full object-cover aspect-square group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section class="py-24 md:py-32">
+            <div class="max-w-4xl mx-auto px-6 text-center">
+                <svg class="h-12 w-12 text-accent/30 mx-auto mb-8" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 21c3 0 7-1 7-8V5c0-1.25-4.5-1.5-6-6 0-1 .5-3 4-3 2 0 5 1.5 5 5v8c0 4-3.5 5-7 5-1 0-2 .5-2 1z"/>
+                </svg>
+
+                <div class="relative min-h-[200px] flex items-center justify-center">
+                    <blockquote id="testimonial-content">
+                        <p class="font-serif text-2xl md:text-4xl text-foreground leading-relaxed mb-8"></p>
+                        <footer>
+                            <p class="font-semibold text-foreground" id="testimonial-author"></p>
+                            <p class="text-sm text-muted-foreground" id="testimonial-role"></p>
+                        </footer>
+                    </blockquote>
+                </div>
+
+                <div class="flex items-center justify-center gap-4 mt-10">
+                    <button id="prev-testimonial" class="p-2 rounded-full border border-border bg-transparent hover:bg-accent hover:text-accent-foreground transition-colors" aria-label="Previous testimonial">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <div class="flex gap-2" id="testimonial-dots"></div>
+                    <button id="next-testimonial" class="p-2 rounded-full border border-border bg-transparent hover:bg-accent hover:text-accent-foreground transition-colors" aria-label="Next testimonial">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="py-24 md:py-32 bg-primary text-primary-foreground">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="grid lg:grid-cols-2 gap-16">
+                    <div>
+                        <p class="text-sm font-medium tracking-widest uppercase opacity-70 mb-4">Come Say Hello</p>
+                        <h2 class="font-serif text-4xl md:text-5xl font-bold leading-tight mb-8 text-balance">
+                            Visit Our Café
+                        </h2>
+
+                        <div class="space-y-6">
+                            <div class="flex items-start gap-4">
+                                <svg class="h-6 w-6 mt-1 opacity-70 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                                </svg>
+                                <div>
+                                    <h3 class="font-semibold mb-1">Location</h3>
+                                    <p class="opacity-80">
+                                        245 Bedford Avenue<br>Brooklyn, NY 11211
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <svg class="h-6 w-6 mt-1 opacity-70 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M11.99 5V1h-1v4H8.01V1H7v4H3.99V1h-1v4H1v14h22V5h-2V1h-1v4h-3.01V1h-1v4zm8.9 13H2.1V7h16.8v11z"/>
+                                </svg>
+                                <div>
+                                    <h3 class="font-semibold mb-1">Hours</h3>
+                                    <p class="opacity-80">
+                                        Mon – Fri: 7am – 7pm<br>Sat – Sun: 8am – 6pm
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <svg class="h-6 w-6 mt-1 opacity-70 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                                </svg>
+                                <div>
+                                    <h3 class="font-semibold mb-1">Contact</h3>
+                                    <p class="opacity-80">
+                                        (718) 555-0123<br>hello@brewstone.coffee
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-primary-foreground/10 rounded-2xl p-8">
+                        <h3 class="font-serif text-2xl font-semibold mb-2">Stay in the Loop</h3>
+                        <p class="opacity-80 mb-6">Subscribe for exclusive offers, new roast announcements, and brewing tips.</p>
+                        <form class="space-y-4" onsubmit="return false;">
+                            <input type="email" placeholder="Your email address" class="w-full px-4 py-2 bg-primary-foreground/10 border border-primary-foreground/20 rounded-md text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary-foreground/50" required>
+                            <button type="submit" class="w-full px-6 py-2 rounded-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 transition-colors text-sm font-medium">Subscribe</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-12 border-t border-border">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <a href="/" class="font-serif text-2xl font-bold tracking-tight text-foreground">BREWSTONE</a>
+
+                    <nav class="flex items-center gap-6">
+                        <a href="#about" class="text-sm text-muted-foreground hover:text-foreground transition-colors">About</a>
+                        <a href="#menu" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Menu</a>
+                        <a href="#gallery" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Gallery</a>
+                        <a href="#contact" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a>
+                    </nav>
+
+                    <div class="flex items-center gap-4">
+                        <a href="#" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="Instagram">
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.204-.012 3.584-.07 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.849.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.015-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="Facebook">
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="Twitter">
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2s9 5 20 5a9.5 9.5 0 00-9-5.5c4.75 2.25 7-7 7-7a10.6 10.6 0 01-9.997-10.004z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-8 border-t border-border text-center">
+                    <p class="text-sm text-muted-foreground">© <span id="year"></span> Brewstone Coffee. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <script src="script.js" type="module"></script>
+</body>
+</html>

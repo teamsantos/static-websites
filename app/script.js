@@ -4,7 +4,7 @@ import templateList from '../assets/templates.json' with { type: 'json' };
 const lang = translationsEN;
 const baseURL = "e-info.click";
 const editorURL = `https://editor.${baseURL}?template=`;
-const templatesURL = `templates.${baseURL}`;
+const templatesURL = `template.${baseURL}`;
 
 async function createCheckout(product_id) {
     try {

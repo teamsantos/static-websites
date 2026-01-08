@@ -21,7 +21,7 @@ export class TemplateManager {
             itemName = templateName;
             itemType = 'template';
             itemUrl = `templates/${templateName}/dist/index.html`;
-            remoteUrl = `https://${templateName}.templates.e-info.click`;
+            remoteUrl = `https://${templateName}.template.e-info.click`;
             this.editor.templateId = templateName; // Store template ID for export
         } else {
             this.editor.ui.showStatus(`No ${this.editor.mode === 'create' ? 'template' : 'project'} specified. Please check your URL and try again, or contact us at ${this.editor.supportEmail}`, 'info');

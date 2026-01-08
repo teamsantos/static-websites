@@ -1,0 +1,19 @@
+{
+  "name": "coffee-shop-landing-page",
+  "version": "1.0.0",
+  "description": "Brewstone Coffee - A beautiful landing page built with pure HTML, CSS, and JavaScript",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "build": "echo 'No build step required for static site'",
+    "start": "python3 -m http.server 8000"
+  },
+  "keywords": [
+    "coffee",
+    "landing-page",
+    "static-site"
+  ],
+  "author": "",
+  "license": "MIT"
+}
