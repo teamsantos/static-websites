@@ -266,16 +266,16 @@ jobs:
           
           echo "✅ Successfully deployed infrastructure for all templates"
 
-       - name: Build templates
-         shell: bash
-         run: |
-            echo "🔨 Building templates..."
-            if [ -z "${{ needs.detect-changes.outputs.templates }}" ]; then
-              echo "⚠️ No templates to build"
-            else
-              # Build only the changed templates
-              npm run build:template ${{ needs.detect-changes.outputs.templates }}
-            fi
+      - name: Build templates
+        shell: bash
+        run: |
+           echo "🔨 Building templates..."
+           if [ -z "${{ needs.detect-changes.outputs.templates }}" ]; then
+             echo "⚠️ No templates to build"
+           else
+             # Build only the changed templates
+             npm run build:template ${{ needs.detect-changes.outputs.templates }}
+           fi
 
       - name: Sync built sites to S3
         shell: bash
