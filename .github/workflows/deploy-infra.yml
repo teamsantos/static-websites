@@ -58,22 +58,51 @@ jobs:
           echo "Checking CDK bootstrap status..."
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           
-          # Function to check if region is bootstrapped
+          # Minimum required bootstrap version
+          MIN_BOOTSTRAP_VERSION=30
+          
+          # Function to check if region is bootstrapped with correct version
           check_bootstrap() {
             local region=$1
             echo "Checking bootstrap for region: $region"
             
-            if aws cloudformation describe-stacks \
+            # Check if stack exists
+            STACK_STATUS=$(aws cloudformation describe-stacks \
               --region "$region" \
               --stack-name CDKToolkit \
               --query 'Stacks[0].StackStatus' \
-              --output text 2>/dev/null | grep -q "COMPLETE"; then
-              echo "✅ Region $region is already bootstrapped"
-              return 0
-            else
-              echo "❌ Region $region needs bootstrapping"
+              --output text 2>/dev/null || echo "NOT_FOUND")
+            
+            if [ "$STACK_STATUS" = "NOT_FOUND" ]; then
+              echo "Stack CDKToolkit not found in $region - needs bootstrapping"
               return 1
             fi
+            
+            if ! echo "$STACK_STATUS" | grep -q "COMPLETE"; then
+              echo "Stack CDKToolkit in $region is in status: $STACK_STATUS - needs bootstrapping"
+              return 1
+            fi
+            
+            # Check bootstrap version from stack outputs
+            BOOTSTRAP_VERSION=$(aws cloudformation describe-stacks \
+              --region "$region" \
+              --stack-name CDKToolkit \
+              --query 'Stacks[0].Outputs[?OutputKey==`BootstrapVersion`].OutputValue' \
+              --output text 2>/dev/null || echo "0")
+            
+            if [ -z "$BOOTSTRAP_VERSION" ] || [ "$BOOTSTRAP_VERSION" = "None" ]; then
+              BOOTSTRAP_VERSION=0
+            fi
+            
+            echo "Bootstrap version in $region: $BOOTSTRAP_VERSION (minimum required: $MIN_BOOTSTRAP_VERSION)"
+            
+            if [ "$BOOTSTRAP_VERSION" -lt "$MIN_BOOTSTRAP_VERSION" ]; then
+              echo "Bootstrap version $BOOTSTRAP_VERSION is outdated (need >= $MIN_BOOTSTRAP_VERSION) - needs re-bootstrapping"
+              return 1
+            fi
+            
+            echo "Region $region is properly bootstrapped (version $BOOTSTRAP_VERSION)"
+            return 0
           }
           
           # Check required regions
@@ -95,9 +124,9 @@ jobs:
           echo "account-id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
           
           if [ -n "$BOOTSTRAP_NEEDED" ]; then
-            echo "🔄 Bootstrap needed for regions: $BOOTSTRAP_NEEDED"
+            echo "Bootstrap needed for regions: $BOOTSTRAP_NEEDED"
           else
-            echo "✅ All regions are already bootstrapped"
+            echo "All regions are properly bootstrapped with version >= $MIN_BOOTSTRAP_VERSION"
           fi
 
       - name: Bootstrap CDK regions
@@ -109,21 +138,29 @@ jobs:
           ACCOUNT_ID="${{ steps.check-bootstrap.outputs.account-id }}"
           
           for region in ${{ steps.check-bootstrap.outputs.bootstrap-needed }}; do
-            echo "🔄 Bootstrapping region: $region"
+            echo "Bootstrapping region: $region"
             CDK_DEFAULT_ACCOUNT=$ACCOUNT_ID CDK_DEFAULT_REGION=$region \
             npx cdk bootstrap "aws://$ACCOUNT_ID/$region" \
               --require-approval never \
               --verbose
             
-            # Verify bootstrap was successful
-            if aws cloudformation describe-stacks \
+            # Verify bootstrap was successful and show version
+            BOOTSTRAP_VERSION=$(aws cloudformation describe-stacks \
+              --region "$region" \
+              --stack-name CDKToolkit \
+              --query 'Stacks[0].Outputs[?OutputKey==`BootstrapVersion`].OutputValue' \
+              --output text 2>/dev/null || echo "unknown")
+            
+            STACK_STATUS=$(aws cloudformation describe-stacks \
               --region "$region" \
               --stack-name CDKToolkit \
               --query 'Stacks[0].StackStatus' \
-              --output text 2>/dev/null | grep -q "COMPLETE"; then
-              echo "✅ Successfully bootstrapped $region"
+              --output text 2>/dev/null || echo "FAILED")
+            
+            if echo "$STACK_STATUS" | grep -q "COMPLETE"; then
+              echo "Successfully bootstrapped $region (version: $BOOTSTRAP_VERSION)"
             else
-              echo "❌ Failed to bootstrap $region"
+              echo "Failed to bootstrap $region (status: $STACK_STATUS)"
               exit 1
             fi
           done
