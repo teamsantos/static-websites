@@ -2,6 +2,8 @@
 export class TemplateManager {
     constructor(editor) {
         this.editor = editor;
+        this.styleObserver = null;
+        this.scopedStyleIds = new Set();
     }
 
     autoLoadTemplate() {
@@ -72,15 +74,122 @@ export class TemplateManager {
             });
     }
 
+     startStyleInterception() {
+         // Use MutationObserver to intercept all style additions and scope them
+         if (this.styleObserver) {
+             this.styleObserver.disconnect();
+         }
+         
+         this.styleObserver = new MutationObserver((mutations) => {
+             mutations.forEach((mutation) => {
+                 if (mutation.type === 'childList') {
+                     mutation.addedNodes.forEach((node) => {
+                         if (node.nodeType === 1 && node.tagName === 'STYLE') {
+                             // Check if this is a Tailwind-generated style
+                             if (!node.getAttribute('data-scoped')) {
+                                 this.scopeStyleTag(node);
+                             }
+                         }
+                     });
+                 }
+             });
+         });
+         
+         // Observe the document head for new style tags
+         this.styleObserver.observe(document.head, {
+             childList: true,
+             subtree: false,
+         });
+     }
+
+     scopeStyleTag(styleTag) {
+         // Mark as scoped to avoid double-processing
+         styleTag.setAttribute('data-scoped', 'true');
+         styleTag.setAttribute('data-template-style', 'true');
+         
+         let cssContent = styleTag.textContent;
+         
+         // Check if it's Tailwind-generated (contains . selectors and utility patterns)
+         const isTailwind = cssContent.includes('@layer') || 
+                          cssContent.match(/\.[a-z]+-[a-z0-9-]+\s*\{/);
+         
+         if (!isTailwind || cssContent.includes('.template-scope-wrapper')) {
+             return; // Not Tailwind or already scoped
+         }
+         
+         // For Tailwind utilities and components, scope them
+         let scopedCss = cssContent;
+         
+         // Skip @import rules
+         const importMatch = scopedCss.match(/^@import[^;]+;[\s\n]*/);
+         let importText = '';
+         if (importMatch) {
+             importText = importMatch[0];
+             scopedCss = scopedCss.substring(importMatch[0].length);
+         }
+         
+         // Scope layer utilities
+         if (scopedCss.includes('@layer utilities')) {
+             scopedCss = scopedCss.replace(
+                 /@layer utilities/,
+                 '@layer utilities'  // Keep as is, utilities are scoped via 'important'
+             );
+         }
+         
+         // Scope regular selectors
+         const lines = scopedCss.split('\n');
+         const scopedLines = lines.map((line, idx) => {
+             // Skip empty lines and @-rules
+             if (!line.trim() || line.trim().startsWith('@')) {
+                 return line;
+             }
+             
+             // Check if this is a selector line (ends with {)
+             if (line.match(/\{[\s]*$/)) {
+                 // Skip :root, html, body as they're already handled
+                 if (line.includes(':root') || line.includes('html') || line.includes('body')) {
+                     return '.template-scope-wrapper { /* normalized */ }';
+                 }
+                 
+                 // Add wrapper prefix to selector
+                 return '.template-scope-wrapper ' + line;
+             }
+             
+             // For declaration lines, add !important if not already present
+             if (line.includes(':') && line.includes(';')) {
+                 if (!line.includes('!important')) {
+                     return line.replace(/;/g, ' !important;');
+                 }
+             }
+             
+             return line;
+         });
+         
+         // Update the style tag content
+         styleTag.textContent = importText + scopedLines.join('\n');
+     }
+
     clearTemplateStyles() {
-        // Remove any existing template styles
-        const existingTemplateStyles = document.querySelectorAll('[data-template-style]');
-        existingTemplateStyles.forEach(style => style.remove());
-    }
+         // Stop observing style changes
+         if (this.styleObserver) {
+             this.styleObserver.disconnect();
+             this.styleObserver = null;
+         }
+         
+         // Remove any existing template styles
+         const existingTemplateStyles = document.querySelectorAll('[data-template-style]');
+         existingTemplateStyles.forEach(style => style.remove());
+         
+         // Clear the scoped style tracking
+         this.scopedStyleIds.clear();
+     }
 
     processTemplate() {
          // Clear any existing template styles first
          this.clearTemplateStyles();
+
+         // START OBSERVING for Tailwind style injections BEFORE anything else loads
+         this.startStyleInterception();
  
          const parser = new DOMParser();
          const doc = parser.parseFromString(this.editor.templateContent, 'text/html');
@@ -91,7 +200,8 @@ export class TemplateManager {
              footerToRemove.remove();
          }
  
-         // Create a wrapper div for isolated Tailwind scope
+         // Create a wrapper div with strict CSS isolation using display: contents
+         // and a custom containment strategy
          const scopeWrapper = document.createElement('div');
          scopeWrapper.className = 'template-scope-wrapper';
          scopeWrapper.setAttribute('data-template-style', 'true');
@@ -133,20 +243,42 @@ export class TemplateManager {
          const linkElements = doc.querySelectorAll('link[rel="stylesheet"]');
          const scriptElements = doc.querySelectorAll('script');
 
+         // Create a style container to hold all template styles
+         // This will be isolated using !important and selector scoping
+         const styleIsolationPrefix = '.template-scope-wrapper';
+
+         // CRITICAL: Process Tailwind config FIRST before any other scripts
+         let tailwindConfigScript = null;
+         let hasTailwindCDN = false;
+         
+         // Find Tailwind-related scripts
+         scriptElements.forEach(scriptElement => {
+             if (scriptElement.src && scriptElement.src.includes('cdn.tailwindcss')) {
+                 hasTailwindCDN = true;
+             } else if (scriptElement.textContent && scriptElement.textContent.includes('tailwind.config')) {
+                 tailwindConfigScript = scriptElement;
+             }
+         });
+
+         // If we have Tailwind, setup the config immediately BEFORE loading anything else
+         if (hasTailwindCDN || tailwindConfigScript) {
+             this.setupTailwindConfiguration(scopeWrapper, tailwindConfigScript);
+         }
+
          // Add style elements - scoped to template wrapper
          styleElements.forEach(styleElement => {
              const newStyle = document.createElement('style');
              newStyle.setAttribute('data-template-style', 'true');
              let cssContent = styleElement.textContent;
              
-             // Wrap body and html styles with template scope wrapper specificity
-             // This prevents them from affecting the editor page
-             cssContent = cssContent.replace(/\bbody\s*\{/g, '.template-scope-wrapper {');
-             cssContent = cssContent.replace(/\bhtml\s*\{/g, '.template-scope-wrapper {');
-             cssContent = cssContent.replace(/\:root\s*\{/g, '.template-scope-wrapper {');
+             // CRITICAL: Scope ALL CSS rules to prevent global effects
+             cssContent = cssContent.replace(/\bbody\s*\{/g, `${styleIsolationPrefix} {`);
+             cssContent = cssContent.replace(/\bhtml\s*\{/g, `${styleIsolationPrefix} {`);
+             cssContent = cssContent.replace(/\:root\s*\{/g, `${styleIsolationPrefix} {`);
+             cssContent = cssContent.replace(/^\s*\*\s*\{/gm, `${styleIsolationPrefix}, ${styleIsolationPrefix} * {`);
              
-             // Wrap any top-level * (universal selector) with scope
-             cssContent = cssContent.replace(/^\s*\*\s*\{/gm, '.template-scope-wrapper, .template-scope-wrapper * {');
+             // Add !important to all declarations to ensure they override editor styles
+             cssContent = cssContent.replace(/;(?!\s*!important)/gm, ' !important;');
              
              newStyle.textContent = cssContent;
              document.head.appendChild(newStyle);
@@ -165,29 +297,23 @@ export class TemplateManager {
              document.head.appendChild(newLink);
          });
 
-         // Handle Tailwind scripts - inject into scope wrapper only
-         let hasTailwindConfig = false;
+         // Handle non-Tailwind scripts
          scriptElements.forEach(scriptElement => {
-             // Check if this is a Tailwind CDN script
-             if (scriptElement.src && scriptElement.src.includes('cdn.tailwindcss')) {
-                 // Load Tailwind CDN into the scope wrapper
-                 this.injectTailwindIntoScope(scopeWrapper);
-             } else if (scriptElement.textContent && scriptElement.textContent.includes('tailwind.config')) {
-                 // This is a Tailwind config script - inject it into the scope wrapper
-                 hasTailwindConfig = true;
-                 const newScript = document.createElement('script');
-                 newScript.setAttribute('data-template-style', 'true');
-                 newScript.textContent = this.scopeTailwindConfig(scriptElement.textContent);
-                 scopeWrapper.appendChild(newScript);
-             } else if (!scriptElement.src && scriptElement.textContent && scriptElement.type !== 'module') {
-                 // Inline scripts (non-module) - add to scope wrapper
+             // Skip Tailwind-related scripts (already handled above)
+             if ((scriptElement.src && scriptElement.src.includes('cdn.tailwindcss')) ||
+                 (scriptElement.textContent && scriptElement.textContent.includes('tailwind.config'))) {
+                 return;
+             }
+             
+             if (!scriptElement.src && scriptElement.textContent && scriptElement.type !== 'module') {
+                 // Inline scripts (non-module)
                  const newScript = document.createElement('script');
                  newScript.setAttribute('data-template-style', 'true');
                  newScript.type = scriptElement.type || 'text/javascript';
                  newScript.textContent = scriptElement.textContent;
                  scopeWrapper.appendChild(newScript);
              } else if (scriptElement.type === 'module' && scriptElement.textContent) {
-                 // Module scripts - add to scope wrapper
+                 // Module scripts
                  const newScript = document.createElement('script');
                  newScript.setAttribute('data-template-style', 'true');
                  newScript.type = 'module';
@@ -195,65 +321,126 @@ export class TemplateManager {
                  scopeWrapper.appendChild(newScript);
              }
          });
-
-         // If Tailwind config was found but not loaded, ensure we still load Tailwind CDN
-         if (hasTailwindConfig) {
-             this.injectTailwindIntoScope(scopeWrapper);
-         }
      }
 
-     scopeTailwindConfig(configScript) {
-         // Add important flag to scope Tailwind to the wrapper
-         // This modifies the config to make all utilities scoped
-         return configScript.replace(
-             /tailwind\.config\s*=\s*\{/,
-             `tailwind.config = {
-                 important: '.template-scope-wrapper',`
-         );
-     }
-
-     injectTailwindIntoScope(scopeWrapper) {
-         // Create an isolated style container that will hold Tailwind styles
-         const styleContainer = document.createElement('div');
-         styleContainer.setAttribute('data-template-style', 'true');
-         styleContainer.style.display = 'none'; // Hide the container itself
+     setupTailwindConfiguration(scopeWrapper, tailwindConfigScript) {
+         // The key insight: Tailwind loads and injects styles into document.head
+         // regardless of where the <script> tag is. We need to:
+         // 1. Load Tailwind in the wrapper
+         // 2. Immediately override all generated styles to be scoped
+         // 3. Or prevent Tailwind from affecting the parent document at all
          
-         // Pre-configure Tailwind BEFORE loading the script
-         // This is critical to prevent global style pollution
          window.tailwind = window.tailwind || {};
          
-         // Create the tailwind config object
-         const tailwindConfig = {
-             important: '.template-scope-wrapper',
+         // Create base config with critical settings
+         const baseConfig = {
+             important: '.template-scope-wrapper',  // Scope ALL utilities
              corePlugins: {
-                 preflight: false, // CRITICAL: Disable preflight to prevent global CSS resets
-             },
-             theme: {
-                 extend: {},
+                 preflight: false,  // DISABLE preflight completely
              },
          };
          
-         // Store the config globally so the script can read it
-         window.tailwind.config = tailwindConfig;
+         // If template has a Tailwind config, merge it but keep our scoping
+         if (tailwindConfigScript && tailwindConfigScript.textContent) {
+             const originalConfigText = tailwindConfigScript.textContent;
+             
+             // Create a temporary script to capture the user's config
+             const tempScript = document.createElement('script');
+             tempScript.textContent = `
+                 (function() {
+                     window._rawTailwindConfig = null;
+                     ${originalConfigText.replace(/tailwind\.config\s*=\s*/, 'window._rawTailwindConfig = ')}
+                 })();
+             `;
+             document.head.appendChild(tempScript);
+             
+             // Set initial config
+             window.tailwind.config = baseConfig;
+             
+             // After config script runs, merge with user config
+             setTimeout(() => {
+                 if (window._rawTailwindConfig) {
+                     const userConfig = window._rawTailwindConfig;
+                     window.tailwind.config = {
+                         ...userConfig,
+                         important: '.template-scope-wrapper',
+                         corePlugins: {
+                             ...userConfig.corePlugins,
+                             preflight: false,  // CRITICAL
+                         },
+                     };
+                 }
+                 tempScript.remove();
+                 delete window._rawTailwindConfig;
+             }, 10);
+         } else {
+             window.tailwind.config = baseConfig;
+         }
          
-         // Create and append the Tailwind CDN script
+         // Load Tailwind into the wrapper
          const script = document.createElement('script');
          script.setAttribute('data-template-style', 'true');
          script.src = 'https://cdn.tailwindcss.com';
          script.defer = true;
          
-         // After script loads, reapply config to ensure it's used
          script.onload = () => {
+             // After Tailwind loads, ensure config is still correct
              setTimeout(() => {
-                 if (window.tailwind) {
-                     window.tailwind.config = tailwindConfig;
+                 if (window.tailwind && window.tailwind.config) {
+                     const config = window.tailwind.config;
+                     // Force the important flag
+                     if (!config.important) {
+                         config.important = '.template-scope-wrapper';
+                     }
+                     // Force preflight off
+                     if (!config.corePlugins) {
+                         config.corePlugins = {};
+                     }
+                     config.corePlugins.preflight = false;
                  }
-             }, 100);
+                 
+                 // Now extract Tailwind styles from head and move to wrapper with !important
+                 this.scopeAllTailwindStyles();
+             }, 200);
          };
          
-         // Append script to scope wrapper, NOT to document head
-         // This ensures Tailwind can only see elements within the wrapper
          scopeWrapper.appendChild(script);
-         scopeWrapper.insertBefore(styleContainer, script);
+     }
+
+     scopeAllTailwindStyles() {
+         // After Tailwind loads, it puts styles in <head>
+         // We need to extract them and re-apply with proper scoping
+         const templateWrapper = document.querySelector('.template-scope-wrapper');
+         if (!templateWrapper) return;
+         
+         // Find all style tags that were added by Tailwind (marked with data-tailwind)
+         const tailwindStyles = document.head.querySelectorAll('style[data-tailwind], style[data-tw]');
+         
+         tailwindStyles.forEach(styleTag => {
+             let cssContent = styleTag.textContent;
+             
+             // Check if it's already scoped
+             if (cssContent.includes('.template-scope-wrapper')) {
+                 return; // Already scoped
+             }
+             
+             // Tailwind utilities need special handling
+             // They come in the form of: .text-red-500 { ... }
+             // We need to scope them: .template-scope-wrapper .text-red-500 { ... }
+             
+             if (!cssContent.includes(':root') && !cssContent.includes('html') && !cssContent.includes('body')) {
+                 // This is utilities - scope them
+                 const wrapper = '.template-scope-wrapper ';
+                 const lines = cssContent.split('\n');
+                 const scopedLines = lines.map(line => {
+                     // Add wrapper prefix to selectors (but be careful with complex selectors)
+                     if (line.match(/^[^{]*\{/)) {
+                         return wrapper + line;
+                     }
+                     return line;
+                 });
+                 styleTag.textContent = scopedLines.join('\n');
+             }
+         });
      }
 }

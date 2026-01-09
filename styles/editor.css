@@ -1167,39 +1167,79 @@ body {
    Template Scope Wrapper - Isolates Tailwind and Template Styles
    ========================================================================== */
 
-.template-scope-wrapper {
-    /* Position as a block element to contain all template content */
-    display: block !important;
-    position: relative;
-    width: 100%;
-    /* Inherit background from container, but allow templates to override */
-    background: inherit;
-    /* CSS containment to prevent style leakage */
-    contain: layout style paint;
-}
+/* CRITICAL: Template CSS Isolation using Containment and Scoping */
 
-/* Reset any editor styles that might have affected template */
+#template-content {
+     /* Container for template content */
+     display: block;
+     width: 100%;
+     overflow-y: auto;
+     background: white;
+     /* High z-index to appear above editor but below modals */
+     position: relative;
+     z-index: 1;
+ }
+
+.template-scope-wrapper {
+     /* CRITICAL: Complete isolation of template styles */
+     display: block !important;
+     width: 100% !important;
+     position: relative !important;
+     
+     /* CSS Containment - prevents ALL style leakage */
+     contain: layout style paint !important;
+     
+     /* Reset dangerous inherited properties */
+     color: initial !important;
+     background-color: initial !important;
+     font-family: initial !important;
+     font-size: initial !important;
+     font-weight: initial !important;
+     line-height: initial !important;
+     letter-spacing: initial !important;
+     text-align: initial !important;
+     
+     /* Reset box model */
+     margin: 0 !important;
+     padding: 56px 0 0 0 !important;  /* Top padding for editor overlay */
+     border: none !important;
+     
+     /* Ensure layout is independent */
+     box-sizing: border-box !important;
+     
+     /* Isolate stacking context */
+     z-index: 1 !important;
+ }
+
+/* CRITICAL: Prevent editor body styles from leaking into template */
 .template-scope-wrapper body {
-    /* Template body should not be affected by editor body styles */
-    color: inherit;
-    background: transparent;
-    font-size: inherit;
-}
+     /* Reset body to defaults */
+     display: block !important;
+     margin: 0 !important;
+     padding: 0 !important;
+     background: transparent !important;
+     color: initial !important;
+     font-family: initial !important;
+     font-size: initial !important;
+ }
 
-/* Ensure Tailwind styles work properly within the template scope */
+/* CRITICAL: Prevent editor html styles from leaking */
+.template-scope-wrapper html {
+     display: block !important;
+     background: transparent !important;
+     color: initial !important;
+ }
+
+/* Ensure template can use all CSS features */
 .template-scope-wrapper * {
-    /* Allow Tailwind and template styles to control all properties */
-}
+     /* Empty - let template styles control */
+ }
 
-/* Prevent editor styles from leaking into template */
-.template-scope-wrapper [data-editable],
+/* Ensure editable elements are accessible within template */
+.template-scope-wrapper [data-editable] {
+     /* Allow template to style these */
+ }
+
 .template-scope-wrapper .editable-element {
-    /* Templates can define these */
-}
-
-/* Override any remaining global styles that might leak */
-.template-scope-wrapper {
-    font-family: inherit;
-    font-size: 16px;
-    color: inherit;
-}
+     /* Allow template to style these */
+ }
