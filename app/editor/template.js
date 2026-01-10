@@ -20,7 +20,7 @@ export class TemplateManager {
         } else if (templateName) {
             itemName = templateName;
             itemType = 'template';
-            itemUrl = `templates/${templateName}/dist/index.html`;
+            itemUrl = `../projects/${templateName}/dist/index.html`;
             remoteUrl = `https://${templateName}.template.e-info.click`;
             this.editor.templateId = templateName; // Store template ID for export
         } else {

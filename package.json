@@ -9,7 +9,7 @@
     "build:template": "node helpers/buildTemplate.js",
     "build:templates": "node helpers/buildTemplate.js",
     "preview": "vite preview",
-    "editor": "npx http-server . -p 3000 -c-1"
+    "editor": "TEMPLATE=coffee vite build && EDITOR_BUILD=true vite build && concurrently \"npx http-server . -p 3000 -c-1\" \"wait-on http://localhost:3000 && open http://localhost:3000/dist/template-editor.html?template=coffee\""
   },
   "repository": {
     "type": "git",
@@ -22,11 +22,13 @@
   },
   "homepage": "https://github.com/teamsantos/static-websites#readme",
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "jsdom": "^26.1.0",
     "serve": "^14.2.5",
     "terser": "^5.43.1",
     "vite": "^7.1.1",
     "vite-plugin-html": "^3.2.2",
-    "vite-plugin-singlefile": "^2.3.0"
+    "vite-plugin-singlefile": "^2.3.0",
+    "wait-on": "^9.0.3"
   }
 }
