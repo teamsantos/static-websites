@@ -20,7 +20,7 @@ function parseEnv() {
         return {
             rootDir: resolve(__dirname, `templates/${templateName}`),
             inputFile: resolve(__dirname, `templates/${templateName}/index.html`),
-            outDir: resolve(__dirname, `templates/${templateName}/dist`)
+            outDir: resolve(__dirname, `projects/${templateName}/dist`)
         };
     }
     if (editorBuild) {
