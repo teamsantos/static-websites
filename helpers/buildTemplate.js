@@ -84,9 +84,9 @@ class TemplateBuildManager {
                 templatePath
             ], rootDir);
 
-            // Step 2: Run Vite build
+            // Step 2: Run Vite build (run vite directly, not npm run build which also builds the editor)
             console.log(`   ✓ Running Vite build...`);
-            await this.runCommand('npm', ['run', 'build'], rootDir, {
+            await this.runCommand('npx', ['vite', 'build'], rootDir, {
                 TEMPLATE: templateName
             });
 

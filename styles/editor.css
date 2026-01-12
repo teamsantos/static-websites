@@ -5,6 +5,136 @@ body {
     background: #f8fafc;
 }
 
+/* Loading Screen */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loading-content {
+    text-align: center;
+    color: #f8fafc;
+    animation: loadingFadeIn 0.6s ease-out;
+}
+
+@keyframes loadingFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.loading-logo {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-icon {
+    width: 64px;
+    height: 64px;
+    color: #3b82f6;
+    animation: loadingPulse 2s ease-in-out infinite;
+    transform-origin: center center;
+}
+
+@keyframes loadingPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+}
+
+.loading-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.025em;
+    background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.loading-subtitle {
+    font-size: 16px;
+    color: #64748b;
+    margin: 0 0 32px 0;
+    font-weight: 400;
+}
+
+.loading-spinner-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(59, 130, 246, 0.2);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: loadingSpin 1s linear infinite;
+}
+
+@keyframes loadingSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-status {
+    font-size: 14px;
+    color: #94a3b8;
+    margin: 0;
+    font-weight: 500;
+    min-height: 20px;
+}
+
+/* Template content hidden state */
+.template-content-hidden {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.template-content-visible {
+    opacity: 1;
+}
+
+/* Error state styling */
+.template-error-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    color: #6b7280;
+}
+
 /* Editor container */
 .editor-container {
     position: relative;

@@ -4,6 +4,55 @@ export class TemplateManager {
         this.editor = editor;
     }
 
+    /**
+     * Update the loading screen status text
+     */
+    updateLoadingStatus(message) {
+        const statusText = document.getElementById('loading-status-text');
+        if (statusText) {
+            statusText.textContent = message;
+        }
+    }
+
+    /**
+     * Hide the loading screen and show the template content
+     */
+    hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loading-screen');
+        const templateContent = document.getElementById('template-content');
+        
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+        }
+        
+        if (templateContent) {
+            templateContent.classList.remove('template-content-hidden');
+            templateContent.classList.add('template-content-visible');
+        }
+    }
+
+    /**
+     * Show error state when template fails to load
+     */
+    showErrorState(message) {
+        const loadingScreen = document.getElementById('loading-screen');
+        const templateContent = document.getElementById('template-content');
+        const errorState = templateContent?.querySelector('.template-error-state');
+        
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+        }
+        
+        if (templateContent) {
+            templateContent.classList.remove('template-content-hidden');
+            templateContent.classList.add('template-content-visible');
+        }
+        
+        if (errorState) {
+            errorState.style.display = 'flex';
+        }
+    }
+
     autoLoadTemplate() {
         // Get template or project name from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
@@ -17,23 +66,25 @@ export class TemplateManager {
             itemType = 'project';
             itemUrl = `projects/${projectName}/index.html`;
             remoteUrl = `https://${projectName}.e-info.click`;
+            this.updateLoadingStatus(`Loading project: ${projectName}...`);
         } else if (templateName) {
             itemName = templateName;
             itemType = 'template';
             itemUrl = `../projects/${templateName}/dist/index.html`;
             remoteUrl = `https://${templateName}.template.e-info.click`;
             this.editor.templateId = templateName; // Store template ID for export
+            this.updateLoadingStatus(`Loading template: ${templateName}...`);
         } else {
+            this.showErrorState();
             this.editor.ui.showStatus(`No ${this.editor.mode === 'create' ? 'template' : 'project'} specified. Please check your URL and try again, or contact us at ${this.editor.supportEmail}`, 'info');
             return;
         }
 
         if (itemName.trim() === '') {
+            this.showErrorState();
             this.editor.ui.showStatus(`Something went wrong. Please try again later or contact us at ${this.editor.supportEmail}`, 'error');
             return;
         }
-
-        this.editor.ui.showStatus(`Loading ${itemType}...`, 'info');
 
         // Fetch item from local directory
         fetch(itemUrl)
@@ -41,32 +92,33 @@ export class TemplateManager {
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
+                this.updateLoadingStatus('Processing template...');
                 return response.text();
             })
             .then(html => {
                 this.editor.templateContent = html;
                 this.processTemplate();
-                this.editor.ui.showStatus(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} loaded successfully!`, 'success');
             })
             .catch(error => {
                 console.error(`Error loading ${itemType}:`, error);
                 // Fallback to remote URL if local fails
-                this.editor.ui.showStatus(`Trying remote ${itemType}...`, 'info');
+                this.updateLoadingStatus(`Trying remote server...`);
 
                 fetch(remoteUrl)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                         }
+                        this.updateLoadingStatus('Processing template...');
                         return response.text();
                     })
                     .then(html => {
                         this.editor.templateContent = html;
                         this.processTemplate();
-                        this.editor.ui.showStatus(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} loaded from remote successfully!`, 'success');
                     })
                     .catch(remoteError => {
                         console.error(`Error loading remote ${itemType}:`, remoteError);
+                        this.showErrorState();
                         this.editor.ui.showStatus(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} not found. Please check the ${itemType} name or contact us at ${this.editor.supportEmail}`, 'error');
                     });
             });
@@ -137,6 +189,9 @@ export class TemplateManager {
         // 3. Let Tailwind generate styles
         // 4. Copy generated styles to shadow root
         // 5. Move content to shadow root
+
+        // Update loading status
+        this.updateLoadingStatus('Loading Tailwind CSS...');
 
         // Show loading indicator while Tailwind processes
         this.showTailwindLoadingIndicator(shadowRoot);
@@ -209,6 +264,7 @@ export class TemplateManager {
 
         loadTailwind().then(() => {
             // Step 4: Inject Tailwind config AFTER Tailwind has loaded
+            this.updateLoadingStatus('Applying theme configuration...');
             if (tailwindConfigContent && window.tailwind) {
                 try {
                     // Execute config - this sets tailwind.config
@@ -223,6 +279,7 @@ export class TemplateManager {
 
             // Step 5: Create temp container with template content
             // Make it visible but off-screen so Tailwind can scan it
+            this.updateLoadingStatus('Generating styles...');
             const tempContainer = document.createElement('div');
             tempContainer.id = 'tailwind-temp-container';
             tempContainer.style.cssText = 'position:fixed;left:-10000px;top:0;width:1920px;height:auto;visibility:visible;';
@@ -232,6 +289,7 @@ export class TemplateManager {
             // Step 6: Trigger Tailwind to rescan by adding a small delay and forcing a repaint
             // This ensures Tailwind's MutationObserver picks up the new content
             requestAnimationFrame(() => {
+                this.updateLoadingStatus('Finalizing template...');
                 setTimeout(() => {
                     this.finishTailwindSetup(doc, shadowRoot, tempContainer, styleElements);
                 }, 800); // Increased delay to ensure Tailwind has time to process
@@ -312,6 +370,8 @@ export class TemplateManager {
         this.editor.elements.processEditableElements(shadowRoot);
         this.editor.sections.initializeSections();
 
+        // Hide loading screen and show template
+        this.hideLoadingScreen();
         this.editor.ui.showStatus('Template ready for editing!', 'success');
     }
 
@@ -345,6 +405,8 @@ export class TemplateManager {
         this.editor.elements.processEditableElements(shadowRoot);
         this.editor.sections.initializeSections();
 
+        // Hide loading screen and show template
+        this.hideLoadingScreen();
         this.editor.ui.showStatus('Template ready for editing!', 'success');
     }
 
