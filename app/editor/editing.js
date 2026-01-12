@@ -21,11 +21,18 @@ export class EditingManager {
     }
 
      startTextEditing(element) {
-         this.editor.currentEditingElement = element;
-         element.classList.add('editing');
+          this.editor.currentEditingElement = element;
+          element.classList.add('editing');
 
-         const textId = element.getAttribute('data-text-id');
-         const currentText = this.editor.translations[this.editor.currentLanguage]?.[textId] || element.textContent;
+          const textId = element.getAttribute('data-text-id');
+          
+          // For input elements, get placeholder; for others, get textContent
+          let currentText;
+          if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+              currentText = this.editor.translations[this.editor.currentLanguage]?.[textId] || element.placeholder;
+          } else {
+              currentText = this.editor.translations[this.editor.currentLanguage]?.[textId] || element.textContent;
+          }
          // Ensure color is in hex format
          let currentColor = this.editor.textColors[textId];
          
@@ -123,10 +130,15 @@ export class EditingManager {
              }
          }, 100);
 
-         // Add real-time text preview while editing
-         textarea.addEventListener('input', (e) => {
-             element.textContent = e.target.value;
-         });
+          // Add real-time text preview while editing
+          textarea.addEventListener('input', (e) => {
+              // For input/textarea elements, update placeholder; for others, update textContent
+              if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                  element.setAttribute('placeholder', e.target.value);
+              } else {
+                  element.textContent = e.target.value;
+              }
+          });
 
          // Initialize iro.js color picker
          this.setupIroColorPicker(editorModal, currentColor, element, initialColor);
@@ -269,59 +281,69 @@ export class EditingManager {
          this.editor.cancelCurrentEdit();
      }
 
-      cancelTextEdit(modal) {
-          // Restore the original text and color of the element before closing the modal
-          if (modal && modal.editingElement) {
-              // Restore text
-              if (modal.originalText !== undefined) {
-                  modal.editingElement.textContent = modal.originalText;
+       cancelTextEdit(modal) {
+           // Restore the original text and color of the element before closing the modal
+           if (modal && modal.editingElement) {
+               // Restore text
+               if (modal.originalText !== undefined) {
+                   const element = modal.editingElement;
+                   if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                       element.setAttribute('placeholder', modal.originalText);
+                   } else {
+                       element.textContent = modal.originalText;
+                   }
+               }
+               // Restore color
+               if (modal.originalColor) {
+                   modal.editingElement.style.setProperty('color', modal.originalColor, 'important');
+               }
+           }
+           this.editor.cancelCurrentEdit();
+       }
+
+      saveModernTextEdit(saveBtn) {
+          const modal = saveBtn.closest('.modern-text-editor-overlay');
+          const textarea = modal.querySelector('.modern-text-input');
+          const picker = modal.colorPickerInstance;
+
+          const newText = textarea.value.trim();
+          const newColor = picker.color.hexString;
+
+          if (this.editor.currentEditingElement) {
+              const element = this.editor.currentEditingElement;
+              const textId = element.getAttribute('data-text-id');
+
+              // For input/textarea elements, update placeholder; for others, update textContent
+              if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                  element.setAttribute('placeholder', newText);
+              } else {
+                  element.textContent = newText;
               }
-              // Restore color
-              if (modal.originalColor) {
-                  modal.editingElement.style.setProperty('color', modal.originalColor, 'important');
+
+              // Update element color
+              this.editor.currentEditingElement.style.setProperty('color', newColor, 'important');
+              console.debug(`Set color on element: ${newColor}`);
+
+              // Update translations
+              if (!this.editor.translations[this.editor.currentLanguage]) {
+                  this.editor.translations[this.editor.currentLanguage] = {};
               }
+              this.editor.translations[this.editor.currentLanguage][textId] = newText;
+
+              // Update text colors
+              this.editor.textColors[textId] = newColor;
+
+              this.editor.ui.showStatus('Text updated successfully', 'success');
+          } else {
+              console.warn('Cannot save: newText or currentEditingElement is missing');
           }
-          this.editor.cancelCurrentEdit();
+
+          modal.classList.add('removing');
+          setTimeout(() => {
+              modal.remove();
+              this.editor.cancelCurrentEdit();
+          }, 300);
       }
-
-     saveModernTextEdit(saveBtn) {
-         const modal = saveBtn.closest('.modern-text-editor-overlay');
-         const textarea = modal.querySelector('.modern-text-input');
-         const picker = modal.colorPickerInstance;
-
-         const newText = textarea.value.trim();
-         const newColor = picker.color.hexString;
-
-         if (this.editor.currentEditingElement) {
-             const textId = this.editor.currentEditingElement.getAttribute('data-text-id');
-
-             // Update element content
-             this.editor.currentEditingElement.textContent = newText;
-
-             // Update element color
-             this.editor.currentEditingElement.style.setProperty('color', newColor, 'important');
-             console.debug(`Set color on element: ${newColor}`);
-
-             // Update translations
-             if (!this.editor.translations[this.editor.currentLanguage]) {
-                 this.editor.translations[this.editor.currentLanguage] = {};
-             }
-             this.editor.translations[this.editor.currentLanguage][textId] = newText;
-
-             // Update text colors
-             this.editor.textColors[textId] = newColor;
-
-             this.editor.ui.showStatus('Text updated successfully', 'success');
-         } else {
-             console.warn('Cannot save: newText or currentEditingElement is missing');
-         }
-
-         modal.classList.add('removing');
-         setTimeout(() => {
-             modal.remove();
-             this.editor.cancelCurrentEdit();
-         }, 300);
-     }
 
     startImageEditing(element) {
         this.editor.currentEditingElement = element;
