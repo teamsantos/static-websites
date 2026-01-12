@@ -130,21 +130,24 @@ export class TemplateManager {
         existingTemplateStyles.forEach(style => style.remove());
     }
 
-    processTemplate() {
-        // Clear any existing template styles first
-        this.clearTemplateStyles();
+     processTemplate() {
+         // Clear any existing template styles first
+         this.clearTemplateStyles();
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(this.editor.templateContent, 'text/html');
+         const parser = new DOMParser();
+         const doc = parser.parseFromString(this.editor.templateContent, 'text/html');
 
-        // Remove the e-info footer if present
-        const footerToRemove = doc.getElementById('modernFooter');
-        if (footerToRemove) {
-            footerToRemove.remove();
-        }
+         // Remove the e-info footer if present
+         const footerToRemove = doc.getElementById('modernFooter');
+         if (footerToRemove) {
+             footerToRemove.remove();
+         }
 
-        // Check if template uses Tailwind CDN
-        const usesTailwind = this.checkForTailwindCDN(doc);
+         // Transform image paths to use the template domain
+         this.transformImagePaths(doc);
+
+         // Check if template uses Tailwind CDN
+         const usesTailwind = this.checkForTailwindCDN(doc);
 
         // Get or create Shadow DOM for complete CSS isolation
         const templateContainer = document.getElementById('template-content');
@@ -166,22 +169,51 @@ export class TemplateManager {
         }
     }
 
-    /**
-     * Check if the template uses Tailwind CDN
-     */
-    checkForTailwindCDN(doc) {
-        const scripts = doc.querySelectorAll('script[src]');
-        for (const script of scripts) {
-            if (script.src.includes('tailwindcss') || script.src.includes('cdn.tailwindcss.com')) {
-                return true;
-            }
-        }
-        return false;
-    }
+     /**
+      * Check if the template uses Tailwind CDN
+      */
+     checkForTailwindCDN(doc) {
+         const scripts = doc.querySelectorAll('script[src]');
+         for (const script of scripts) {
+             if (script.src.includes('tailwindcss') || script.src.includes('cdn.tailwindcss.com')) {
+                 return true;
+             }
+         }
+         return false;
+     }
 
-    /**
-     * Process template that uses Tailwind CDN
-     */
+     /**
+      * Transform image paths from relative paths to full template domain URLs
+      * E.g., /images/image.jpg becomes https://<templateID>.template.e-info.click/images/image.jpg
+      */
+     transformImagePaths(doc) {
+         // Get the template ID from the URL parameters
+         const urlParams = new URLSearchParams(window.location.search);
+         const templateName = urlParams.get('template');
+         const projectName = urlParams.get('project');
+
+         if (!templateName && !projectName) {
+             return; // No template/project to transform paths for
+         }
+
+         const domain = templateName 
+             ? `https://${templateName}.template.e-info.click`
+             : `https://${projectName}.e-info.click`;
+
+         // Find all img elements and transform their src attributes
+         const imageElements = doc.querySelectorAll('img[src], [data-image-src]');
+         imageElements.forEach(element => {
+             const src = element.getAttribute('src');
+             if (src && src.startsWith('/')) {
+                 // Transform relative path to full URL
+                 element.setAttribute('src', domain + src);
+             }
+         });
+     }
+
+     /**
+      * Process template that uses Tailwind CDN
+      */
     processTemplateWithTailwind(doc, shadowRoot, templateContainer) {
         // For Tailwind, we need to:
         // 1. Inject Tailwind script and config into the main document
