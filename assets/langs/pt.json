@@ -129,7 +129,7 @@
         "Usa um dos nossos templates",
         "Um domínio personalizado"
       ],
-      "price": "€8,99/mês (preço do dominio não incluido)",
+      "price": "€8,99/mês",
       "svg": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>\n<path d='M12 2l2.92 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 7.08-1.01L12 2z'/>\n</svg>",
       "redirect-to": "_templates"
     },
@@ -139,7 +139,7 @@
         "Website personalizado de acordo com o seu pedido",
         "Dominio personalizado"
       ],
-      "price": "14,99€ (preço do dominio não incluido)",
+      "price": "14,99€",
       "svg": "<svg viewBox='0 0 24 24' fill='currentColor'>\n<path d='M12 2l2.92 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77 5.82 21l1.18-6.88-5-4.87 7.08-1.01L12 2z'/>\n</svg>",
       "redirect-to": "_get-started"
     }
