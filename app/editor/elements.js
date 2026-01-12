@@ -16,8 +16,57 @@ export class ElementManager {
     }
 
     /**
-     * Convert RGB/RGBA color to hex
-     * Handles hex, rgb, rgba, and edge cases like transparent colors
+     * Convert OKLCH color to sRGB
+     * @param {number} L - Lightness (0-1)
+     * @param {number} C - Chroma (0-0.4+)
+     * @param {number} H - Hue (0-360)
+     * @returns {object} {r, g, b} values 0-255
+     */
+    oklchToRgb(L, C, H) {
+        // Convert hue to radians
+        const hRad = (H * Math.PI) / 180;
+        
+        // OKLCH to OKLab
+        const a = C * Math.cos(hRad);
+        const b = C * Math.sin(hRad);
+        
+        // OKLab to linear sRGB via LMS
+        const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+        const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+        const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+        
+        const l = l_ * l_ * l_;
+        const m = m_ * m_ * m_;
+        const s = s_ * s_ * s_;
+        
+        // LMS to linear sRGB
+        let r = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+        let g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+        let bVal = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+        
+        // Linear sRGB to sRGB (gamma correction)
+        const toSrgb = (c) => {
+            if (c <= 0.0031308) {
+                return 12.92 * c;
+            }
+            return 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+        };
+        
+        r = toSrgb(r);
+        g = toSrgb(g);
+        bVal = toSrgb(bVal);
+        
+        // Clamp and convert to 0-255
+        return {
+            r: Math.round(Math.max(0, Math.min(1, r)) * 255),
+            g: Math.round(Math.max(0, Math.min(1, g)) * 255),
+            b: Math.round(Math.max(0, Math.min(1, bVal)) * 255)
+        };
+    }
+
+    /**
+     * Convert RGB/RGBA/OKLCH color to hex
+     * Handles hex, rgb, rgba, oklch, and edge cases like transparent colors
      */
     rgbToHex(color) {
         if (!color) return '#000000';
@@ -30,6 +79,17 @@ export class ElementManager {
         // Handle transparent and special values
         if (color === 'transparent' || color === 'rgba(0, 0, 0, 0)' || color === 'inherit' || color === 'initial') {
             return '#000000'; // Default to black for transparent/unset colors
+        }
+
+        // Handle OKLCH colors - oklch(L C H) or oklch(L C H / alpha)
+        const oklchMatch = color.match(/^oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*[\d.]+%?)?\s*\)$/i);
+        if (oklchMatch) {
+            const L = parseFloat(oklchMatch[1]);
+            const C = parseFloat(oklchMatch[2]);
+            const H = parseFloat(oklchMatch[3]);
+            const { r, g, b } = this.oklchToRgb(L, C, H);
+            const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+            return hex.toLowerCase();
         }
 
         // Handle RGB/RGBA colors - with flexible spacing

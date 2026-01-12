@@ -5,7 +5,10 @@ export class EditingManager {
     }
 
     handleElementClick(event) {
-        const element = event.target.closest('.editable-element');
+        // The event.target should already be the editable element (set by editor.js for shadow DOM)
+        const element = event.target.classList?.contains('editable-element') 
+            ? event.target 
+            : event.target.closest?.('.editable-element');
         if (!element) return;
 
         event.preventDefault();

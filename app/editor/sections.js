@@ -7,21 +7,28 @@ export class SectionManager {
     }
 
     /**
+     * Get the shadow root container for querying template elements
+     */
+    getTemplateRoot() {
+        return this.editor.shadowRoot || document.getElementById('template-content');
+    }
+
+    /**
      * Initialize section management for the current template
      */
     initializeSections() {
-        const templateContainer = document.getElementById('template-content');
-        if (!templateContainer) return;
+        const templateRoot = this.getTemplateRoot();
+        if (!templateRoot) return;
 
         // Find all sections in the template
-        const sections = templateContainer.querySelectorAll('section, header, footer, main');
+        const sections = templateRoot.querySelectorAll('section, header, footer, main');
         sections.forEach(section => {
             this.applyStoredBackground(section);
             this.addSectionControls(section);
         });
 
         // Also check for divs that might be sections (like hero sections)
-        const potentialSections = templateContainer.querySelectorAll('div[id]');
+        const potentialSections = templateRoot.querySelectorAll('div[id]');
         potentialSections.forEach(div => {
             // Only add controls to divs that look like sections (have meaningful content)
             if (this.isSectionLike(div)) {
@@ -149,12 +156,14 @@ export class SectionManager {
       */
      initializeSectionColorPicker(sectionId, initialColor) {
          const pickerId = `section-color-picker-${sectionId}`;
-         const pickerContainer = document.getElementById(pickerId);
+         // Query within shadow root for the picker container
+         const templateRoot = this.getTemplateRoot();
+         const pickerContainer = templateRoot?.querySelector(`#${pickerId}`);
          if (!pickerContainer || this.sectionPickers?.[sectionId]) return;
 
          if (!this.sectionPickers) this.sectionPickers = {};
 
-         const picker = new iro.ColorPicker(`#${pickerId}`, {
+         const picker = new iro.ColorPicker(pickerContainer, {
              width: 180,
              color: initialColor
          });
@@ -163,7 +172,7 @@ export class SectionManager {
 
          picker.on('color:change', (color) => {
              this.changeSectionBackground(sectionId, color.hexString);
-             const swatch = document.querySelector(`.section-bg-color-swatch[data-section-id="${sectionId}"]`);
+             const swatch = templateRoot?.querySelector(`.section-bg-color-swatch[data-section-id="${sectionId}"]`);
              if (swatch) {
                  swatch.style.backgroundColor = color.hexString;
              }
@@ -270,7 +279,9 @@ export class SectionManager {
      * Remove a section from the template
      */
     removeSection(sectionId) {
-        const section = document.getElementById(sectionId) || document.querySelector(`[data-section-id="${sectionId}"]`)?.parentElement;
+        const templateRoot = this.getTemplateRoot();
+        const section = templateRoot?.querySelector(`#${sectionId}`) || 
+                       templateRoot?.querySelector(`[data-section-id="${sectionId}"]`)?.parentElement;
         if (!section) return;
 
         // Store the section reference for re-adding
@@ -303,7 +314,8 @@ export class SectionManager {
      * Update navigation links that reference the removed section
      */
     updateNavigationLinks(sectionId) {
-        const links = document.querySelectorAll(`a[href="#${sectionId}"]`);
+        const templateRoot = this.getTemplateRoot();
+        const links = templateRoot?.querySelectorAll(`a[href="#${sectionId}"]`) || [];
         links.forEach(link => {
             link.style.textDecoration = 'line-through';
             link.style.opacity = '0.5';
@@ -388,7 +400,8 @@ export class SectionManager {
      * Restore navigation links for re-added section
      */
     restoreNavigationLinks(sectionId) {
-        const links = document.querySelectorAll(`a[href="#${sectionId}"]`);
+        const templateRoot = this.getTemplateRoot();
+        const links = templateRoot?.querySelectorAll(`a[href="#${sectionId}"]`) || [];
         links.forEach(link => {
             link.style.textDecoration = '';
             link.style.opacity = '';
@@ -419,8 +432,8 @@ export class SectionManager {
 
         if (!sectionTemplate) return;
 
-        const templateContainer = document.getElementById('template-content');
-        if (!templateContainer) return;
+        const templateRoot = this.getTemplateRoot();
+        if (!templateRoot) return;
 
         // Create the section element
         const sectionElement = document.createElement('section');
@@ -428,8 +441,9 @@ export class SectionManager {
         sectionElement.className = sectionType;
         sectionElement.innerHTML = sectionTemplate.template;
 
-        // Add to the end of the template
-        templateContainer.appendChild(sectionElement);
+        // Add to the end of the template (find the wrapper inside shadow root)
+        const wrapper = templateRoot.querySelector('#template-shadow-wrapper') || templateRoot;
+        wrapper.appendChild(sectionElement);
 
         // Add controls
         this.addSectionControls(sectionElement);
@@ -454,8 +468,57 @@ export class SectionManager {
     }
 
     /**
-     * Convert RGB/RGBA color to hex
-     * Handles hex, rgb, rgba, and edge cases like transparent colors
+     * Convert OKLCH color to sRGB
+     * @param {number} L - Lightness (0-1)
+     * @param {number} C - Chroma (0-0.4+)
+     * @param {number} H - Hue (0-360)
+     * @returns {object} {r, g, b} values 0-255
+     */
+    oklchToRgb(L, C, H) {
+        // Convert hue to radians
+        const hRad = (H * Math.PI) / 180;
+        
+        // OKLCH to OKLab
+        const a = C * Math.cos(hRad);
+        const b = C * Math.sin(hRad);
+        
+        // OKLab to linear sRGB via LMS
+        const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+        const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+        const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+        
+        const l = l_ * l_ * l_;
+        const m = m_ * m_ * m_;
+        const s = s_ * s_ * s_;
+        
+        // LMS to linear sRGB
+        let r = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+        let g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+        let bVal = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+        
+        // Linear sRGB to sRGB (gamma correction)
+        const toSrgb = (c) => {
+            if (c <= 0.0031308) {
+                return 12.92 * c;
+            }
+            return 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+        };
+        
+        r = toSrgb(r);
+        g = toSrgb(g);
+        bVal = toSrgb(bVal);
+        
+        // Clamp and convert to 0-255
+        return {
+            r: Math.round(Math.max(0, Math.min(1, r)) * 255),
+            g: Math.round(Math.max(0, Math.min(1, g)) * 255),
+            b: Math.round(Math.max(0, Math.min(1, bVal)) * 255)
+        };
+    }
+
+    /**
+     * Convert RGB/RGBA/OKLCH color to hex
+     * Handles hex, rgb, rgba, oklch, and edge cases like transparent colors
      */
     rgbToHex(color) {
         if (!color) return '#ffffff';
@@ -468,6 +531,17 @@ export class SectionManager {
         // Handle transparent and special values
         if (color === 'transparent' || color === 'rgba(0, 0, 0, 0)' || color === 'inherit' || color === 'initial') {
             return '#ffffff'; // Default to white for transparent/unset colors
+        }
+
+        // Handle OKLCH colors - oklch(L C H) or oklch(L C H / alpha)
+        const oklchMatch = color.match(/^oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*[\d.]+%?)?\s*\)$/i);
+        if (oklchMatch) {
+            const L = parseFloat(oklchMatch[1]);
+            const C = parseFloat(oklchMatch[2]);
+            const H = parseFloat(oklchMatch[3]);
+            const { r, g, b } = this.oklchToRgb(L, C, H);
+            const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+            return hex.toLowerCase();
         }
 
         // Handle RGB/RGBA colors - with flexible spacing
@@ -488,7 +562,9 @@ export class SectionManager {
      * Change the background color of a section
      */
     changeSectionBackground(sectionId, color) {
-        const section = document.getElementById(sectionId) || document.querySelector(`[data-section-id="${sectionId}"]`)?.parentElement;
+        const templateRoot = this.getTemplateRoot();
+        const section = templateRoot?.querySelector(`#${sectionId}`) || 
+                       templateRoot?.querySelector(`[data-section-id="${sectionId}"]`)?.parentElement;
         if (!section) return;
 
         // Apply the background color

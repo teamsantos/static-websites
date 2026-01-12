@@ -73,75 +73,621 @@ export class TemplateManager {
     }
 
     clearTemplateStyles() {
-        // Remove any existing template styles
+        // Remove any existing template styles from document head (legacy cleanup)
         const existingTemplateStyles = document.querySelectorAll('[data-template-style]');
         existingTemplateStyles.forEach(style => style.remove());
     }
 
     processTemplate() {
-         // Clear any existing template styles first
-         this.clearTemplateStyles();
- 
-         const parser = new DOMParser();
-         const doc = parser.parseFromString(this.editor.templateContent, 'text/html');
- 
-         // Remove the e-info footer if present
-         const footerToRemove = doc.getElementById('modernFooter');
-         if (footerToRemove) {
-             footerToRemove.remove();
-         }
- 
-         // Extract and apply CSS styles from the template
-         this.extractAndApplyStyles(doc);
- 
-         // Display the template in the DOM first so CSS styles are applied
-         const templateContainer = document.getElementById('template-content');
-         templateContainer.innerHTML = '';
-         templateContainer.appendChild(doc.body);
- 
-         // Add padding to prevent editor overlay from blocking content
-         templateContainer.style.paddingTop = '56px';
- 
-         // Now that the template is in the live DOM and CSS styles are applied,
-         // load text/image files and process editable elements
-         // This must happen AFTER appendChild so getComputedStyle() works correctly
-         this.editor.elements.loadTranslationFiles(templateContainer);
-         this.editor.elements.loadImageFiles(templateContainer);
- 
-         // Process editable elements
-         this.editor.elements.processEditableElements(templateContainer);
- 
-         // Initialize section management
-         this.editor.sections.initializeSections();
- 
-         this.editor.ui.showStatus('Template ready for editing!', 'success');
-     }
+        // Clear any existing template styles first
+        this.clearTemplateStyles();
 
-    extractAndApplyStyles(doc) {
-        // Extract styles from template head
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(this.editor.templateContent, 'text/html');
+
+        // Remove the e-info footer if present
+        const footerToRemove = doc.getElementById('modernFooter');
+        if (footerToRemove) {
+            footerToRemove.remove();
+        }
+
+        // Check if template uses Tailwind CDN
+        const usesTailwind = this.checkForTailwindCDN(doc);
+
+        // Get or create Shadow DOM for complete CSS isolation
+        const templateContainer = document.getElementById('template-content');
+        let shadowRoot = templateContainer.shadowRoot;
+        if (!shadowRoot) {
+            shadowRoot = templateContainer.attachShadow({ mode: 'open' });
+        }
+        shadowRoot.innerHTML = '';
+
+        // Store shadow root reference on editor for other modules to access
+        this.editor.shadowRoot = shadowRoot;
+
+        if (usesTailwind) {
+            // For Tailwind templates, we need a special process
+            this.processTemplateWithTailwind(doc, shadowRoot, templateContainer);
+        } else {
+            // For non-Tailwind templates, proceed normally
+            this.processTemplateNormal(doc, shadowRoot);
+        }
+    }
+
+    /**
+     * Check if the template uses Tailwind CDN
+     */
+    checkForTailwindCDN(doc) {
+        const scripts = doc.querySelectorAll('script[src]');
+        for (const script of scripts) {
+            if (script.src.includes('tailwindcss') || script.src.includes('cdn.tailwindcss.com')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Process template that uses Tailwind CDN
+     */
+    processTemplateWithTailwind(doc, shadowRoot, templateContainer) {
+        // For Tailwind, we need to:
+        // 1. Inject Tailwind script and config into the main document
+        // 2. Temporarily render content in a visible (but off-screen) div in main document
+        // 3. Let Tailwind generate styles
+        // 4. Copy generated styles to shadow root
+        // 5. Move content to shadow root
+
+        // Show loading indicator while Tailwind processes
+        this.showTailwindLoadingIndicator(shadowRoot);
+
+        // Step 1: Extract Tailwind-related elements from template
         const styleElements = doc.querySelectorAll('style');
         const linkElements = doc.querySelectorAll('link[rel="stylesheet"]');
+        const scriptElements = doc.querySelectorAll('script');
 
-        // Add style elements
-        styleElements.forEach(styleElement => {
-            const newStyle = document.createElement('style');
-            newStyle.setAttribute('data-template-style', 'true');
-            // Add higher specificity to template styles to avoid conflicts with editor
-            let cssContent = styleElement.textContent;
-            // Wrap body styles with template container specificity
-            cssContent = cssContent.replace(/body\s*\{/g, '#template-content body {');
-            cssContent = cssContent.replace(/html\s*\{/g, '#template-content html {');
-            newStyle.textContent = cssContent;
-            document.head.appendChild(newStyle);
-        });
-
-        // Add link elements (external stylesheets)
+        // Inject font stylesheets to document head (fonts need to be in main document)
         linkElements.forEach(linkElement => {
+            if (linkElement.rel !== 'stylesheet') return;
             const newLink = document.createElement('link');
-            newLink.setAttribute('data-template-style', 'true');
             newLink.rel = 'stylesheet';
             newLink.href = linkElement.href;
+            newLink.setAttribute('data-template-style', 'true');
+            if (linkElement.crossOrigin) {
+                newLink.crossOrigin = linkElement.crossOrigin;
+            }
             document.head.appendChild(newLink);
         });
+
+        // Step 2: Find Tailwind script and config
+        let tailwindSrc = null;
+        let tailwindConfigContent = null;
+        
+        scriptElements.forEach(scriptElement => {
+            const src = scriptElement.src;
+            const content = scriptElement.textContent;
+            
+            if (src && (src.includes('tailwindcss') || src.includes('cdn.tailwindcss.com'))) {
+                tailwindSrc = src;
+            } else if (content && content.includes('tailwind.config')) {
+                tailwindConfigContent = content;
+            }
+        });
+
+        // Step 3: Load Tailwind, then config, then create temp container
+        this.loadTailwindAndProcess(tailwindSrc, tailwindConfigContent, doc, shadowRoot, styleElements);
+    }
+
+    /**
+     * Load Tailwind CDN, apply config, and process template
+     */
+    loadTailwindAndProcess(tailwindSrc, tailwindConfigContent, doc, shadowRoot, styleElements) {
+        const loadTailwind = () => {
+            return new Promise((resolve) => {
+                // Check if Tailwind is already loaded
+                if (window.tailwind) {
+                    resolve();
+                    return;
+                }
+
+                if (!tailwindSrc) {
+                    resolve();
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = tailwindSrc;
+                script.setAttribute('data-template-style', 'true');
+                script.onload = () => {
+                    // Give Tailwind a moment to initialize
+                    setTimeout(resolve, 200);
+                };
+                script.onerror = () => resolve();
+                document.head.appendChild(script);
+            });
+        };
+
+        loadTailwind().then(() => {
+            // Step 4: Inject Tailwind config AFTER Tailwind has loaded
+            if (tailwindConfigContent && window.tailwind) {
+                try {
+                    // Execute config - this sets tailwind.config
+                    const configScript = document.createElement('script');
+                    configScript.textContent = tailwindConfigContent;
+                    configScript.setAttribute('data-template-style', 'true');
+                    document.head.appendChild(configScript);
+                } catch (e) {
+                    console.warn('Error applying Tailwind config:', e);
+                }
+            }
+
+            // Step 5: Create temp container with template content
+            // Make it visible but off-screen so Tailwind can scan it
+            const tempContainer = document.createElement('div');
+            tempContainer.id = 'tailwind-temp-container';
+            tempContainer.style.cssText = 'position:fixed;left:-10000px;top:0;width:1920px;height:auto;visibility:visible;';
+            tempContainer.innerHTML = doc.body.innerHTML;
+            document.body.appendChild(tempContainer);
+
+            // Step 6: Trigger Tailwind to rescan by adding a small delay and forcing a repaint
+            // This ensures Tailwind's MutationObserver picks up the new content
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    this.finishTailwindSetup(doc, shadowRoot, tempContainer, styleElements);
+                }, 800); // Increased delay to ensure Tailwind has time to process
+            });
+        });
+    }
+
+    /**
+     * Finish setting up template after Tailwind has processed
+     */
+    finishTailwindSetup(doc, shadowRoot, tempContainer, styleElements) {
+        // Remove loading indicator
+        this.removeTailwindLoadingIndicator(shadowRoot);
+
+        // Collect ALL styles from the document - Tailwind CDN injects styles into <style> tags
+        let tailwindCSS = '';
+        
+        // Get all style elements in the document
+        const allStyles = document.querySelectorAll('style');
+        allStyles.forEach(style => {
+            const content = style.textContent;
+            if (!content) return;
+            
+            // Include all Tailwind-related styles
+            // Tailwind CDN creates style tags with utility classes
+            if (
+                content.includes('--tw-') ||           // Tailwind CSS variables
+                content.includes('tailwindcss') ||     // Tailwind comment marker
+                content.includes('.bg-') ||            // Background utilities
+                content.includes('.text-') ||          // Text utilities
+                content.includes('.flex') ||           // Flex utilities
+                content.includes('.grid') ||           // Grid utilities
+                content.includes('.p-') ||             // Padding utilities
+                content.includes('.m-') ||             // Margin utilities
+                content.includes('box-sizing')         // Reset styles
+            ) {
+                tailwindCSS += content + '\n';
+            }
+        });
+
+        // Add template's own style elements (like dark mode styles)
+        // Transform :root to :host for Shadow DOM compatibility
+        styleElements.forEach(styleElement => {
+            let css = styleElement.textContent;
+            css = this.transformCSSForShadowDOM(css);
+            tailwindCSS += css + '\n';
+        });
+
+        // Inject combined styles into shadow root
+        const combinedStyle = document.createElement('style');
+        combinedStyle.textContent = tailwindCSS;
+        shadowRoot.appendChild(combinedStyle);
+
+        // Inject editor-specific styles
+        this.injectEditorStylesIntoShadow(shadowRoot);
+
+        // Create wrapper and move content to shadow root
+        const wrapper = document.createElement('div');
+        wrapper.id = 'template-shadow-wrapper';
+        wrapper.style.paddingTop = '56px';
+        wrapper.style.minHeight = '100vh';
+        
+        // Copy body classes to wrapper (important for Tailwind body utilities like bg-background)
+        const bodyClasses = doc.body.className;
+        if (bodyClasses) {
+            wrapper.className = bodyClasses;
+        }
+        
+        wrapper.innerHTML = tempContainer.innerHTML;
+        shadowRoot.appendChild(wrapper);
+
+        // Clean up temp container
+        tempContainer.remove();
+
+        // Now process elements in shadow root
+        this.editor.elements.loadTranslationFiles(shadowRoot);
+        this.editor.elements.loadImageFiles(shadowRoot);
+        this.editor.elements.processEditableElements(shadowRoot);
+        this.editor.sections.initializeSections();
+
+        this.editor.ui.showStatus('Template ready for editing!', 'success');
+    }
+
+    /**
+     * Process non-Tailwind template normally
+     */
+    processTemplateNormal(doc, shadowRoot) {
+        // Inject styles INTO the shadow root (not document.head) for isolation
+        this.injectStylesIntoShadow(doc, shadowRoot);
+
+        // Create wrapper to hold template content with proper padding
+        const wrapper = document.createElement('div');
+        wrapper.id = 'template-shadow-wrapper';
+        wrapper.style.paddingTop = '56px';
+        wrapper.style.minHeight = '100vh';
+
+        // Copy the body content into wrapper
+        Array.from(doc.body.childNodes).forEach(node => {
+            wrapper.appendChild(node.cloneNode(true));
+        });
+
+        shadowRoot.appendChild(wrapper);
+
+        // Add editor-specific styles to shadow root for editable elements
+        this.injectEditorStylesIntoShadow(shadowRoot);
+
+        // Now that the template is in the live DOM (shadow DOM) and CSS styles are applied,
+        // load text/image files and process editable elements
+        this.editor.elements.loadTranslationFiles(shadowRoot);
+        this.editor.elements.loadImageFiles(shadowRoot);
+        this.editor.elements.processEditableElements(shadowRoot);
+        this.editor.sections.initializeSections();
+
+        this.editor.ui.showStatus('Template ready for editing!', 'success');
+    }
+
+    /**
+     * Inject template styles into the shadow root for CSS isolation (non-Tailwind)
+     */
+    injectStylesIntoShadow(doc, shadowRoot) {
+        // Extract and inject style elements
+        const styleElements = doc.querySelectorAll('style');
+        styleElements.forEach(styleElement => {
+            const newStyle = document.createElement('style');
+            // Transform CSS for Shadow DOM compatibility:
+            // 1. Replace :root with :host (CSS variables need to be on :host in shadow DOM)
+            // 2. Replace body selector with #template-shadow-wrapper
+            let cssContent = styleElement.textContent;
+            cssContent = this.transformCSSForShadowDOM(cssContent);
+            newStyle.textContent = cssContent;
+            shadowRoot.appendChild(newStyle);
+        });
+
+        // Extract and inject link elements (external stylesheets)
+        const linkElements = doc.querySelectorAll('link[rel="stylesheet"]');
+        linkElements.forEach(linkElement => {
+            const newLink = document.createElement('link');
+            newLink.rel = 'stylesheet';
+            newLink.href = linkElement.href;
+            if (linkElement.crossOrigin) {
+                newLink.crossOrigin = linkElement.crossOrigin;
+            }
+            shadowRoot.appendChild(newLink);
+        });
+
+        // Handle regular scripts (non-Tailwind)
+        const scriptElements = doc.querySelectorAll('script');
+        scriptElements.forEach(scriptElement => {
+            const src = scriptElement.src;
+            const content = scriptElement.textContent;
+            
+            // Skip empty scripts
+            if (!src && !content?.trim()) return;
+            
+            const newScript = document.createElement('script');
+            if (src) {
+                newScript.src = src;
+            } else {
+                newScript.textContent = content;
+            }
+            if (scriptElement.type) {
+                newScript.type = scriptElement.type;
+            }
+            // Scripts are added to document head for proper execution context
+            newScript.setAttribute('data-template-style', 'true');
+            document.head.appendChild(newScript);
+        });
+    }
+
+    /**
+     * Transform CSS to work inside Shadow DOM
+     * - :root becomes :host (for CSS variables)
+     * - body becomes #template-shadow-wrapper
+     * - html becomes :host
+     */
+    transformCSSForShadowDOM(css) {
+        // Replace :root with :host for CSS custom properties
+        css = css.replace(/:root\s*\{/g, ':host {');
+        
+        // Replace html selector with :host
+        css = css.replace(/(?<![a-zA-Z0-9_-])html\s*\{/g, ':host {');
+        
+        // Replace body selector with #template-shadow-wrapper
+        // Be careful not to replace body inside other selectors or comments
+        css = css.replace(/(?<![a-zA-Z0-9_-])body\s*\{/g, '#template-shadow-wrapper {');
+        
+        // Also handle body in combined selectors like "html, body {"
+        css = css.replace(/(?<![a-zA-Z0-9_-])body\s*,/g, '#template-shadow-wrapper,');
+        css = css.replace(/,\s*body\s*\{/g, ', #template-shadow-wrapper {');
+        
+        return css;
+    }
+
+    /**
+     * Inject editor-specific styles into shadow root for editable element highlighting
+     */
+    injectEditorStylesIntoShadow(shadowRoot) {
+        const editorStyles = document.createElement('style');
+        editorStyles.textContent = `
+            /* Editable element highlighting */
+            .editable-element {
+                position: relative;
+                cursor: pointer;
+                transition: all 0.15s ease;
+            }
+
+            .editable-element:hover {
+                box-shadow: 0 0 0 2px #3b82f6;
+            }
+
+            .editable-element.editing {
+                box-shadow: 0 0 0 2px #3b82f6;
+            }
+
+            .editable-element[data-text-id]:hover::after {
+                content: "Click to edit text";
+                position: absolute;
+                top: -32px;
+                left: 0;
+                background: #1e293b;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 500;
+                white-space: nowrap;
+                z-index: 1001;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .editable-element[data-image-src]:hover::after {
+                content: "Click to change image";
+                position: absolute;
+                top: -32px;
+                left: 0;
+                background: #1e293b;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 500;
+                white-space: nowrap;
+                z-index: 1001;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            /* Plus divider for empty elements */
+            .plus-divider {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin: 20px 0;
+                opacity: 0.2;
+                transition: opacity 0.3s ease;
+                cursor: pointer;
+            }
+
+            .plus-divider:hover {
+                opacity: 1;
+            }
+
+            .divider-line {
+                flex: 1;
+                height: 1px;
+                background-color: currentColor;
+            }
+
+            .plus-icon {
+                font-size: 18px;
+                font-weight: 300;
+                user-select: none;
+            }
+
+            .lang-element-wrapper {
+                display: contents;
+            }
+
+            /* Section controls */
+            .section-controls {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-size: 12px;
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                opacity: 0.7;
+                transition: opacity 0.2s;
+                backdrop-filter: blur(4px);
+            }
+
+            .section-controls:hover {
+                opacity: 1;
+            }
+
+            .section-label {
+                font-weight: 500;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 120px;
+            }
+
+            .section-control-btn {
+                background: none;
+                border: none;
+                color: white;
+                cursor: pointer;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 16px;
+                font-weight: bold;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 20px;
+                height: 20px;
+            }
+
+            .section-control-btn:hover {
+                background: rgba(255, 255, 255, 0.15);
+            }
+
+            .section-hide-btn:hover {
+                background: rgba(107, 114, 128, 0.8);
+            }
+
+            .section-bg-color-swatch {
+                width: 24px;
+                height: 20px;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-radius: 3px;
+                cursor: pointer;
+                background: white;
+                margin-right: 4px;
+                transition: all 0.2s ease;
+            }
+
+            .section-bg-color-swatch:hover {
+                border-color: rgba(255, 255, 255, 0.8);
+                box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+            }
+
+            .section-color-picker-popover {
+                position: absolute;
+                display: none;
+                padding: 12px;
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1010;
+            }
+
+            .image-remove-btn {
+                position: absolute;
+                top: 2rem;
+                right: 0.5rem;
+                background: rgba(239, 68, 68, 0.9);
+                color: white;
+                border: none;
+                border-radius: 0.375rem;
+                width: 2rem;
+                height: 2rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                backdrop-filter: blur(4px);
+                z-index: 10;
+            }
+
+            .image-remove-btn:hover {
+                background: rgba(220, 38, 38, 1);
+                transform: scale(1.05);
+            }
+
+            .image-remove-btn:active {
+                transform: scale(0.95);
+            }
+
+            .image-remove-btn svg {
+                pointer-events: none;
+            }
+
+            /* Section hover effects */
+            section:hover,
+            header:hover,
+            footer:hover,
+            main:hover,
+            div[id]:hover {
+                outline: 2px solid rgba(59, 130, 246, 0.3);
+                outline-offset: 2px;
+            }
+
+            /* Loading indicator for Tailwind processing */
+            .tailwind-loading-indicator {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 60px 20px;
+                text-align: center;
+                color: #64748b;
+            }
+
+            .tailwind-loading-spinner {
+                width: 40px;
+                height: 40px;
+                border: 3px solid #e2e8f0;
+                border-top-color: #3b82f6;
+                border-radius: 50%;
+                animation: tailwind-spin 1s linear infinite;
+                margin-bottom: 16px;
+            }
+
+            @keyframes tailwind-spin {
+                to { transform: rotate(360deg); }
+            }
+
+            .tailwind-loading-text {
+                font-size: 14px;
+                font-weight: 500;
+            }
+        `;
+        shadowRoot.appendChild(editorStyles);
+    }
+
+    /**
+     * Show loading indicator while Tailwind processes styles
+     */
+    showTailwindLoadingIndicator(shadowRoot) {
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.className = 'tailwind-loading-indicator';
+        loadingIndicator.id = 'tailwind-loading';
+        loadingIndicator.innerHTML = `
+            <div class="tailwind-loading-spinner"></div>
+            <div class="tailwind-loading-text">Processing Tailwind styles...</div>
+        `;
+        shadowRoot.appendChild(loadingIndicator);
+    }
+
+    /**
+     * Remove loading indicator after Tailwind processing is complete
+     */
+    removeTailwindLoadingIndicator(shadowRoot) {
+        const loadingIndicator = shadowRoot.querySelector('#tailwind-loading');
+        if (loadingIndicator) {
+            loadingIndicator.remove();
+        }
     }
 }

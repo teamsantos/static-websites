@@ -4,14 +4,36 @@ export class UtilsManager {
         this.editor = editor;
     }
 
+    /**
+     * Get the shadow root or template container
+     */
+    getTemplateRoot() {
+        return this.editor.shadowRoot || document.getElementById('template-content');
+    }
+
+    /**
+     * Get the content wrapper inside shadow root
+     */
+    getTemplateWrapper() {
+        const shadowRoot = this.editor.shadowRoot;
+        if (shadowRoot) {
+            return shadowRoot.querySelector('#template-shadow-wrapper');
+        }
+        return document.getElementById('template-content');
+    }
+
     getEditedHtml() {
         // Similar to exportTemplate but return the HTML string
         const parser = new DOMParser();
         const originalDoc = parser.parseFromString(this.editor.templateContent, 'text/html');
 
-        // Update the body content with our modifications
-        const templateContainer = document.getElementById('template-content');
-        originalDoc.body.innerHTML = templateContainer.innerHTML;
+        // Update the body content with our modifications from shadow root
+        const templateWrapper = this.getTemplateWrapper();
+        if (templateWrapper) {
+            // Clone the content and clean up editor-specific elements
+            const cleanedContent = this.getCleanedContent(templateWrapper);
+            originalDoc.body.innerHTML = cleanedContent;
+        }
 
         // Clean up editor-specific styles
         const styleElements = originalDoc.querySelectorAll('style');
@@ -36,6 +58,48 @@ export class UtilsManager {
         return originalDoc.documentElement.outerHTML;
     }
 
+    /**
+     * Get cleaned content from template wrapper, removing editor-specific elements
+     */
+    getCleanedContent(wrapper) {
+        // Clone the wrapper to avoid modifying the live DOM
+        const clone = wrapper.cloneNode(true);
+        
+        // Remove editor-specific elements
+        const editorsToRemove = clone.querySelectorAll('.section-controls, .plus-divider, .lang-element-wrapper');
+        editorsToRemove.forEach(el => {
+            // For lang-element-wrapper, unwrap the contents
+            if (el.classList.contains('lang-element-wrapper')) {
+                const parent = el.parentNode;
+                while (el.firstChild) {
+                    // Skip plus-divider elements
+                    if (el.firstChild.classList?.contains('plus-divider')) {
+                        el.removeChild(el.firstChild);
+                    } else {
+                        parent.insertBefore(el.firstChild, el);
+                    }
+                }
+                parent.removeChild(el);
+            } else {
+                el.remove();
+            }
+        });
+
+        // Remove editable-element class
+        const editableElements = clone.querySelectorAll('.editable-element');
+        editableElements.forEach(el => {
+            el.classList.remove('editable-element');
+            el.classList.remove('editing');
+        });
+
+        // Remove padding from wrapper if present
+        if (clone.style.paddingTop === '56px') {
+            clone.style.paddingTop = '';
+        }
+
+        return clone.innerHTML;
+    }
+
     collectExportData() {
         // Collect the current state for export: images, translations, textColors, sectionBackgrounds, and templateId
         return {
@@ -53,7 +117,7 @@ export class UtilsManager {
             this.editor.currentEditingElement = null;
         }
 
-        // Remove any open editors
+        // Remove any open editors (these are in the main document, not shadow root)
         const editors = document.querySelectorAll('.text-editor, .image-editor, .modern-text-editor-overlay');
         editors.forEach(editor => editor.remove());
 
@@ -79,9 +143,12 @@ export class UtilsManager {
         const parser = new DOMParser();
         const originalDoc = parser.parseFromString(this.editor.templateContent, 'text/html');
 
-        // Update the body content with our modifications
-        const templateContainer = document.getElementById('template-content');
-        originalDoc.body.innerHTML = templateContainer.innerHTML;
+        // Update the body content with our modifications from shadow root
+        const templateWrapper = this.getTemplateWrapper();
+        if (templateWrapper) {
+            const cleanedContent = this.getCleanedContent(templateWrapper);
+            originalDoc.body.innerHTML = cleanedContent;
+        }
 
         // Clean up editor-specific styles
         const styleElements = originalDoc.querySelectorAll('style');

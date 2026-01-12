@@ -19,6 +19,7 @@ class TemplateEditor {
         this.currentEditingElement = null;
         this.mode = 'create'; // 'create' or 'save'
         this.templateId = null; // Template identifier for export
+        this.shadowRoot = null; // Shadow DOM root for template isolation
 
         // Support email - change this in one place
         this.supportEmail = supportEmail;
@@ -62,7 +63,7 @@ class TemplateEditor {
         // File inputs
         document.getElementById('image-file-input').addEventListener('change', (e) => this.handleImageFile(e));
 
-        // Global events
+        // Global events - use composedPath for shadow DOM events
         document.addEventListener('click', (e) => this.handleElementClick(e));
         document.addEventListener('keydown', (e) => this.handleKeydown(e));
     }
@@ -100,7 +101,24 @@ class TemplateEditor {
 
     // Editing methods delegated to EditingManager
     handleElementClick(event) {
-        this.editing.handleElementClick(event);
+        // For shadow DOM, we need to use composedPath to find the actual target
+        // event.composedPath() returns the path of elements the event traveled through
+        const path = event.composedPath();
+        
+        // Find if any element in the path is an editable element
+        const editableElement = path.find(el => 
+            el.classList && el.classList.contains('editable-element')
+        );
+        
+        if (editableElement) {
+            // Create a synthetic event-like object with the correct target
+            const syntheticEvent = {
+                target: editableElement,
+                preventDefault: () => event.preventDefault(),
+                stopPropagation: () => event.stopPropagation()
+            };
+            this.editing.handleElementClick(syntheticEvent);
+        }
     }
 
      saveModernTextEdit(saveBtn) {
