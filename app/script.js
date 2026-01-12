@@ -58,22 +58,22 @@ const injectPlans = (plans) => {
                 ${plan.description.map(point => `<li><p>${point}</p></li>`).join("")}
             </ul>
 
-            <div class="template-content template-button">
-                ${
-                    isComingSoon
-                        ? `
-                        <button class="btn btn-disabled btn-full coming-soon-btn" disabled>
-                            Coming Soon
-                        </button>
-                        `
-                        : `
-                        <button 
-                          class="btn btn-primary btn-full pay-btn"
-                          data-product="${plan.stripe_price_id}">
-                          Pay Now
-                        </button>
-                        `
-                }
+             <div class="template-content template-button">
+                 ${
+                     isComingSoon
+                         ? `
+                         <button class="btn btn-disabled coming-soon-btn" disabled>
+                             Coming Soon
+                         </button>
+                         `
+                         : `
+                         <button
+                           class="btn btn-primary pay-btn"
+                           data-product="${plan.stripe_price_id}">
+                           Pay Now
+                         </button>
+                         `
+                 }
             </div>
         </div>
         `;
