@@ -38,54 +38,63 @@ async function createCheckout(product_id) {
 
 const injectPlans = (plans) => {
     const container = document.getElementById("plans");
-    container.innerHTML = plans.map((plan, idx) => {
-        
+    const fragment = document.createDocumentFragment();
+
+    plans.forEach((plan) => {
+        const card = document.createElement("div");
+        card.className = `plan-item ${plan.coming_soon ? 'coming-soon' : ''}`;
         const isComingSoon = plan.coming_soon === true;
 
-        return `
-        <div class="plan-item ${isComingSoon ? "coming-soon" : ""}" 
-             redirect-to="${plan["redirect-to"]}">
-            <div class="plan-item-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    ${plan.svg}
-                </svg>
-            </div>
+        card.innerHTML = `
+<div class="plan-header">
+    <div class="plan-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            ${plan.svg}
+        </svg>
+    </div>
+    <h3 class="plan-name">${plan.name}</h3>
+    ${isComingSoon ? '<span class="plan-badge">Coming Soon</span>' : ''}
+</div>
 
-            <h3>${plan.name}</h3>
-            <h5 style="padding-bottom: 10px;">${plan.price}</h5>
+<div class="plan-pricing">
+    <div class="price">${plan.price}</div>
+</div>
 
-            <ul>
-                ${plan.description.map(point => `<li><p>${point}</p></li>`).join("")}
-            </ul>
+<ul class="plan-features">
+    ${plan.description.map(point => `<li class="feature-point"><span class="checkmark">✓</span>${point}</li>`).join("")}
+</ul>
 
-             <div class="template-content template-button">
-                 ${
-                     isComingSoon
-                         ? `
-                         <button class="btn btn-disabled coming-soon-btn" disabled>
-                             Coming Soon
-                         </button>
-                         `
-                         : `
-                         <button
-                           class="btn btn-primary pay-btn"
-                           data-product="${plan.stripe_price_id}">
-                           Pay Now
-                         </button>
-                         `
-                 }
-            </div>
-        </div>
-        `;
-    }).join("");
+<div class="plan-action">
+    ${
+        isComingSoon
+            ? `<button class="btn btn-disabled coming-soon-btn" disabled>Coming Soon</button>`
+            : `<button class="btn btn-primary pay-btn" data-product="${plan.stripe_price_id}">Choose Plan</button>`
+    }
+</div>
+`;
 
-    // attach events only to active buttons
-    container.querySelectorAll(".pay-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const productId = btn.getAttribute("data-product");
-            createCheckout(productId);
-        });
+        // Handle click events for coming soon
+        if (isComingSoon) {
+            card.style.cursor = "default";
+            card.onclick = (e) => {
+                e.stopPropagation();
+                showComingSoonNotification(plan.name);
+            };
+        } else {
+            // Attach event to pay button
+            const payBtn = card.querySelector(".pay-btn");
+            if (payBtn) {
+                payBtn.addEventListener("click", () => {
+                    const productId = payBtn.getAttribute("data-product");
+                    createCheckout(productId);
+                });
+            }
+        }
+
+        fragment.appendChild(card);
     });
+
+    container.appendChild(fragment);
 };
 
 const injectBenifits = (benifits) => {
