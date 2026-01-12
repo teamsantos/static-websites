@@ -65,11 +65,10 @@ const injectPlans = (plans) => {
 </ul>
 
 <div class="plan-action">
-    ${
-        isComingSoon
-            ? `<button class="btn btn-disabled coming-soon-btn" disabled>Coming Soon</button>`
-            : `<button class="btn btn-primary pay-btn" data-product="${plan.stripe_price_id}">Choose Plan</button>`
-    }
+    ${isComingSoon
+                ? `<button class="btn btn-disabled coming-soon-btn" disabled>Coming Soon</button>`
+                : `<button class="btn btn-primary pay-btn" redirect-to="_templates">Choose Plan</button>`
+            }
 </div>
 `;
 
@@ -80,15 +79,6 @@ const injectPlans = (plans) => {
                 e.stopPropagation();
                 showComingSoonNotification(plan.name);
             };
-        } else {
-            // Attach event to pay button
-            const payBtn = card.querySelector(".pay-btn");
-            if (payBtn) {
-                payBtn.addEventListener("click", () => {
-                    const productId = payBtn.getAttribute("data-product");
-                    createCheckout(productId);
-                });
-            }
         }
 
         fragment.appendChild(card);
@@ -123,13 +113,13 @@ const injectTemplates = (templates, selectText) => {
         card.innerHTML = `
 <div class="template-frame">
     ${template.comingSoon
-    ? `<div class="frame-placeholder">
+                ? `<div class="frame-placeholder">
         <div class="placeholder-content">
             <span>Preview Coming Soon</span>
         </div>
         <div class="coming-soon-badge">Coming Soon</div>
     </div>`
-    : `<iframe src="${frameURL}" 
+                : `<iframe src="${frameURL}" 
         title="${template.title} Preview"
         frameborder="0"
         scrolling="no"
@@ -137,7 +127,7 @@ const injectTemplates = (templates, selectText) => {
         sandbox="allow-scripts allow-same-origin allow-forms"
         class="template-iframe">
     </iframe>`
-    }
+            }
 </div>
 <div class="template-content">
     <div class="template-header">
@@ -173,14 +163,17 @@ const injectTemplates = (templates, selectText) => {
     container.appendChild(fragment);
 };
 
-const showComingSoonNotification = (templateName) => {
+const showComingSoonNotification = (templateName, plan = false) => {
     // Create a simple notification
     const notification = document.createElement('div');
     notification.className = 'notification coming-soon-notification';
     notification.innerHTML = `
 <div class="notification-content">
     <h4>Coming Soon!</h4>
-    <p>The ${templateName} template is currently in development. Check back soon!</p>
+    ${!plan
+            ? `<p>The ${templateName} template is currently in development. Check back soon!</p>`
+            : ''
+        }
     <button class="btn btn-primary notification-close">Got it</button>
 </div>
 `;

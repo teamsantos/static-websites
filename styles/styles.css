@@ -965,6 +965,11 @@ p {
     margin-top: auto;
 }
 
+.plan-action .btn {
+    width: 100%;
+    justify-content: center;
+}
+
 .plan-item.coming-soon {
     opacity: 0.7;
     pointer-events: none;
