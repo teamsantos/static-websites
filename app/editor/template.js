@@ -556,6 +556,17 @@ export class TemplateManager {
                 box-shadow: 0 0 0 2px #3b82f6;
             }
 
+            /* Ensure editable elements and their parents don't clip the tooltip */
+            .editable-element:hover {
+                overflow: visible !important;
+            }
+            
+            /* Handle parent elements that have overflow:hidden - 
+               temporarily make visible when child is hovered */
+            .editable-overflow-parent:has(.editable-element:hover) {
+                overflow: visible !important;
+            }
+
             .editable-element[data-text-id]:hover::after {
                 content: "Click to edit text";
                 position: absolute;

@@ -269,7 +269,32 @@ export class ElementManager {
                  }
              }
  
-             // Always enable editing - no conditional logic needed
+             // Mark parent elements that have overflow:hidden so we can handle tooltip visibility
+             this.markOverflowParents(element);
          });
      }
+
+    /**
+     * Mark parent elements with overflow:hidden so CSS can handle tooltip visibility
+     * This walks up the DOM tree and adds a class to parents that clip content
+     */
+    markOverflowParents(element) {
+        let parent = element.parentElement;
+        let depth = 0;
+        const maxDepth = 5; // Only check up to 5 levels
+
+        while (parent && depth < maxDepth) {
+            // Get computed style - works in shadow DOM since element is already attached
+            try {
+                const style = getComputedStyle(parent);
+                if (style.overflow === 'hidden' || style.overflowY === 'hidden' || style.overflowX === 'hidden') {
+                    parent.classList.add('editable-overflow-parent');
+                }
+            } catch (e) {
+                // If getComputedStyle fails, skip this element
+            }
+            parent = parent.parentElement;
+            depth++;
+        }
+    }
 }
