@@ -71,9 +71,15 @@ class HTMLExtractor {
 
     hasExtractableTextContent(element) {
         const inlineTags = ['STRONG', 'EM', 'B', 'I', 'SPAN', 'A', 'U', 'MARK', 'SMALL', 'SUB', 'SUP'];
+        // BR tags break the flow - if present, don't extract as single block
+        // Instead, let recursive processing handle each part separately
 
         for (let child of element.childNodes) {
             if (child.nodeType === 1) { // Element node
+                // BR tags mean we should NOT extract as single block
+                if (child.tagName === 'BR') {
+                    return false;
+                }
                 if (!inlineTags.includes(child.tagName)) {
                     return false;
                 }
@@ -88,6 +94,33 @@ class HTMLExtractor {
             }
         }
         return element.textContent.trim().length > 0;
+    }
+
+    wrapTextNodes(element) {
+        // Wrap standalone text nodes in spans so they become editable
+        // This is used when an element has mixed content (e.g., text + BR + more text)
+        const document = element.ownerDocument;
+        const childNodes = Array.from(element.childNodes);
+        
+        for (let node of childNodes) {
+            if (node.nodeType === 3) { // Text node
+                const text = node.textContent.trim();
+                if (text) {
+                    // Create a span wrapper for the text node
+                    const span = document.createElement('span');
+                    const textKey = this.generateTextKey(text);
+                    span.setAttribute('data-text-id', textKey);
+                    // Preserve the original whitespace by using node.textContent directly
+                    // but store the trimmed version in JSON
+                    span.textContent = '';
+                    this.enJson[textKey] = text;
+                    this.textCounter++;
+                    
+                    // Replace the text node with the span
+                    node.parentNode.replaceChild(span, node);
+                }
+            }
+        }
     }
 
     shouldSkipElement(element) {
@@ -228,6 +261,12 @@ class HTMLExtractor {
                 this.enJson[textKey] = text;
                 this.textCounter++;
             }
+        }
+        else {
+            // Element doesn't have extractable text content as a whole
+            // (e.g., has BR tags or block elements inside)
+            // We need to wrap standalone text nodes in spans to make them editable
+            this.wrapTextNodes(element);
         }
 
         const children = Array.from(element.children);
