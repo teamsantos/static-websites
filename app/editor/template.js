@@ -59,18 +59,26 @@ export class TemplateManager {
         const templateName = urlParams.get('template');
         const projectName = urlParams.get('project');
 
+        // Detect if running locally (localhost or 127.0.0.1)
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
         let itemName, itemType, itemUrl, remoteUrl;
 
         if (projectName) {
             itemName = projectName;
             itemType = 'project';
-            itemUrl = `projects/${projectName}/index.html`;
+            itemUrl = isLocal 
+                ? `/projects/${projectName}/index.html`
+                : `projects/${projectName}/index.html`;
             remoteUrl = `https://${projectName}.e-info.click`;
             this.updateLoadingStatus(`Loading project: ${projectName}...`);
         } else if (templateName) {
             itemName = templateName;
             itemType = 'template';
-            itemUrl = `../projects/${templateName}/dist/index.html`;
+            // When running locally from /dist/, use absolute path to templates folder
+            itemUrl = isLocal 
+                ? `/templates/${templateName}/dist/index.html`
+                : `../templates/${templateName}/dist/index.html`;
             remoteUrl = `https://${templateName}.template.e-info.click`;
             this.editor.templateId = templateName; // Store template ID for export
             this.updateLoadingStatus(`Loading template: ${templateName}...`);
@@ -402,6 +410,9 @@ export class TemplateManager {
         this.editor.elements.processEditableElements(shadowRoot);
         this.editor.sections.initializeSections();
 
+        // Initialize hero images editor if template has trail images
+        this.editor.heroImages.initialize();
+
         // Hide loading screen and show template
         this.hideLoadingScreen();
         this.editor.ui.showStatus('Template ready for editing!', 'success');
@@ -436,6 +447,9 @@ export class TemplateManager {
         this.editor.elements.loadImageFiles(shadowRoot);
         this.editor.elements.processEditableElements(shadowRoot);
         this.editor.sections.initializeSections();
+
+        // Initialize hero images editor if template has trail images
+        this.editor.heroImages.initialize();
 
         // Hide loading screen and show template
         this.hideLoadingScreen();

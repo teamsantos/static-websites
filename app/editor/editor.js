@@ -7,6 +7,7 @@ import { ElementManager } from './elements.js';
 import { EditingManager } from './editing.js';
 import { UtilsManager } from './utils.js';
 import { SectionManager } from './sections.js';
+import { HeroImagesEditor } from './hero-images.js';
 
 class TemplateEditor {
     constructor() {
@@ -33,6 +34,7 @@ class TemplateEditor {
         this.editing = new EditingManager(this);
         this.utils = new UtilsManager(this);
         this.sections = new SectionManager(this);
+        this.heroImages = new HeroImagesEditor(this);
 
         this.init();
     }
