@@ -342,8 +342,28 @@
 
         @media (max-width: 480px) {
             .hero-buttons {
-                flex-direction: column;
-                gap: 0.75rem;
+                flex-direction: row;
+                gap: 0.5rem;
+                width: calc(100% - 2rem);
+                max-width: 400px;
+            }
+
+            .hero-pill-btn {
+                padding: 0.75rem 1rem;
+            }
+
+            .hero-pill-btn.scroll-btn {
+                flex-shrink: 0;
+                padding: 0.75rem;
+            }
+
+            .hero-pill-btn.scroll-btn span {
+                display: none;
+            }
+
+            .hero-pill-btn:not(.scroll-btn) {
+                flex: 1;
+                justify-content: center;
             }
         }
 
@@ -870,6 +890,42 @@
             color: var(--color-accent);
         }
 
+        /* Mobile Menu Close Button */
+        .mobile-menu-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .mobile-menu-close svg {
+            width: 24px;
+            height: 24px;
+            color: var(--color-white);
+        }
+
+        .mobile-menu.active .mobile-menu-close {
+            opacity: 1;
+            transform: scale(1);
+            transition-delay: 0.3s;
+        }
+
+        .mobile-menu-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
         /* Prevent body scroll when menu is open */
         body.menu-open {
             overflow: hidden;
@@ -914,6 +970,11 @@
 
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Navigation menu">
+        <button class="mobile-menu-close" aria-label="Close menu">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
         <a href="#works" class="mobile-nav-link" data-text-id="work">Work</a>
         <a href="#about" class="mobile-nav-link" data-text-id="about">About</a>
         <a href="#services" class="mobile-nav-link" data-text-id="services">Services</a>
@@ -939,7 +1000,7 @@
             </p>
         </div>
         <div class="hero-buttons">
-            <a href="#works" class="hero-pill-btn" id="scrollIndicator">
+            <a href="#works" class="hero-pill-btn scroll-btn" id="scrollIndicator">
                 <span>Scroll</span>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -1392,6 +1453,7 @@
         (function() {
             const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
             const mobileMenu = document.getElementById('mobileMenu');
+            const mobileMenuClose = document.querySelector('.mobile-menu-close');
             const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
             const body = document.body;
 
@@ -1421,6 +1483,11 @@
 
             // Toggle menu on button click
             mobileMenuBtn.addEventListener('click', toggleMenu);
+
+            // Close menu when clicking the close button
+            if (mobileMenuClose) {
+                mobileMenuClose.addEventListener('click', closeMenu);
+            }
 
             // Close menu when clicking a link
             mobileNavLinks.forEach(link => {
