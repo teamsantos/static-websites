@@ -340,7 +340,7 @@ export class TemplateManager {
     /**
      * Finish setting up template after Tailwind has processed
      */
-    finishTailwindSetup(doc, shadowRoot, tempContainer, styleElements) {
+    async finishTailwindSetup(doc, shadowRoot, tempContainer, styleElements) {
         // Remove loading indicator
         this.removeTailwindLoadingIndicator(shadowRoot);
 
@@ -384,7 +384,7 @@ export class TemplateManager {
         shadowRoot.appendChild(combinedStyle);
 
         // Inject editor-specific styles
-        this.injectEditorStylesIntoShadow(shadowRoot);
+        await this.injectEditorStylesIntoShadow(shadowRoot);
 
         // Create wrapper and move content to shadow root
         const wrapper = document.createElement('div');
@@ -422,7 +422,7 @@ export class TemplateManager {
     /**
      * Process non-Tailwind template normally
      */
-    processTemplateNormal(doc, shadowRoot) {
+    async processTemplateNormal(doc, shadowRoot) {
         // Inject styles INTO the shadow root (not document.head) for isolation
         this.injectStylesIntoShadow(doc, shadowRoot);
 
@@ -440,7 +440,7 @@ export class TemplateManager {
         shadowRoot.appendChild(wrapper);
 
         // Add editor-specific styles to shadow root for editable elements
-        this.injectEditorStylesIntoShadow(shadowRoot);
+        await this.injectEditorStylesIntoShadow(shadowRoot);
 
         // Now that the template is in the live DOM (shadow DOM) and CSS styles are applied,
         // load text/image files and process editable elements
@@ -539,8 +539,43 @@ export class TemplateManager {
 
     /**
      * Inject editor-specific styles into shadow root for editable element highlighting
+     * Loads styles from the external editor.css file to maintain a single source of truth
      */
-    injectEditorStylesIntoShadow(shadowRoot) {
+    async injectEditorStylesIntoShadow(shadowRoot) {
+        // Detect if running locally (localhost or 127.0.0.1)
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        // Build the path to editor.css
+        const cssPath = isLocal 
+            ? '/styles/editor.css'
+            : '../styles/editor.css';
+        
+        try {
+            const response = await fetch(cssPath);
+            if (!response.ok) {
+                throw new Error(`Failed to load editor.css: ${response.status}`);
+            }
+            
+            let cssContent = await response.text();
+            
+            // Transform selectors for shadow DOM compatibility
+            // Replace #template-content selectors since we're inside the shadow root
+            cssContent = cssContent.replace(/#template-content\s+/g, '');
+            
+            const editorStyles = document.createElement('style');
+            editorStyles.textContent = cssContent;
+            shadowRoot.appendChild(editorStyles);
+        } catch (error) {
+            console.warn('Could not load editor.css, using fallback inline styles:', error);
+            // Fallback to minimal inline styles if CSS file cannot be loaded
+            this.injectFallbackEditorStyles(shadowRoot);
+        }
+    }
+
+    /**
+     * Fallback inline styles in case editor.css cannot be loaded
+     */
+    injectFallbackEditorStyles(shadowRoot) {
         const editorStyles = document.createElement('style');
         editorStyles.textContent = `
             /* Editable element highlighting */
@@ -558,14 +593,7 @@ export class TemplateManager {
                 box-shadow: 0 0 0 2px #3b82f6;
             }
 
-            /* Ensure editable elements and their parents don't clip the tooltip */
             .editable-element:hover {
-                overflow: visible !important;
-            }
-            
-            /* Handle parent elements that have overflow:hidden - 
-               temporarily make visible when child is hovered */
-            .editable-overflow-parent:has(.editable-element:hover) {
                 overflow: visible !important;
             }
 
@@ -583,6 +611,9 @@ export class TemplateManager {
                 white-space: nowrap;
                 z-index: 1001;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                text-transform: none;
+                letter-spacing: normal;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
             }
 
             .editable-element[data-image-src]:hover::after {
@@ -599,6 +630,9 @@ export class TemplateManager {
                 white-space: nowrap;
                 z-index: 1001;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                text-transform: none;
+                letter-spacing: normal;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
             }
 
             .editable-element[data-icon-id]:hover::after {
@@ -615,9 +649,11 @@ export class TemplateManager {
                 white-space: nowrap;
                 z-index: 1001;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                text-transform: none;
+                letter-spacing: normal;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
             }
 
-            /* Plus divider for empty elements */
             .plus-divider {
                 display: flex;
                 align-items: center;
@@ -648,7 +684,6 @@ export class TemplateManager {
                 display: contents;
             }
 
-            /* Section controls */
             .section-controls {
                 position: absolute;
                 top: 10px;
@@ -662,13 +697,13 @@ export class TemplateManager {
                 display: flex;
                 align-items: center;
                 gap: 6px;
-                opacity: 0.7;
+                opacity: 0.7 !important;
                 transition: opacity 0.2s;
                 backdrop-filter: blur(4px);
             }
 
             .section-controls:hover {
-                opacity: 1;
+                opacity: 1 !important;
             }
 
             .section-label {
@@ -763,7 +798,6 @@ export class TemplateManager {
                 pointer-events: none;
             }
 
-            /* Section hover effects */
             section:hover,
             header:hover,
             footer:hover,
@@ -773,7 +807,6 @@ export class TemplateManager {
                 outline-offset: 2px;
             }
 
-            /* Loading indicator for Tailwind processing */
             .tailwind-loading-indicator {
                 display: flex;
                 flex-direction: column;

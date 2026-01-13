@@ -942,7 +942,7 @@ export class EditingManager {
         return [
             { class: 'fas', label: 'Solid', description: 'Filled/Solid icons' },
             { class: 'far', label: 'Regular', description: 'Outlined/Regular icons' },
-            { class: 'fab', label: 'Brands', description: 'Brand logos' }
+            // { class: 'fab', label: 'Brands', description: 'Brand logos' }
         ];
     }
     
