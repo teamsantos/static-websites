@@ -9,7 +9,7 @@
     "build:template": "node helpers/buildTemplate.js",
     "build:templates": "node helpers/buildTemplate.js",
     "preview": "vite preview",
-    "editor": "TEMPLATE=coffee vite build && EDITOR_BUILD=true vite build && concurrently \"npx http-server . -p 3000 -c-1\" \"wait-on http://localhost:3000 && open http://localhost:3000/dist/template-editor.html?template=coffee\""
+    "editor": "TEMPLATE=portfolio vite build && EDITOR_BUILD=true vite build && concurrently \"npx http-server . -p 3000 -c-1\" \"wait-on http://localhost:3000 && open http://localhost:3000/dist/template-editor.html?template=portfolio\""
   },
   "repository": {
     "type": "git",

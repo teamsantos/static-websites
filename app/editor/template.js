@@ -471,28 +471,12 @@ export class TemplateManager {
             shadowRoot.appendChild(newLink);
         });
 
-        // Handle regular scripts (non-Tailwind)
-        const scriptElements = doc.querySelectorAll('script');
-        scriptElements.forEach(scriptElement => {
-            const src = scriptElement.src;
-            const content = scriptElement.textContent;
-            
-            // Skip empty scripts
-            if (!src && !content?.trim()) return;
-            
-            const newScript = document.createElement('script');
-            if (src) {
-                newScript.src = src;
-            } else {
-                newScript.textContent = content;
-            }
-            if (scriptElement.type) {
-                newScript.type = scriptElement.type;
-            }
-            // Scripts are added to document head for proper execution context
-            newScript.setAttribute('data-template-style', 'true');
-            document.head.appendChild(newScript);
-        });
+        // Skip template scripts in editor mode - they would run in the wrong context
+        // (main document instead of shadow DOM) and cause issues like:
+        // - Custom cursors appearing on the editor page
+        // - Event listeners not finding elements (they're in shadow DOM)
+        // - Navbar scroll effects not working
+        // The template preview is for visual editing, not interactive functionality
     }
 
     /**
@@ -515,6 +499,24 @@ export class TemplateManager {
         // Also handle body in combined selectors like "html, body {"
         css = css.replace(/(?<![a-zA-Z0-9_-])body\s*,/g, '#template-shadow-wrapper,');
         css = css.replace(/,\s*body\s*\{/g, ', #template-shadow-wrapper {');
+        
+        // Remove cursor: none styles - templates shouldn't hide the cursor in editor mode
+        css = css.replace(/cursor\s*:\s*none\s*(!important)?\s*;?/gi, 'cursor: auto;');
+        
+        // Hide custom cursor elements and mobile menu overlays in editor mode
+        // These are interactive features that don't work without JavaScript
+        css += `
+            .cursor, .cursor-dot, [class*="cursor"]:not([class*="cursor-pointer"]) {
+                display: none !important;
+            }
+            .mobile-menu, .mobile-menu-btn, .mobile-menu-close {
+                display: none !important;
+            }
+            /* Ensure navbar is visible and properly styled in editor */
+            .navbar {
+                position: absolute !important;
+            }
+        `;
         
         return css;
     }
