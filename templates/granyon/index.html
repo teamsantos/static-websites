@@ -178,6 +178,52 @@
             overflow: hidden;
         }
 
+        /* Hero Trail Images */
+        .hero-images-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .hero-trail-image {
+            position: absolute;
+            width: 200px;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 8px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+            filter: grayscale(30%);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .hero-trail-image.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .hero-trail-image.fading {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+        }
+
+        @media (max-width: 768px) {
+            .hero-trail-image {
+                width: 120px;
+                height: 160px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-images-container {
+                display: none;
+            }
+        }
+
         .hero-content {
             text-align: center;
             max-width: 1200px;
@@ -815,6 +861,9 @@
 
     <!-- Hero Section -->
     <section class="hero">
+        <!-- Trail Images Container -->
+        <div class="hero-images-container" id="heroImagesContainer"></div>
+        
         <div class="hero-content">
             <div class="hero-tagline">
                 <span class="tag green">Design Studio</span>
@@ -1103,6 +1152,161 @@
             el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             observer.observe(el);
         });
+
+        // Hero Image Trail Effect
+        (function() {
+            const hero = document.querySelector('.hero');
+            const container = document.getElementById('heroImagesContainer');
+            
+            if (!hero || !container || !window.matchMedia('(hover: hover)').matches) return;
+
+            // Images to use for the trail effect
+            const trailImages = [
+                'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=560&fit=crop',
+                'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=560&fit=crop',
+                'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=400&h=560&fit=crop',
+                'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=560&fit=crop',
+                'https://images.unsplash.com/photo-1634942537034-2531766767d1?w=400&h=560&fit=crop',
+                'https://images.unsplash.com/photo-1559028012-481c04fa702d?w=400&h=560&fit=crop',
+                'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=560&fit=crop',
+                'https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=560&fit=crop'
+            ];
+
+            // Preload images
+            trailImages.forEach(src => {
+                const img = new Image();
+                img.src = src;
+            });
+
+            let currentImageIndex = 0;
+            let lastX = 0;
+            let lastY = 0;
+            let isMoving = false;
+            let moveTimeout = null;
+            let throttleTimeout = null;
+            const activeImages = [];
+            const minDistance = 100; // Minimum distance to travel before showing next image
+            const maxImages = 5; // Maximum visible images at once
+            const fadeDelay = 50; // Time before image starts fading after mouse stops (almost instant)
+
+            function getDistance(x1, y1, x2, y2) {
+                return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            }
+
+            function createTrailImage(x, y) {
+                const img = document.createElement('img');
+                img.src = trailImages[currentImageIndex];
+                img.className = 'hero-trail-image';
+                img.style.left = (x - 100) + 'px'; // Center the image on cursor
+                img.style.top = (y - 140) + 'px';
+                
+                container.appendChild(img);
+                
+                // Trigger reflow for animation
+                img.offsetHeight;
+                
+                // Show image
+                requestAnimationFrame(() => {
+                    img.classList.add('visible');
+                });
+
+                // Track this image
+                const imageData = {
+                    element: img,
+                    timeout: null
+                };
+                activeImages.push(imageData);
+
+                // Cycle to next image
+                currentImageIndex = (currentImageIndex + 1) % trailImages.length;
+
+                // Remove excess images
+                while (activeImages.length > maxImages) {
+                    const oldest = activeImages.shift();
+                    fadeOutImage(oldest);
+                }
+
+                return imageData;
+            }
+
+            function fadeOutImage(imageData) {
+                if (imageData.timeout) {
+                    clearTimeout(imageData.timeout);
+                }
+                
+                const img = imageData.element;
+                img.classList.remove('visible');
+                img.classList.add('fading');
+                
+                // Remove from DOM after fade
+                setTimeout(() => {
+                    if (img.parentNode) {
+                        img.parentNode.removeChild(img);
+                    }
+                }, 1300);
+            }
+
+            function fadeAllImages() {
+                activeImages.forEach(imageData => {
+                    fadeOutImage(imageData);
+                });
+                activeImages.length = 0;
+            }
+
+            function handleMouseMove(e) {
+                const rect = hero.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Check if we've moved enough distance
+                const distance = getDistance(lastX, lastY, x, y);
+                
+                if (distance >= minDistance) {
+                    // Throttle image creation
+                    if (!throttleTimeout) {
+                        createTrailImage(x, y);
+                        lastX = x;
+                        lastY = y;
+                        
+                        throttleTimeout = setTimeout(() => {
+                            throttleTimeout = null;
+                        }, 80);
+                    }
+                }
+
+                // Reset the "stopped moving" timeout
+                isMoving = true;
+                if (moveTimeout) {
+                    clearTimeout(moveTimeout);
+                }
+                
+                moveTimeout = setTimeout(() => {
+                    isMoving = false;
+                    // Fade out all images when mouse stops
+                    fadeAllImages();
+                }, fadeDelay);
+            }
+
+            function handleMouseLeave() {
+                isMoving = false;
+                if (moveTimeout) {
+                    clearTimeout(moveTimeout);
+                }
+                fadeAllImages();
+                lastX = 0;
+                lastY = 0;
+            }
+
+            function handleMouseEnter(e) {
+                const rect = hero.getBoundingClientRect();
+                lastX = e.clientX - rect.left;
+                lastY = e.clientY - rect.top;
+            }
+
+            hero.addEventListener('mousemove', handleMouseMove);
+            hero.addEventListener('mouseleave', handleMouseLeave);
+            hero.addEventListener('mouseenter', handleMouseEnter);
+        })();
     </script>
 </body>
 </html>
