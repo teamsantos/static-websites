@@ -73,6 +73,13 @@ class HTMLExtractor {
         const inlineTags = ['STRONG', 'EM', 'B', 'I', 'SPAN', 'A', 'U', 'MARK', 'SMALL', 'SUB', 'SUP'];
         // BR tags break the flow - if present, don't extract as single block
         // Instead, let recursive processing handle each part separately
+        
+        // Check if element only contains A tags (like nav menus) - if so, don't extract as single block
+        // This allows nav menus to have individually editable links
+        const children = Array.from(element.children);
+        if (children.length > 0 && children.every(child => child.tagName === 'A')) {
+            return false;
+        }
 
         for (let child of element.childNodes) {
             if (child.nodeType === 1) { // Element node
@@ -253,13 +260,24 @@ class HTMLExtractor {
         }
 
         else if (this.hasExtractableTextContent(element)) {
-            const text = element.textContent.trim();
-            if (text) {
-                const textKey = this.generateTextKey(text, element);
-                element.setAttribute('data-text-id', textKey);
-                element.textContent = ''; // Remove the text content
-                this.enJson[textKey] = text;
-                this.textCounter++;
+            // Skip if element already has a data-text-id (preserve manual assignments)
+            if (!element.hasAttribute('data-text-id')) {
+                const text = element.textContent.trim();
+                if (text) {
+                    const textKey = this.generateTextKey(text, element);
+                    element.setAttribute('data-text-id', textKey);
+                    element.textContent = ''; // Remove the text content
+                    this.enJson[textKey] = text;
+                    this.textCounter++;
+                }
+            } else {
+                // Element has data-text-id, preserve the text and add to JSON
+                const existingKey = element.getAttribute('data-text-id');
+                const text = element.textContent.trim();
+                if (text && !this.enJson[existingKey]) {
+                    this.enJson[existingKey] = text;
+                    element.textContent = ''; // Remove the text content for injection later
+                }
             }
         }
         else {
