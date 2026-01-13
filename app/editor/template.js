@@ -407,6 +407,7 @@ export class TemplateManager {
         // Now process elements in shadow root
         this.editor.elements.loadTranslationFiles(shadowRoot);
         this.editor.elements.loadImageFiles(shadowRoot);
+        this.editor.elements.loadIconFiles(shadowRoot);
         this.editor.elements.processEditableElements(shadowRoot);
         this.editor.sections.initializeSections();
 
@@ -445,6 +446,7 @@ export class TemplateManager {
         // load text/image files and process editable elements
         this.editor.elements.loadTranslationFiles(shadowRoot);
         this.editor.elements.loadImageFiles(shadowRoot);
+        this.editor.elements.loadIconFiles(shadowRoot);
         this.editor.elements.processEditableElements(shadowRoot);
         this.editor.sections.initializeSections();
 
@@ -585,6 +587,22 @@ export class TemplateManager {
 
             .editable-element[data-image-src]:hover::after {
                 content: "Click to change image";
+                position: absolute;
+                top: -32px;
+                left: 0;
+                background: #1e293b;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 500;
+                white-space: nowrap;
+                z-index: 1001;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .editable-element[data-icon-id]:hover::after {
+                content: "Click to change icon";
                 position: absolute;
                 top: -32px;
                 left: 0;

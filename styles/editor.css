@@ -256,6 +256,9 @@ body {
     white-space: nowrap;
     z-index: 1001;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    text-transform: none;
+    letter-spacing: normal;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
 }
 
 .editable-element[data-image-src]:hover::after {
@@ -272,6 +275,28 @@ body {
     white-space: nowrap;
     z-index: 1001;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    text-transform: none;
+    letter-spacing: normal;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
+}
+
+.editable-element[data-icon-id]:hover::after {
+    content: "Click to change icon";
+    position: absolute;
+    top: -32px;
+    left: 0;
+    background: #1e293b;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 1001;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    text-transform: none;
+    letter-spacing: normal;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
 }
 
 
@@ -1889,4 +1914,356 @@ body {
 
 .section-controls:hover {
     opacity: 1 !important;
+}
+
+/* ============================================
+   Icon Editor Modal Styles
+   ============================================ */
+
+/* Icon Editor Modal Overlay */
+.modern-icon-editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: modalFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-icon-editor-overlay.removing {
+    animation: modalFadeOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Icon Editor Card */
+.modern-icon-editor-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.1),
+        0 15px 35px rgba(0, 0, 0, 0.05),
+        0 5px 15px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    animation: modernCardAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: 1px solid #6b7280;
+    max-width: 600px;
+    width: 90vw;
+    max-height: 90vh;
+}
+
+/* Icon Editor Header */
+.icon-editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.icon-editor-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.current-icon-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.current-icon-preview i {
+    font-size: 28px;
+    color: #3b82f6;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+/* Icon Search */
+.icon-search-container {
+    margin-bottom: 16px;
+}
+
+.icon-search-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #0f172a;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.icon-search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.icon-search-input::placeholder {
+    color: #94a3b8;
+}
+
+/* Icon Grid */
+.icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+    max-height: 350px;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.icon-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 8px;
+    background: #f8fafc;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.icon-option:hover {
+    background: #e0f2fe;
+    border-color: #3b82f6;
+}
+
+.icon-option.selected {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.icon-option i {
+    font-size: 22px;
+    color: #334155;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-option:hover i,
+.icon-option.selected i {
+    color: #2563eb;
+}
+
+.icon-label {
+    font-size: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
+    font-weight: 500;
+    color: #64748b;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.icon-option:hover .icon-label,
+.icon-option.selected .icon-label {
+    color: #1e40af;
+}
+
+/* Icon Grid Scrollbar */
+.icon-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.icon-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.icon-grid::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 3px;
+}
+
+.icon-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.6);
+}
+
+/* Icon Editor Content and Footer */
+.modern-icon-editor-card .editor-card-content {
+    padding: 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+/* Icon Editor Controls (Color Picker) */
+.icon-editor-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(14, 165, 233, 0.1);
+}
+
+.icon-editor-controls .color-picker-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.icon-editor-controls .color-picker-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    white-space: nowrap;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
+}
+
+/* Icon Style Selector */
+.icon-style-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.icon-style-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    white-space: nowrap;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
+}
+
+.icon-style-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.icon-style-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.icon-style-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+.icon-style-btn.active {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+}
+
+.icon-style-btn i {
+    font-size: 14px;
+}
+
+.icon-style-btn span {
+    font-size: 11px;
+}
+
+#icon-color-picker-popover {
+    position: absolute;
+    display: none;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+}
+
+.modern-icon-editor-card .editor-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: linear-gradient(180deg, #0b1220 0%, #0d1b2a 50%, #0b1220 100%);
+    backdrop-filter: blur(20px);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* Responsive Icon Editor */
+@media (max-width: 768px) {
+    .modern-icon-editor-card {
+        width: 95vw !important;
+        max-width: none !important;
+        max-height: 85vh !important;
+    }
+
+    .icon-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        max-height: 280px;
+    }
+
+    .icon-option {
+        padding: 10px 6px;
+    }
+
+    .icon-option i {
+        font-size: 20px;
+    }
+
+    .icon-label {
+        font-size: 9px;
+    }
+
+    .modern-icon-editor-card .editor-card-content {
+        padding: 16px;
+    }
+
+    .modern-icon-editor-card .editor-card-footer {
+        padding: 16px;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .modern-icon-editor-card .editor-card-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
 }

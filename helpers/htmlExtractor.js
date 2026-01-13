@@ -16,10 +16,44 @@ class HTMLExtractor {
 
         this.textCounter = 1;
         this.imageCounter = 1;
+        this.iconCounter = 1;
         this.enJson = {};
         this.imagesJson = {};
+        this.iconsJson = {};
+        this.iconsJsonPath = path.join(this.assetsDir, 'icons.json');
         this.titleUsed = false;
         this.descriptionUsed = false;
+    }
+
+    generateIconKey() {
+        return `icon_${this.iconCounter}`;
+    }
+
+    /**
+     * Extract Font Awesome icon class from element
+     * Returns the icon class (e.g., "fa-tooth", "fa-star") or null if not a Font Awesome icon
+     */
+    extractFontAwesomeClass(element) {
+        if (element.tagName !== 'I') return null;
+        
+        const classList = Array.from(element.classList || []);
+        // Find Font Awesome icon class (starts with fa-)
+        const iconClass = classList.find(cls => 
+            cls.startsWith('fa-') && 
+            !['fa-solid', 'fa-regular', 'fa-light', 'fa-thin', 'fa-duotone', 'fa-brands'].includes(cls) &&
+            cls !== 'fa'
+        );
+        
+        // Check if it has a Font Awesome prefix class
+        const hasPrefix = classList.some(cls => 
+            ['fas', 'far', 'fal', 'fat', 'fad', 'fab', 'fa-solid', 'fa-regular', 'fa-light', 'fa-thin', 'fa-duotone', 'fa-brands'].includes(cls)
+        );
+        
+        if (iconClass && hasPrefix) {
+            return iconClass;
+        }
+        
+        return null;
     }
 
     ensureDirectories() {
@@ -193,6 +227,17 @@ class HTMLExtractor {
                 this.enJson[textKey] = alt.trim();
                 this.textCounter++;
             }
+        }
+
+        // Handle Font Awesome icons (<i> elements with fa- classes)
+        const iconClass = this.extractFontAwesomeClass(element);
+        if (iconClass) {
+            const iconKey = this.generateIconKey();
+            element.setAttribute('data-icon-id', iconKey);
+            this.iconsJson[iconKey] = iconClass;
+            this.iconCounter++;
+            // Don't process children of icon elements
+            return;
         }
 
         const style = element.getAttribute('style');
@@ -418,16 +463,19 @@ class HTMLExtractor {
 
             const langData = JSON.parse(fs.readFileSync(this.enJsonPath, 'utf8'));
             const imageData = JSON.parse(fs.readFileSync(this.imagesJsonPath, 'utf8'));
+            const iconData = fs.existsSync(this.iconsJsonPath) 
+                ? JSON.parse(fs.readFileSync(this.iconsJsonPath, 'utf8')) 
+                : {};
             const document = dom.window.document;
 
             // Inject content into head section
             if (document.head) {
-                this.injectTextContent(document.head, langData, imageData);
+                this.injectTextContent(document.head, langData, imageData, iconData);
             }
 
             // Inject content into body section
             if (document.body) {
-                this.injectTextContent(document.body, langData, imageData);
+                this.injectTextContent(document.body, langData, imageData, iconData);
             }
 
             // Write back the modified HTML
@@ -438,13 +486,13 @@ class HTMLExtractor {
         }
     }
 
-    injectTextContent(element, langData, imageData) {
+    injectTextContent(element, langData, imageData, iconData = {}) {
         if (this.shouldSkipElement(element)) {
             // Special case: if it's HEAD, still process its children
             if (element.tagName === 'HEAD') {
                 const children = Array.from(element.children);
                 for (let child of children) {
-                    this.injectTextContent(child, langData, imageData);
+                    this.injectTextContent(child, langData, imageData, iconData);
                 }
             }
             return;
@@ -507,9 +555,20 @@ class HTMLExtractor {
             element.setAttribute('style', newStyle);
         }
 
+        // Inject icon classes (Font Awesome icons)
+        const iconId = element.getAttribute('data-icon-id');
+        if (iconId && iconData[iconId]) {
+            // The icon class is stored in iconData, we just need to ensure it's on the element
+            // The class should already be there, but this ensures consistency
+            const iconClass = iconData[iconId];
+            if (!element.classList.contains(iconClass)) {
+                element.classList.add(iconClass);
+            }
+        }
+
         const children = Array.from(element.children);
         for (let child of children) {
-            this.injectTextContent(child, langData, imageData);
+            this.injectTextContent(child, langData, imageData, iconData);
         }
     }
 
@@ -530,8 +589,10 @@ class HTMLExtractor {
 
             this.textCounter = 1;
             this.imageCounter = 1;
+            this.iconCounter = 1;
             this.enJson = {};
             this.imagesJson = {};
+            this.iconsJson = {};
             this.titleUsed = false;
             this.descriptionUsed = false;
 
@@ -549,6 +610,7 @@ class HTMLExtractor {
 
             fs.writeFileSync(this.enJsonPath, JSON.stringify(this.enJson, null, 2), 'utf8');
             fs.writeFileSync(this.imagesJsonPath, JSON.stringify(this.imagesJson, null, 2), 'utf8');
+            fs.writeFileSync(this.iconsJsonPath, JSON.stringify(this.iconsJson, null, 2), 'utf8');
 
             // Inject the content back into the HTML for single-file builds
             this.injectContentIntoDOM(dom);

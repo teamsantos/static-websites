@@ -14,6 +14,9 @@ class TemplateEditor {
         this.templateContent = null;
         this.translations = {};
         this.images = {};
+        this.icons = {};
+        this.iconColors = {};
+        this.iconStyles = {};
         this.textColors = {};
         this.sectionBackgrounds = {};
         this.currentLanguage = 'en';

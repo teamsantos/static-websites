@@ -101,9 +101,12 @@ export class UtilsManager {
     }
 
     collectExportData() {
-        // Collect the current state for export: images, translations, textColors, sectionBackgrounds, and templateId
+        // Collect the current state for export: images, translations, textColors, icons, iconColors, iconStyles, sectionBackgrounds, and templateId
         return {
             images: this.editor.images,
+            icons: this.editor.icons,
+            iconColors: this.editor.iconColors,
+            iconStyles: this.editor.iconStyles,
             langs: this.editor.translations[this.editor.currentLanguage] || {},
             textColors: this.editor.textColors,
             sectionBackgrounds: this.editor.sectionBackgrounds,
@@ -118,7 +121,7 @@ export class UtilsManager {
         }
 
         // Remove any open editors (these are in the main document, not shadow root)
-        const editors = document.querySelectorAll('.text-editor, .image-editor, .modern-text-editor-overlay');
+        const editors = document.querySelectorAll('.text-editor, .image-editor, .modern-text-editor-overlay, .modern-icon-editor-overlay');
         editors.forEach(editor => editor.remove());
 
         // Remove any modals

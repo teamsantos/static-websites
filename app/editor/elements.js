@@ -250,9 +250,53 @@ export class ElementManager {
         });
     }
 
+     loadIconFiles(containerOrDoc) {
+         // Load icon files from the template (Font Awesome icons with data-icon-id)
+         const iconElements = containerOrDoc.querySelectorAll('[data-icon-id]');
+         this.editor.icons = {};
+         iconElements.forEach(element => {
+             const iconId = element.getAttribute('data-icon-id');
+             if (iconId) {
+                 // Extract the current Font Awesome icon class
+                 const iconClass = this.extractFontAwesomeClass(element);
+                 this.editor.icons[iconId] = iconClass || '';
+
+                 const wrapper = document.createElement('div');
+                 wrapper.className = 'lang-element-wrapper icon-element-wrapper';
+
+                 // Make wrapper inherit display and layout properties
+                 wrapper.style.display = 'contents';
+
+                 element.parentNode.insertBefore(wrapper, element);
+                 wrapper.appendChild(element);
+
+                 // Icons don't need plus dividers since they're always visible
+                 // Just make them clickable directly
+             }
+         });
+     }
+
+     /**
+      * Extract Font Awesome icon class from element
+      * Returns the icon class (e.g., "fa-tooth", "fa-star") or null if not a Font Awesome icon
+      */
+     extractFontAwesomeClass(element) {
+         if (element.tagName !== 'I') return null;
+         
+         const classList = Array.from(element.classList || []);
+         // Find Font Awesome icon class (starts with fa-)
+         const iconClass = classList.find(cls => 
+             cls.startsWith('fa-') && 
+             !['fa-solid', 'fa-regular', 'fa-light', 'fa-thin', 'fa-duotone', 'fa-brands'].includes(cls) &&
+             cls !== 'fa'
+         );
+         
+         return iconClass || null;
+     }
+
      processEditableElements(containerOrDoc) {
          // Add editable class to elements with data attributes
-         const editableSelectors = '[data-text-id], [data-image-src]';
+         const editableSelectors = '[data-text-id], [data-image-src], [data-icon-id]';
          const editableElements = containerOrDoc.querySelectorAll(editableSelectors);
  
          editableElements.forEach(element => {
