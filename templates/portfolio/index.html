@@ -1261,12 +1261,18 @@
                 document.querySelectorAll('.nav-link, .logo').forEach(el => {
                     el.style.color = 'var(--color-black)';
                 });
+                document.querySelectorAll('.mobile-menu-btn span').forEach(el => {
+                    el.style.background = 'var(--color-black)';
+                });
             } else {
                 navbar.classList.add('blend-mode');
                 navbar.style.background = 'transparent';
                 navbar.style.backdropFilter = 'none';
                 document.querySelectorAll('.nav-link, .logo').forEach(el => {
                     el.style.color = 'var(--color-white)';
+                });
+                document.querySelectorAll('.mobile-menu-btn span').forEach(el => {
+                    el.style.background = 'var(--color-white)';
                 });
             }
         });
