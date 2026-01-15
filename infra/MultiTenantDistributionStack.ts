@@ -57,6 +57,7 @@ export class MultiTenantDistributionStack extends cdk.Stack {
         // Create CloudFront Function to rewrite paths based on hostname
         // Supports subdomain-based routing (generating.e-info.click/)
         // All projects are stored under /projects prefix in S3
+        // Shared files (e.g., /shared/contact-form.js) are served from common location
         const pathRewriteFunction = new cloudfront.Function(
             this,
             "PathRewriteFunction",
@@ -78,6 +79,13 @@ function handler(event) {
     
     // Normalize URI - remove duplicate slashes
     var uri = request.uri.replace(/\\/+/g, '/');
+    
+    // Shared files are served from common /shared/ folder in S3
+    // e.g., /shared/contact-form.js -> /shared/contact-form.js (no project prefix)
+    if (uri.indexOf('/shared/') === 0) {
+        request.uri = uri;
+        return request;
+    }
     
     // Rewrite URI based on the path
     if (uri === '/' || uri === '') {

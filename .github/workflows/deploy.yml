@@ -95,6 +95,13 @@ jobs:
            aws s3 cp $BUILD_DIR/template-editor.html s3://$S3_BUCKET/editor/template-editor.html \
              --cache-control "no-cache, no-store, must-revalidate" \
              --content-type "text/html"
+      - name: Upload shared files
+        run: |
+           echo "📤 Uploading shared files (contact-form.js, etc.)..."
+           aws s3 sync shared/ s3://$S3_BUCKET/shared/ \
+             --cache-control "public, max-age=86400" \
+             --exclude ".*"
+           echo "✅ Shared files uploaded successfully"
 
       - name: Invalidate CloudFront cache
         run: |
@@ -104,3 +111,23 @@ jobs:
             --paths "/*" \
             --output table
           echo "✅ CloudFront cache invalidated successfully"
+      - name: Invalidate Multi-tenant CloudFront cache for shared files
+        run: |
+          echo "🔄 Invalidating Multi-tenant CloudFront cache for shared files..."
+          # Get the MultiTenantDistribution distribution ID from stack outputs
+          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+            --region us-east-1 \
+            --stack-name "MultiTenantDistribution" \
+            --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' \
+            --output text 2>/dev/null || echo "")
+          
+          if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
+            echo "Creating invalidation for distribution: $DISTRIBUTION_ID"
+            aws cloudfront create-invalidation \
+              --distribution-id "$DISTRIBUTION_ID" \
+              --paths "/shared/*" \
+              --output table
+            echo "✅ Multi-tenant CloudFront cache invalidated for shared files"
+          else
+            echo "⚠️ MultiTenantDistribution stack not found, skipping invalidation"
+          fi

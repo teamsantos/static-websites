@@ -1174,7 +1174,7 @@
                     </div>
                 </div>
                 <div class="contact-form">
-                    <form id="contactForm">
+                    <form id="contact-form">
                         <div class="form-group">
                             <label for="name" >Full Name</label>
                             <input type="text" id="name" name="name" required="" placeholder="Your full name" >
@@ -1253,13 +1253,6 @@
             });
         });
 
-        // Form submission
-        document.getElementById('contactForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            alert('Thank you for your message! We\'ll get back to you within 24 hours.');
-            this.reset();
-        });
-
         // Intersection Observer for animations
         const observerOptions = {
             threshold: 0.1,
@@ -1329,5 +1322,6 @@
             }
         });
     </script>
+    <script src="/shared/contact-form.js"></script>
 </body>
 </html>

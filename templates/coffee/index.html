@@ -437,11 +437,13 @@
                     </div>
 
                     <div class="bg-primary-foreground/10 rounded-2xl p-8">
-                        <h3 class="font-serif text-2xl font-semibold mb-2">Stay in the Loop</h3>
-                        <p class="opacity-80 mb-6">Subscribe for exclusive offers, new roast announcements, and brewing tips.</p>
-                        <form class="space-y-4" onsubmit="return false;">
-                            <input type="email" placeholder="Your email address" class="w-full px-4 py-2 bg-primary-foreground/10 border border-primary-foreground/20 rounded-md text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary-foreground/50" required>
-                            <button type="submit" class="w-full px-6 py-2 rounded-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 transition-colors text-sm font-medium">Subscribe</button>
+                        <h3 class="font-serif text-2xl font-semibold mb-2">Get In Touch</h3>
+                        <p class="opacity-80 mb-6">Have a question or want to book an event? Send us a message!</p>
+                        <form id="contact-form" class="space-y-4">
+                            <input type="text" name="name" placeholder="Your name" class="w-full px-4 py-2 bg-primary-foreground/10 border border-primary-foreground/20 rounded-md text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary-foreground/50" required>
+                            <input type="email" name="email" placeholder="Your email address" class="w-full px-4 py-2 bg-primary-foreground/10 border border-primary-foreground/20 rounded-md text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary-foreground/50" required>
+                            <textarea name="message" placeholder="Your message" rows="4" class="w-full px-4 py-2 bg-primary-foreground/10 border border-primary-foreground/20 rounded-md text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary-foreground/50 resize-none" required></textarea>
+                            <button type="submit" class="w-full px-6 py-2 rounded-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 transition-colors text-sm font-medium">Send Message</button>
                         </form>
                     </div>
                 </div>
@@ -486,6 +488,7 @@
             </div>
         </footer>
 
+    <script src="/shared/contact-form.js"></script>
     <script src="script.js" type="module"></script>
 </body>
 </html>

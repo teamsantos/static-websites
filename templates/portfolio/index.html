@@ -1154,7 +1154,36 @@
         <div class="contact-container">
             <h2>Let's Create Something Great Together</h2>
             <p>Ready to start your next project? We'd love to hear from you.</p>
-            <a href="mailto:hello@studioname.com" class="contact-email">hello@studioname.com</a>
+            
+            <!-- Contact Form -->
+            <form id="contact-form" style="max-width: 500px; margin: 2rem auto; text-align: left;">
+                <div style="margin-bottom: 1rem;">
+                    <input type="text" name="name" placeholder="Your name" required
+                        style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--color-gray-200); border-radius: 8px; font-size: 1rem; background: var(--color-white); transition: border-color 0.2s ease;"
+                        onfocus="this.style.borderColor='var(--color-accent)'" 
+                        onblur="this.style.borderColor='var(--color-gray-200)'">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <input type="email" name="email" placeholder="Your email" required
+                        style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--color-gray-200); border-radius: 8px; font-size: 1rem; background: var(--color-white); transition: border-color 0.2s ease;"
+                        onfocus="this.style.borderColor='var(--color-accent)'" 
+                        onblur="this.style.borderColor='var(--color-gray-200)'">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <textarea name="message" placeholder="Tell us about your project..." rows="4" required
+                        style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--color-gray-200); border-radius: 8px; font-size: 1rem; background: var(--color-white); resize: vertical; transition: border-color 0.2s ease;"
+                        onfocus="this.style.borderColor='var(--color-accent)'" 
+                        onblur="this.style.borderColor='var(--color-gray-200)'"></textarea>
+                </div>
+                <button type="submit" 
+                    style="width: 100%; padding: 0.875rem 1.5rem; background: var(--color-accent); color: var(--color-black); border: none; border-radius: 100px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 0.2s ease, transform 0.2s ease;"
+                    onmouseover="this.style.transform='translateY(-2px)'" 
+                    onmouseout="this.style.transform='translateY(0)'">
+                    Send Message
+                </button>
+            </form>
+            
+            <a href="mailto:hello@studioname.com" class="contact-email" style="margin-top: 1rem; display: inline-block;">hello@studioname.com</a>
             <div class="social-links">
                 <a href="#" class="social-link" aria-label="Instagram">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
@@ -1542,5 +1571,6 @@
             }
         })();
     </script>
+    <script src="/shared/contact-form.js"></script>
 </body>
 </html>

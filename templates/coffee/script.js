@@ -129,7 +129,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 });
 
 // ============================================================================
-// Contact Form
+// Smooth Scroll Enhancement
 // ============================================================================
 
 const contactForm = document.querySelector('#contact form');
