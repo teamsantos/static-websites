@@ -19,12 +19,5 @@
     "title": "Brewstone Coffee - Artisan Coffee Roasters",
     "description": "Handcrafted coffee roasted with care. Discover the perfect cup at Brewstone Coffee with our curated menu and cozy atmosphere.",
     "screenshot": "templates/coffee/assets/images/screenshot/index.webp"
-  },
-  {
-    "name": "modern-header",
-    "comingSoon": false,
-    "title": "Modern Header Template",
-    "description": "Experience our sleek, semi-transparent header with smooth animations and modern design principles",
-    "screenshot": "templates/modern-header/assets/images/screenshot/index.webp"
   }
 ]
