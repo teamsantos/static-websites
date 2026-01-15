@@ -52,12 +52,15 @@ jobs:
               # Extract template ID from path (e.g., templates/businessCard/assets/... -> businessCard)
               template_id=$(echo "$screenshot_path" | cut -d'/' -f2)
               
-              # Upload to S3 with the correct path structure
-              aws s3 cp "$screenshot_path" "s3://teamsantos-static-websites/templates/${template_id}/assets/images/screenshot.webp" \
+              # Convert template ID to lowercase for S3 path
+              template_id_lower=$(echo "$template_id" | tr '[:upper:]' '[:lower:]')
+              
+              # Upload to S3 with lowercase path structure
+              aws s3 cp "$screenshot_path" "s3://teamsantos-static-websites/templates/${template_id_lower}/assets/images/screenshot.webp" \
                 --content-type "image/webp" \
                 --cache-control "max-age=86400"
               
-              echo "Uploaded screenshot for template: ${template_id}"
+              echo "Uploaded screenshot for template: ${template_id_lower}"
             fi
           done
           
