@@ -3,24 +3,28 @@
     "name": "businessCard",
     "comingSoon": false,
     "title": "SmileBright Dental - Modern Dental Care",
-    "description": "Experience cutting-edge dental care with our expert team. Comprehensive services from routine checkups to advanced cosmetic dentistry."
+    "description": "Experience cutting-edge dental care with our expert team. Comprehensive services from routine checkups to advanced cosmetic dentistry.",
+    "screenshot": "templates/businessCard/assets/images/screenshot/index.webp"
   },
   {
     "name": "bussinessCardTest",
     "comingSoon": true,
     "title": "SmileBright Dental - Modern Dental Care",
-    "description": "Experience cutting-edge dental care with our expert team. Comprehensive services from routine checkups to advanced cosmetic dentistry."
+    "description": "Experience cutting-edge dental care with our expert team. Comprehensive services from routine checkups to advanced cosmetic dentistry.",
+    "screenshot": null
   },
   {
     "name": "coffee",
     "comingSoon": false,
     "title": "Brewstone Coffee - Artisan Coffee Roasters",
-    "description": "Handcrafted coffee roasted with care. Discover the perfect cup at Brewstone Coffee with our curated menu and cozy atmosphere."
+    "description": "Handcrafted coffee roasted with care. Discover the perfect cup at Brewstone Coffee with our curated menu and cozy atmosphere.",
+    "screenshot": "templates/coffee/assets/images/screenshot/index.webp"
   },
   {
     "name": "modern-header",
     "comingSoon": false,
     "title": "Modern Header Template",
-    "description": "Experience our sleek, semi-transparent header with smooth animations and modern design principles"
+    "description": "Experience our sleek, semi-transparent header with smooth animations and modern design principles",
+    "screenshot": "templates/modern-header/assets/images/screenshot/index.webp"
   }
 ]

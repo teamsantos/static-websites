@@ -109,9 +109,8 @@ const injectTemplates = (templates, selectText) => {
         const buttonText = template.comingSoon ? 'Coming Soon' : selectText;
         const buttonClass = `${template.comingSoon ? 'btn btn-secondary btn-full hidden' : 'btn btn-primary btn-full'} `;
 
-        const frameURL = `https://${template.name}.${templatesURL}`;
         card.innerHTML = `
-<div class="template-frame">
+<div class="template-image">
     ${template.comingSoon
                 ? `<div class="frame-placeholder">
         <div class="placeholder-content">
@@ -119,14 +118,12 @@ const injectTemplates = (templates, selectText) => {
         </div>
         <div class="coming-soon-badge">Coming Soon</div>
     </div>`
-                : `<iframe src="${frameURL}" 
-        title="${template.title} Preview"
-        frameborder="0"
-        scrolling="no"
+                : `<img 
+        src="${template.screenshot}" 
+        alt="${template.title} Preview"
         loading="lazy"
-        sandbox="allow-scripts allow-same-origin allow-forms"
-        class="template-iframe">
-    </iframe>`
+        class="template-screenshot"
+    />`
             }
 </div>
 <div class="template-content">

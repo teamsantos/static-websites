@@ -1,0 +1,51 @@
+name: Generate Template Screenshots
+
+on:
+  push:
+    paths:
+      - 'templates/**'
+      - 'assets/templates.json'
+  workflow_dispatch:  # Allow manual triggering
+  schedule:
+    # Run weekly on Monday at 2 AM UTC to catch any template updates
+    - cron: '0 2 * * 1'
+
+jobs:
+  generate-screenshots:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        
+      - name: Generate screenshots
+        run: node scripts/generate-screenshots.js
+        env:
+          BASE_URL: ${{ secrets.TEMPLATE_BASE_URL || 'https://template.e-info.click' }}
+          
+      - name: Check for screenshot changes
+        id: check_changes
+        run: |
+          git diff --quiet templates/**/assets/images/screenshot/ || echo "changes=true" >> $GITHUB_OUTPUT
+          
+      - name: Commit and push screenshots
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add templates/**/assets/images/screenshot/*.webp
+          git commit -m "chore: update template screenshots [skip ci]"
+          git push
