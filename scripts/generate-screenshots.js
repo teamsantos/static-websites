@@ -18,6 +18,7 @@ import { chromium } from 'playwright';
 import { readFile, mkdir, access } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import sharp from 'sharp';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -93,9 +94,10 @@ async function generateScreenshot(browser, template) {
     
     // Construct the URL properly by removing protocol and trailing slashes from base URL
     const cleanBaseUrl = CONFIG.baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    const url = `https://${name}.${cleanBaseUrl}`;
+    const url = `https://${name.toLowerCase()}.${cleanBaseUrl}`;
     const screenshotDir = await ensureScreenshotDirectory(name);
     const screenshotPath = join(screenshotDir, 'index.webp');
+    const tempPngPath = join(screenshotDir, 'temp.png');
     
     console.log(`📸 Generating screenshot for "${title}"...`);
     console.log(`   URL: ${url}`);
@@ -114,14 +116,22 @@ async function generateScreenshot(browser, template) {
         // Wait a bit for any animations to complete
         await page.waitForTimeout(1000);
         
-        // Take screenshot
+        // Take screenshot as PNG (Playwright doesn't support WebP directly)
         await page.screenshot({
-            path: screenshotPath,
-            type: 'webp',
-            quality: CONFIG.screenshotQuality
+            path: tempPngPath,
+            type: 'png'
         });
         
         await page.close();
+        
+        // Convert PNG to WebP using sharp
+        await sharp(tempPngPath)
+            .webp({ quality: CONFIG.screenshotQuality })
+            .toFile(screenshotPath);
+        
+        // Clean up temporary PNG file
+        const { unlink } = await import('fs/promises');
+        await unlink(tempPngPath);
         
         console.log(`✅ Screenshot saved: ${screenshotPath}`);
         return { success: true, path: screenshotPath };
