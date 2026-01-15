@@ -25,7 +25,7 @@ const PROJECT_ROOT = join(__dirname, '..');
 
 // Configuration
 const CONFIG = {
-    baseUrl: process.env.BASE_URL || 'template.e-info.click',
+    baseUrl: process.env.BASE_URL || 'https://template.e-info.click',
     viewport: {
         width: 800,
         height: 600
@@ -91,7 +91,7 @@ async function generateScreenshot(browser, template) {
         return { success: false, error: 'Directory not found' };
     }
     
-    const url = `https://${name}.${CONFIG.baseUrl}`;
+    const url = `https://${name}.${CONFIG.baseUrl.replace(/^https?:\/\//, '')}`;
     const screenshotDir = await ensureScreenshotDirectory(name);
     const screenshotPath = join(screenshotDir, 'index.webp');
     
