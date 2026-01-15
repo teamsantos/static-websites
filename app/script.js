@@ -119,7 +119,7 @@ const injectTemplates = (templates, selectText) => {
         <div class="coming-soon-badge">Coming Soon</div>
     </div>`
                 : `<img 
-        src="https://${templace.name}${templatesURL}/assets/images/screenshot.png" 
+        src="https://${templace.name}.${templatesURL}/assets/images/screenshot.webp" 
         alt="${template.title} Preview"
         loading="lazy"
         class="template-screenshot"
