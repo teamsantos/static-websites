@@ -91,7 +91,9 @@ async function generateScreenshot(browser, template) {
         return { success: false, error: 'Directory not found' };
     }
     
-    const url = `https://${name}.${CONFIG.baseUrl.replace(/^https?:\/\//, '')}`;
+    // Construct the URL properly by removing protocol and trailing slashes from base URL
+    const cleanBaseUrl = CONFIG.baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const url = `https://${name}.${cleanBaseUrl}`;
     const screenshotDir = await ensureScreenshotDirectory(name);
     const screenshotPath = join(screenshotDir, 'index.webp');
     
