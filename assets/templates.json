@@ -4,7 +4,7 @@
     "comingSoon": false,
     "title": "SmileBright Dental - Modern Dental Care",
     "description": "Experience cutting-edge dental care with our expert team. Comprehensive services from routine checkups to advanced cosmetic dentistry.",
-    "screenshot": "templates/businessCard/assets/images/screenshot/index.webp"
+    "screenshot": "https://businesscard.template.e-info.click/assets/images/screenshot.webp"
   },
   {
     "name": "bussinessCardTest",
@@ -18,6 +18,6 @@
     "comingSoon": false,
     "title": "Brewstone Coffee - Artisan Coffee Roasters",
     "description": "Handcrafted coffee roasted with care. Discover the perfect cup at Brewstone Coffee with our curated menu and cozy atmosphere.",
-    "screenshot": "templates/coffee/assets/images/screenshot/index.webp"
+    "screenshot": "https://coffee.template.e-info.click/assets/images/screenshot.webp"
   }
 ]
