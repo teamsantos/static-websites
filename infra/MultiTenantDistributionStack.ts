@@ -160,7 +160,27 @@ function handler(event) {
             ),
         });
 
-        // Output distribution details
+                // Add SES CNAME records for domain verification
+        new route53.CnameRecord(this, "SESVerificationRecord1", {
+            zone: hostedZone,
+            recordName: "tlo4lw6ugpyyyctfmc4owy7tsij3scqo._domainkey.e-info.click",
+            domainName: "tlo4lw6ugpyyyctfmc4owy7tsij3scqo.dkim.amazonses.com",
+            ttl: cdk.Duration.hours(1),
+        });
+
+        new route53.CnameRecord(this, "SESVerificationRecord2", {
+            zone: hostedZone,
+            recordName: "ebjhxt3lbu6sfocsdbbea4je7ieohq66._domainkey.e-info.click",
+            domainName: "ebjhxt3lbu6sfocsdbbea4je7ieohq66.dkim.amazonses.com",
+            ttl: cdk.Duration.hours(1),
+        });
+
+        new route53.CnameRecord(this, "SESVerificationRecord3", {
+            zone: hostedZone,
+            recordName: "u5r7ztbhdyru4xgdz7icdi2yoprp6wkx._domainkey.e-info.click",
+            domainName: "u5r7ztbhdyru4xgdz7icdi2yoprp6wkx.dkim.amazonses.com",
+            ttl: cdk.Duration.hours(1),
+        });
         new cdk.CfnOutput(this, "DistributionId", {
             value: this.distributionId,
             description: "CloudFront distribution ID",

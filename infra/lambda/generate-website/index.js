@@ -481,7 +481,7 @@ async function generateWebsiteCore(operationId) {
     // Send email only for new projects
     if (!isUpdate) {
         const params = {
-            Source: process.env.FROM_EMAIL,
+            Source: 'no-reply@e-info.click',
             Destination: {
                 ToAddresses: [email],
             },
