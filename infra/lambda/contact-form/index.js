@@ -1,9 +1,10 @@
-// Use CommonJS require instead of ES6 import for Lambda compatibility
-const AWS = require("aws-sdk");
+// Using AWS SDK v3 (recommended for Node.js 18+)
+const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
+const { SecretsManagerClient, GetSecretValueCommand } = require("@aws-sdk/client-secrets-manager");
 const { Octokit } = require("octokit");
 
-const ses = new AWS.SES({ region: process.env.AWS_SES_REGION || "us-east-1" });
-const secretsManager = new AWS.SecretsManager();
+const sesClient = new SESClient({ region: process.env.AWS_SES_REGION || "us-east-1" });
+const secretsManagerClient = new SecretsManagerClient();
 
 // Cache secrets to avoid fetching on every invocation
 let cachedGithubToken = null;
@@ -16,8 +17,12 @@ async function getSecrets() {
     if (!cachedGithubToken || !cachedGithubConfig) {
         try {
             const [tokenSecret, configSecret] = await Promise.all([
-                secretsManager.getSecretValue({ SecretId: process.env.GITHUB_TOKEN_SECRET_NAME }).promise(),
-                secretsManager.getSecretValue({ SecretId: process.env.GITHUB_CONFIG_SECRET_NAME }).promise()
+                secretsManagerClient.send(new GetSecretValueCommand({ 
+                    SecretId: process.env.GITHUB_TOKEN_SECRET_NAME 
+                })),
+                secretsManagerClient.send(new GetSecretValueCommand({ 
+                    SecretId: process.env.GITHUB_CONFIG_SECRET_NAME 
+                }))
             ]);
 
             cachedGithubToken = tokenSecret.SecretString;
@@ -69,7 +74,6 @@ async function getProjectOwnerEmail(projectName, octokit, owner, repo) {
  * Validate email format
  */
 function isValidEmail(email) {
-    // More comprehensive email validation
     const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     return email && emailRegex.test(email) && email.length <= 254;
 }
@@ -81,7 +85,7 @@ function sanitizeInput(input, maxLength = 1000) {
     if (typeof input !== 'string') return '';
     return input
         .slice(0, maxLength)
-        .replace(/[<>]/g, '') // Remove HTML brackets
+        .replace(/[<>]/g, '')
         .trim();
 }
 
@@ -103,7 +107,6 @@ function escapeHtml(text) {
  * Generate HTML email for contact form submission
  */
 function generateContactEmail(projectName, senderName, senderEmail, message) {
-    // Escape all user input for HTML context
     const escapedProjectName = escapeHtml(projectName);
     const escapedSenderName = escapeHtml(senderName);
     const escapedSenderEmail = escapeHtml(senderEmail);
@@ -179,7 +182,6 @@ You can reply directly to this email to respond to ${senderName}.
 
 /**
  * Rate limiting check (basic implementation)
- * In production, consider using DynamoDB or ElastiCache for distributed rate limiting
  */
 const rateLimitCache = new Map();
 
@@ -187,7 +189,6 @@ function checkRateLimit(email, maxRequests = 5, windowMs = 3600000) {
     const now = Date.now();
     const userRequests = rateLimitCache.get(email) || [];
     
-    // Clean up old requests outside the window
     const recentRequests = userRequests.filter(timestamp => now - timestamp < windowMs);
     
     if (recentRequests.length >= maxRequests) {
@@ -197,7 +198,6 @@ function checkRateLimit(email, maxRequests = 5, windowMs = 3600000) {
     recentRequests.push(now);
     rateLimitCache.set(email, recentRequests);
     
-    // Clean up old entries periodically
     if (rateLimitCache.size > 10000) {
         const cutoff = now - windowMs;
         for (const [key, timestamps] of rateLimitCache.entries()) {
@@ -211,7 +211,6 @@ function checkRateLimit(email, maxRequests = 5, windowMs = 3600000) {
 }
 
 exports.handler = async (event) => {
-    // CORS headers
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
@@ -219,7 +218,6 @@ exports.handler = async (event) => {
         'Content-Type': 'application/json',
     };
 
-    // Handle CORS preflight OPTIONS requests
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 200,
@@ -228,7 +226,6 @@ exports.handler = async (event) => {
         };
     }
 
-    // Only allow POST
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
@@ -251,7 +248,6 @@ exports.handler = async (event) => {
 
     const { projectName, name, email, message } = requestBody;
 
-    // Validate required fields
     if (!projectName || !name || !email || !message) {
         return {
             statusCode: 400,
@@ -263,7 +259,6 @@ exports.handler = async (event) => {
         };
     }
 
-    // Validate email format
     if (!isValidEmail(email)) {
         return {
             statusCode: 400,
@@ -272,7 +267,6 @@ exports.handler = async (event) => {
         };
     }
 
-    // Sanitize inputs
     const sanitizedName = sanitizeInput(name, 100);
     const sanitizedEmail = sanitizeInput(email, 254);
     const sanitizedMessage = sanitizeInput(message, 5000);
@@ -286,7 +280,6 @@ exports.handler = async (event) => {
         };
     }
 
-    // Basic rate limiting
     if (!checkRateLimit(sanitizedEmail)) {
         console.warn(`Rate limit exceeded for email: ${sanitizedEmail}`);
         return {
@@ -299,14 +292,12 @@ exports.handler = async (event) => {
     }
 
     try {
-        // Get GitHub secrets to fetch owner email
         const { githubToken, githubOwner, githubRepo } = await getSecrets();
         
         const octokit = new Octokit({
             auth: githubToken,
         });
 
-        // Get the project owner's email
         const ownerEmail = await getProjectOwnerEmail(sanitizedProjectName, octokit, githubOwner, githubRepo);
 
         if (!ownerEmail) {
@@ -318,18 +309,16 @@ exports.handler = async (event) => {
             };
         }
 
-        // Verify FROM_EMAIL is configured
         const fromEmail = process.env.FROM_EMAIL;
         if (!fromEmail) {
             console.error('FROM_EMAIL environment variable not set');
             throw new Error('Email configuration error');
         }
 
-        // Send email via SES
         const htmlBody = generateContactEmail(sanitizedProjectName, sanitizedName, sanitizedEmail, sanitizedMessage);
         const textBody = generatePlainTextEmail(sanitizedProjectName, sanitizedName, sanitizedEmail, sanitizedMessage);
 
-        const params = {
+        const command = new SendEmailCommand({
             Source: fromEmail,
             Destination: {
                 ToAddresses: [ownerEmail],
@@ -351,9 +340,9 @@ exports.handler = async (event) => {
                     },
                 },
             },
-        };
+        });
 
-        await ses.sendEmail(params).promise();
+        await sesClient.send(command);
 
         console.log(`Contact form email sent successfully for project ${sanitizedProjectName} to ${ownerEmail}`);
 
@@ -369,7 +358,6 @@ exports.handler = async (event) => {
     } catch (error) {
         console.error('Error sending contact form email:', error);
         
-        // Don't expose internal error details to the client
         return {
             statusCode: 500,
             headers: corsHeaders,
