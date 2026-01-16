@@ -1,10 +1,9 @@
-// Using AWS SDK v3 (recommended for Node.js 18+)
-const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
-const { SecretsManagerClient, GetSecretValueCommand } = require("@aws-sdk/client-secrets-manager");
-const { Octokit } = require("octokit");
+// Using AWS SDK v2 with ES6 modules (type: module)
+import AWS from "aws-sdk";
+import { Octokit } from "octokit";
 
-const sesClient = new SESClient({ region: process.env.AWS_SES_REGION || "us-east-1" });
-const secretsManagerClient = new SecretsManagerClient();
+const ses = new AWS.SES({ region: process.env.AWS_SES_REGION || "us-east-1" });
+const secretsManager = new AWS.SecretsManager();
 
 // Cache secrets to avoid fetching on every invocation
 let cachedGithubToken = null;
@@ -15,22 +14,13 @@ let cachedGithubConfig = null;
  */
 async function getSecrets() {
     if (!cachedGithubToken || !cachedGithubConfig) {
-        try {
-            const [tokenSecret, configSecret] = await Promise.all([
-                secretsManagerClient.send(new GetSecretValueCommand({ 
-                    SecretId: process.env.GITHUB_TOKEN_SECRET_NAME 
-                })),
-                secretsManagerClient.send(new GetSecretValueCommand({ 
-                    SecretId: process.env.GITHUB_CONFIG_SECRET_NAME 
-                }))
-            ]);
+        const [tokenSecret, configSecret] = await Promise.all([
+            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_TOKEN_SECRET_NAME }).promise(),
+            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_CONFIG_SECRET_NAME }).promise()
+        ]);
 
-            cachedGithubToken = tokenSecret.SecretString;
-            cachedGithubConfig = JSON.parse(configSecret.SecretString);
-        } catch (error) {
-            console.error('Error fetching secrets:', error);
-            throw new Error('Failed to retrieve configuration');
-        }
+        cachedGithubToken = tokenSecret.SecretString;
+        cachedGithubConfig = JSON.parse(configSecret.SecretString);
     }
 
     return {
@@ -210,7 +200,11 @@ function checkRateLimit(email, maxRequests = 5, windowMs = 3600000) {
     return true;
 }
 
-exports.handler = async (event) => {
+/**
+ * Main Handler
+ * Processes HTTP requests from API Gateway
+ */
+export const handler = async (event) => {
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
@@ -218,6 +212,7 @@ exports.handler = async (event) => {
         'Content-Type': 'application/json',
     };
 
+    // Handle CORS preflight OPTIONS requests
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 200,
@@ -309,7 +304,7 @@ exports.handler = async (event) => {
             };
         }
 
-        const fromEmail = process.env.FROM_EMAIL;
+        const fromEmail = process.env.FROM_EMAIL || 'no-reply@e-info.click';
         if (!fromEmail) {
             console.error('FROM_EMAIL environment variable not set');
             throw new Error('Email configuration error');
@@ -318,7 +313,7 @@ exports.handler = async (event) => {
         const htmlBody = generateContactEmail(sanitizedProjectName, sanitizedName, sanitizedEmail, sanitizedMessage);
         const textBody = generatePlainTextEmail(sanitizedProjectName, sanitizedName, sanitizedEmail, sanitizedMessage);
 
-        const command = new SendEmailCommand({
+        const params = {
             Source: fromEmail,
             Destination: {
                 ToAddresses: [ownerEmail],
@@ -340,9 +335,9 @@ exports.handler = async (event) => {
                     },
                 },
             },
-        });
+        };
 
-        await sesClient.send(command);
+        await ses.sendEmail(params).promise();
 
         console.log(`Contact form email sent successfully for project ${sanitizedProjectName} to ${ownerEmail}`);
 
@@ -357,6 +352,7 @@ exports.handler = async (event) => {
 
     } catch (error) {
         console.error('Error sending contact form email:', error);
+        console.error('Error stack:', error.stack);
         
         return {
             statusCode: 500,
