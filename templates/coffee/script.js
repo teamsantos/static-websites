@@ -154,7 +154,7 @@ if (contactForm) {
                     button.disabled = false;
                 }, 2000);
             } else {
-                UIManager.showStatus('Please enter a valid email address', 'error');
+                window.templateEditorInstance.ui.showStatus('Please enter a valid email address', 'error');
             }
         }
     });

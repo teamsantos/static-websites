@@ -24,7 +24,7 @@ async function createCheckout(product_id) {
         if (!response.ok) {
             const error = await response.json();
             console.error("Checkout creation failed:", error);
-            UIManager.showStatus("Failed to create checkout session.", "error");
+            window.templateEditorInstance.ui.showStatus("Failed to create checkout session.", "error");
             return;
         }
 
@@ -32,7 +32,7 @@ async function createCheckout(product_id) {
         window.location.href = data.sessionUrl; // Redirect to Stripe checkout
     } catch (err) {
         console.error("Error creating checkout:", err);
-        UIManager.showStatus("Something went wrong.", "error");
+        window.templateEditorInstance.ui.showStatus("Something went wrong.", "error");
     }
 }
 
