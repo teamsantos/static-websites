@@ -1,10 +1,10 @@
 import AWS from "aws-sdk";
 import Stripe from "stripe";
 import { v4 as uuidv4 } from "uuid";
-import { validatePaymentSessionRequest } from "./shared/validators.js";
 import { generateIdempotencyKey, withIdempotency } from "./shared/idempotency.js";
 import { createLogger, logMetric } from "./shared/logger.js";
-import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js";
+import { addBreadcrumb, captureException, initSentry } from "./shared/sentry.js";
+import { validatePaymentSessionRequest } from "./shared/validators.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -14,22 +14,25 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
  * @returns {boolean} - True if the project name exists, otherwise false.
  */
 async function projectNameExists(logger, s3, bucketName, projectName) {
+    const lowerCaseProjectName = projectName.toLowerCase(); // Ensure case-insensitive comparison
     try {
-        const lowerCaseProjectName = projectName.toLowerCase(); // Ensure case-insensitive comparison
-
-        // List objects in the S3 bucket (simulate searching for project names starting with projectName)
-        const data = await s3.listObjectsV2({
+        await s3.headObject({
             Bucket: bucketName,
-            Prefix: lowerCaseProjectName,
+            Key: `projects/${lowerCaseProjectName}/index.html`
         }).promise();
 
-        // Check if any object is found that matches the project name
-        const exists = data.Contents.some((item) => item.Key.toLowerCase() === lowerCaseProjectName);
-        logger.info("S3 project name validation result", { projectName, exists });
-        return exists;
+        logger.info("S3 project file found", { projectName, exists });
+        return true;
     } catch (error) {
-        logger.error("Failed to validate project name in S3", { error: error.message, projectName });
-        throw new Error("Error validating project name");
+        if (error.code === 'NotFound' || error.statusCode === 404) {
+            const exists = false;
+            logger.info("S3 project file not found", { projectName, exists });
+            return false;
+        } else {
+            // Some other error occurred (permissions, network, etc.)
+            logger.error("S3 headObject error", { projectName, error });
+            throw error;
+        }
     }
 }
 const dynamodb = new AWS.DynamoDB.DocumentClient();
@@ -189,7 +192,7 @@ export const handler = async (event, context) => {
                 langs: cleanedLangs,
                 textColors,
                 sectionBackgrounds,
-                templateId, 
+                templateId,
                 createdAt: new Date().toISOString(),
                 paymentSessionId: session.id,
                 status: "pending",
@@ -217,7 +220,7 @@ export const handler = async (event, context) => {
         };
     } catch (error) {
         logger.error('Stripe session creation failed', { error: error.message, email, stack: error.stack }, { severity: 'error' });
-        
+
         captureException(error, {
             email,
             projectName,

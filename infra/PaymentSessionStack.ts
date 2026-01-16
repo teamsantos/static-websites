@@ -90,10 +90,13 @@ export class StripeCheckoutStack extends cdk.Stack {
 
     if (props.s3Bucket) {
       // Allow ListBucket on the bucket
-      checkoutFunction.addToRolePolicy(
-        new iam.PolicyStatement({
-          actions: ["s3:ListBucket"],
-          resources: [`arn:aws:s3:::${props.s3Bucket}`],
+checkoutFunction.addToRolePolicy(
+           new iam.PolicyStatement({
+               actions: ["s3:ListBucket", "s3:GetObject"],
+               resources: [
+                   `arn:aws:s3:::${props.s3Bucket}`,       // List bucket
+                   `arn:aws:s3:::${props.s3Bucket}/*`      // Read all bucket objects
+               ],
         })
       );
 
