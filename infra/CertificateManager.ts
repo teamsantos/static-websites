@@ -2,7 +2,6 @@ import * as cdk from 'aws-cdk-lib';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
-import * as cr from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 
 export interface CertificateManagerProps {
@@ -33,33 +32,27 @@ export class CertificateManager extends Construct {
         const wildcardDomain = `*.${certDomain}`;
         const parameterPath = props.parameterPath || `/acm/certificates/${certDomain}`;
 
-        // Use Custom Resource to look up SSM parameter at deployment time
-        const parameterLookup = new cr.AwsCustomResource(this, 'ParameterLookup', {
-            onUpdate: {
-                service: 'SSM',
-                action: 'getParameter',
-                parameters: {
-                    Name: parameterPath,
-                },
-                physicalResourceId: cr.PhysicalResourceId.of(`${parameterPath}-lookup`),
-                ignoreErrorCodesMatching: 'ParameterNotFound',
-            },
-            policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
-                resources: [
-                    `arn:aws:ssm:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:parameter${parameterPath}`
-                ],
-            }),
-        });
-
-        // Get the parameter value from the custom resource
-        const existingCertArn = parameterLookup.getResponseField('Parameter.Value');
-
-        // Try to use existing certificate if parameter exists
-        let certificate: acm.ICertificate;
-        
+        // Try to lookup existing certificate ARN from SSM during synthesis
+        let existingCertArn: string | undefined;
         try {
-            // Attempt to import existing certificate
-            // If the parameter doesn't exist, this will fail and we'll create new
+            // This uses cdk.context.json to cache the lookup
+            const lookupValue = ssm.StringParameter.valueFromLookup(this, parameterPath);
+            
+            // Check if it's a real ARN (not a dummy value from first synth)
+            if (lookupValue && 
+                lookupValue.startsWith('arn:aws:acm:') &&
+                !lookupValue.includes('dummy-value-for')) {
+                existingCertArn = lookupValue;
+            }
+        } catch (error) {
+            // Parameter doesn't exist yet
+            existingCertArn = undefined;
+        }
+
+        let certificate: acm.ICertificate;
+
+        if (existingCertArn) {
+            // Use existing certificate
             certificate = acm.Certificate.fromCertificateArn(
                 this,
                 'Certificate',
@@ -70,8 +63,8 @@ export class CertificateManager extends Construct {
                 value: 'Existing (from Parameter Store)',
                 description: 'Certificate source'
             });
-        } catch {
-            // Parameter doesn't exist, create new certificate
+        } else {
+            // Create new certificate
             certificate = this.createNewCertificate(
                 wildcardDomain,
                 certDomain,
