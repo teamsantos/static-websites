@@ -154,7 +154,7 @@ if (contactForm) {
                     button.disabled = false;
                 }, 2000);
             } else {
-                alert('Please enter a valid email address');
+                UIManager.showStatus('Please enter a valid email address', 'error');
             }
         }
     });

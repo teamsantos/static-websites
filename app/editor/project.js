@@ -80,7 +80,7 @@ export class ProjectManager {
             if (!response.ok) {
                 const error = await response.json();
                 console.error("Checkout creation failed:", error);
-                alert("Failed to create checkout session.");
+                UIManager.showStatus("Failed to create checkout session.", "error");
                 return;
             }
 
@@ -88,7 +88,7 @@ export class ProjectManager {
             window.location.href = data.sessionUrl; // Redirect to Stripe checkout
         } catch (err) {
             console.error("Error creating checkout:", err);
-            alert("Something went wrong.");
+            UIManager.showStatus("Something went wrong.", "error");
         }
     }
 

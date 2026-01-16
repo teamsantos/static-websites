@@ -15,17 +15,19 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
  */
 async function projectNameExists(logger, s3, bucketName, projectName) {
     const lowerCaseProjectName = projectName.toLowerCase(); // Ensure case-insensitive comparison
+    let exists = false; // Initialize the `exists` variable to avoid being undefined
     try {
         await s3.headObject({
             Bucket: bucketName,
             Key: `projects/${lowerCaseProjectName}/index.html`
         }).promise();
 
+        exists = true; // Set `exists` to true because the object exists
         logger.info("S3 project file found", { projectName, exists });
         return true;
     } catch (error) {
         if (error.code === 'NotFound' || error.statusCode === 404) {
-            const exists = false;
+            exists = false; // Set `exists` to false because the object does not exist
             logger.info("S3 project file not found", { projectName, exists });
             return false;
         } else {
