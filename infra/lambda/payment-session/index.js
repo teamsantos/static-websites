@@ -7,6 +7,31 @@ import { createLogger, logMetric } from "./shared/logger.js";
 import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+/**
+ * Helper function to check if a project name already exists in the S3 bucket (case-insensitive).
+ * @param {string} projectName - Name of the project to check.
+ * @returns {boolean} - True if the project name exists, otherwise false.
+ */
+async function projectNameExists(logger, s3, bucketName, projectName) {
+    try {
+        const lowerCaseProjectName = projectName.toLowerCase(); // Ensure case-insensitive comparison
+
+        // List objects in the S3 bucket (simulate searching for project names starting with projectName)
+        const data = await s3.listObjectsV2({
+            Bucket: bucketName,
+            Prefix: lowerCaseProjectName,
+        }).promise();
+
+        // Check if any object is found that matches the project name
+        const exists = data.Contents.some((item) => item.Key.toLowerCase() === lowerCaseProjectName);
+        logger.info("S3 project name validation result", { projectName, exists });
+        return exists;
+    } catch (error) {
+        logger.error("Failed to validate project name in S3", { error: error.message, projectName });
+        throw new Error("Error validating project name");
+    }
+}
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE || "websites-metadata";
@@ -15,6 +40,8 @@ const SEND_EMAIL_FUNCTION = process.env.SEND_EMAIL_FUNCTION || "send-email";
 // Keep S3 for backwards compatibility if needed
 const s3 = new AWS.S3();
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || "teamsantos-static-websites";
+
+export { projectNameExists };
 
 export const handler = async (event, context) => {
     initSentry('payment-session', context);
@@ -70,6 +97,28 @@ export const handler = async (event, context) => {
     const { email, projectName, images, priceId, langs, textColors, sectionBackgrounds, templateId } = requestBody;
 
     // SECURITY: Comprehensive input validation
+    // Check if the project name exists in S3
+    let projectExists;
+    try {
+        projectExists = await projectNameExists(logger, s3, BUCKET_NAME, projectName);
+    } catch (err) {
+        logger.error("Error occurred during project name validation", { error: err.message });
+        return {
+            statusCode: 500,
+            headers: corsHeaders(origin),
+            body: JSON.stringify({ error: "Failed to validate project name" }),
+        };
+    }
+
+    if (projectExists) {
+        logger.warn('Project name already exists in S3', { projectName });
+        return {
+            statusCode: 409, // Conflict
+            headers: corsHeaders(origin),
+            body: JSON.stringify({ error: "Project name already exists" }),
+        };
+    }
+
     const validation = validatePaymentSessionRequest(requestBody);
     if (!validation.valid) {
         logger.warn('Validation failed', { error: validation.error, email });
