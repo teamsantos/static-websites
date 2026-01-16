@@ -187,6 +187,13 @@ jobs:
           npm ci
           echo "✅ Lambda dependencies installed"
 
+      - name: Install Lambda dependencies (contact-form)
+        working-directory: infra/lambda/contact-form
+        run: |
+          echo "📦 Installing Lambda dependencies..."
+          npm ci
+          echo "✅ Lambda dependencies installed"
+
       - name: Build CDK project
         working-directory: infra
         run: |
