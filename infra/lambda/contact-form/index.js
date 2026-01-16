@@ -1,5 +1,6 @@
-import AWS from "aws-sdk";
-import { Octokit } from "octokit";
+// Use CommonJS require instead of ES6 import for Lambda compatibility
+const AWS = require("aws-sdk");
+const { Octokit } = require("octokit");
 
 const ses = new AWS.SES({ region: process.env.AWS_SES_REGION || "us-east-1" });
 const secretsManager = new AWS.SecretsManager();
@@ -8,15 +9,23 @@ const secretsManager = new AWS.SecretsManager();
 let cachedGithubToken = null;
 let cachedGithubConfig = null;
 
+/**
+ * Get secrets from AWS Secrets Manager with caching
+ */
 async function getSecrets() {
     if (!cachedGithubToken || !cachedGithubConfig) {
-        const [tokenSecret, configSecret] = await Promise.all([
-            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_TOKEN_SECRET_NAME }).promise(),
-            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_CONFIG_SECRET_NAME }).promise()
-        ]);
+        try {
+            const [tokenSecret, configSecret] = await Promise.all([
+                secretsManager.getSecretValue({ SecretId: process.env.GITHUB_TOKEN_SECRET_NAME }).promise(),
+                secretsManager.getSecretValue({ SecretId: process.env.GITHUB_CONFIG_SECRET_NAME }).promise()
+            ]);
 
-        cachedGithubToken = tokenSecret.SecretString;
-        cachedGithubConfig = JSON.parse(configSecret.SecretString);
+            cachedGithubToken = tokenSecret.SecretString;
+            cachedGithubConfig = JSON.parse(configSecret.SecretString);
+        } catch (error) {
+            console.error('Error fetching secrets:', error);
+            throw new Error('Failed to retrieve configuration');
+        }
     }
 
     return {
@@ -36,12 +45,22 @@ async function getProjectOwnerEmail(projectName, octokit, owner, repo) {
             repo,
             path: `projects/${projectName}/.email`,
         });
-        return Buffer.from(response.data.content, 'base64').toString('utf8').trim();
+        
+        const email = Buffer.from(response.data.content, 'base64').toString('utf8').trim();
+        
+        // Validate the email from the file
+        if (!isValidEmail(email)) {
+            console.error(`Invalid email format in .email file for project ${projectName}: ${email}`);
+            return null;
+        }
+        
+        return email;
     } catch (error) {
         if (error.status === 404) {
             console.log(`No .email file found for project ${projectName}`);
             return null;
         }
+        console.error(`Error fetching .email file for project ${projectName}:`, error);
         throw error;
     }
 }
@@ -50,8 +69,9 @@ async function getProjectOwnerEmail(projectName, octokit, owner, repo) {
  * Validate email format
  */
 function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    // More comprehensive email validation
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    return email && emailRegex.test(email) && email.length <= 254;
 }
 
 /**
@@ -66,9 +86,29 @@ function sanitizeInput(input, maxLength = 1000) {
 }
 
 /**
+ * Escape HTML to prevent XSS in email content
+ */
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+/**
  * Generate HTML email for contact form submission
  */
 function generateContactEmail(projectName, senderName, senderEmail, message) {
+    // Escape all user input for HTML context
+    const escapedProjectName = escapeHtml(projectName);
+    const escapedSenderName = escapeHtml(senderName);
+    const escapedSenderEmail = escapeHtml(senderEmail);
+    const escapedMessage = escapeHtml(message);
+    
     return `
 <!DOCTYPE html>
 <html>
@@ -89,26 +129,26 @@ function generateContactEmail(projectName, senderName, senderEmail, message) {
     <div class="container">
         <div class="header">
             <h1>New Contact Form Submission</h1>
-            <p>from ${projectName}</p>
+            <p>from ${escapedProjectName}</p>
         </div>
         <div class="content">
             <p>You have received a new message through your website's contact form:</p>
             
             <div class="message-box">
-                <p style="white-space: pre-wrap;">${message}</p>
+                <p style="white-space: pre-wrap;">${escapedMessage}</p>
             </div>
             
             <div class="sender-info">
-                <p><strong>From:</strong> ${senderName}</p>
-                <p><strong>Email:</strong> <a href="mailto:${senderEmail}">${senderEmail}</a></p>
+                <p><strong>From:</strong> ${escapedSenderName}</p>
+                <p><strong>Email:</strong> <a href="mailto:${escapedSenderEmail}">${escapedSenderEmail}</a></p>
             </div>
             
             <p style="margin-top: 20px; font-size: 14px; color: #666;">
-                You can reply directly to this email to respond to ${senderName}.
+                You can reply directly to this email to respond to ${escapedSenderName}.
             </p>
         </div>
         <div class="footer">
-            <p>This message was sent via your website's contact form on ${projectName}.e-info.click</p>
+            <p>This message was sent via your website's contact form on ${escapedProjectName}.e-info.click</p>
         </div>
     </div>
 </body>
@@ -137,12 +177,46 @@ You can reply directly to this email to respond to ${senderName}.
 `.trim();
 }
 
-export const handler = async (event) => {
+/**
+ * Rate limiting check (basic implementation)
+ * In production, consider using DynamoDB or ElastiCache for distributed rate limiting
+ */
+const rateLimitCache = new Map();
+
+function checkRateLimit(email, maxRequests = 5, windowMs = 3600000) {
+    const now = Date.now();
+    const userRequests = rateLimitCache.get(email) || [];
+    
+    // Clean up old requests outside the window
+    const recentRequests = userRequests.filter(timestamp => now - timestamp < windowMs);
+    
+    if (recentRequests.length >= maxRequests) {
+        return false;
+    }
+    
+    recentRequests.push(now);
+    rateLimitCache.set(email, recentRequests);
+    
+    // Clean up old entries periodically
+    if (rateLimitCache.size > 10000) {
+        const cutoff = now - windowMs;
+        for (const [key, timestamps] of rateLimitCache.entries()) {
+            if (timestamps.every(t => t < cutoff)) {
+                rateLimitCache.delete(key);
+            }
+        }
+    }
+    
+    return true;
+}
+
+exports.handler = async (event) => {
     // CORS headers
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
         'Access-Control-Allow-Methods': 'POST,OPTIONS',
+        'Content-Type': 'application/json',
     };
 
     // Handle CORS preflight OPTIONS requests
@@ -167,6 +241,7 @@ export const handler = async (event) => {
     try {
         requestBody = JSON.parse(event.body);
     } catch (error) {
+        console.error('Invalid JSON:', error);
         return {
             statusCode: 400,
             headers: corsHeaders,
@@ -207,7 +282,19 @@ export const handler = async (event) => {
         return {
             statusCode: 400,
             headers: corsHeaders,
-            body: JSON.stringify({ error: 'Invalid input data' }),
+            body: JSON.stringify({ error: 'Invalid input data after sanitization' }),
+        };
+    }
+
+    // Basic rate limiting
+    if (!checkRateLimit(sanitizedEmail)) {
+        console.warn(`Rate limit exceeded for email: ${sanitizedEmail}`);
+        return {
+            statusCode: 429,
+            headers: corsHeaders,
+            body: JSON.stringify({ 
+                error: 'Too many requests. Please try again later.'
+            }),
         };
     }
 
@@ -231,12 +318,19 @@ export const handler = async (event) => {
             };
         }
 
+        // Verify FROM_EMAIL is configured
+        const fromEmail = process.env.FROM_EMAIL;
+        if (!fromEmail) {
+            console.error('FROM_EMAIL environment variable not set');
+            throw new Error('Email configuration error');
+        }
+
         // Send email via SES
         const htmlBody = generateContactEmail(sanitizedProjectName, sanitizedName, sanitizedEmail, sanitizedMessage);
         const textBody = generatePlainTextEmail(sanitizedProjectName, sanitizedName, sanitizedEmail, sanitizedMessage);
 
         const params = {
-            Source: process.env.FROM_EMAIL || 'noreply@e-info.click',
+            Source: fromEmail,
             Destination: {
                 ToAddresses: [ownerEmail],
             },
@@ -275,6 +369,7 @@ export const handler = async (event) => {
     } catch (error) {
         console.error('Error sending contact form email:', error);
         
+        // Don't expose internal error details to the client
         return {
             statusCode: 500,
             headers: corsHeaders,
