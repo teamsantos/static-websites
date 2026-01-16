@@ -1,5 +1,4 @@
 import * as cdk from "aws-cdk-lib";
-import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
@@ -7,7 +6,6 @@ import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 
 interface ContactFormStackProps extends cdk.StackProps {
     sesRegion?: string;
-    api?: apigateway.RestApi;
 }
 
 export class ContactFormStack extends cdk.Stack {

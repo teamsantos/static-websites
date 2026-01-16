@@ -17,6 +17,7 @@ import { DashboardStack } from "./DashboardStack";
 import { AlertingStack } from "./AlertingStack";
 import { ProjectManagementStack } from "./ProjectManagementStack";
 import { EmailTemplateStack } from "./EmailTemplateStack";
+import { ContactFormStack } from "./ContactFormStack";
 
 const app = new cdk.App();
 
@@ -120,6 +121,10 @@ new CloudWatchLogsStack(app, "CloudWatchLogsBucket", {
         Environment: "production",
         Purpose: "CloudWatchLogsArchival",
     },
+});
+
+new ContactFormStack(app, "ContactFormStack", {
+    sesRegion: config.certificateRegion 
 });
 
 // Create other infrastructure stacks
