@@ -176,6 +176,11 @@ export class ProjectManager {
         const urlParams = new URLSearchParams(window.location.search);
         const projectName = urlParams.get('project');
 
+        // Get the export data (images, langs, templateId)
+        const exportData = this.editor.collectExportData();
+        // Extract the original theme ID before it gets overwritten
+        const sourceTemplateId = exportData.templateId;
+
         this.editor.ui.showStatus('Verifying code...', 'info');
 
         try {
@@ -183,6 +188,10 @@ export class ProjectManager {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    ...exportData,
+                    // Pass the original theme explicitly
+                    sourceTemplateId: sourceTemplateId,
+                    // Ensure templateId (project name) from URL takes precedence over exportData.templateId
                     templateId: projectName,
                     code: code
                 })

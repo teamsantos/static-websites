@@ -11,6 +11,7 @@ interface ProjectManagementStackProps extends cdk.StackProps {
   metadataTable: dynamodb.Table;
   confirmationCodesTable: dynamodb.Table;
   sendEmailFunction: lambda.Function;
+  generateWebsiteFunction: lambda.Function;
 }
 
 /**
@@ -145,10 +146,12 @@ export class ProjectManagementStack extends cdk.Stack {
         code: lambda.Code.fromAsset(
           path.join(__dirname, "lambda/validate-confirmation-code")
         ),
-        timeout: cdk.Duration.seconds(10),
+        timeout: cdk.Duration.seconds(30), // Increased timeout for website generation
         memorySize: 256,
         environment: {
           DYNAMODB_CODES_TABLE: props.confirmationCodesTable.tableName,
+          DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
+          GENERATE_WEBSITE_FUNCTION: props.generateWebsiteFunction.functionName,
           SENTRY_DSN: process.env.SENTRY_DSN || "",
         },
         logGroup,
@@ -159,6 +162,8 @@ export class ProjectManagementStack extends cdk.Stack {
 
     // Grant permissions
     props.confirmationCodesTable.grantReadData(validateConfirmationCodeFunction); // To validate code
+    props.metadataTable.grantReadWriteData(validateConfirmationCodeFunction); // To get email and save new operation
+    props.generateWebsiteFunction.grantInvoke(validateConfirmationCodeFunction); // To trigger regeneration
 
     // ============================================================
     // API Gateway

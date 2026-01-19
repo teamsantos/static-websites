@@ -307,6 +307,7 @@ new ProjectManagementStack(app, "ProjectManagementStack", {
     metadataTable: dynamoDBStack.table,
     confirmationCodesTable: dynamoDBStack.confirmationCodesTable,
     sendEmailFunction: emailTemplateStack.sendEmailFunction,
+    generateWebsiteFunction: createProjectStack.generateWebsiteFunction,
     env: {
         account: account,
         region: config.region,
