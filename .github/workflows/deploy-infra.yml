@@ -166,33 +166,18 @@ jobs:
             fi
           done
 
-      - name: Install Lambda dependencies (create-project)
-        working-directory: infra/lambda/create-project
+      - name: Install Lambda dependencies (all)
+        shell: bash
         run: |
           echo "📦 Installing Lambda dependencies..."
-          npm ci
-          echo "✅ Lambda dependencies installed"
-
-      - name: Install Lambda dependencies (payment-session)
-        working-directory: infra/lambda/payment-session
-        run: |
-          echo "📦 Installing Lambda dependencies..."
-          npm ci
-          echo "✅ Lambda dependencies installed"
-
-      - name: Install Lambda dependencies (generate-website)
-        working-directory: infra/lambda/generate-website
-        run: |
-          echo "📦 Installing Lambda dependencies..."
-          npm ci
-          echo "✅ Lambda dependencies installed"
-
-      - name: Install Lambda dependencies (contact-form)
-        working-directory: infra/lambda/contact-form
-        run: |
-          echo "📦 Installing Lambda dependencies..."
-          npm ci
-          echo "✅ Lambda dependencies installed"
+          for dir in infra/lambda/*; do
+            if [ -d "$dir" ] && [ -f "$dir/package.json" ]; then
+              echo "Installing dependencies for $(basename "$dir")..."
+              (cd "$dir" && npm ci)
+              echo "✅ Dependencies installed for $(basename "$dir")"
+            fi
+          done
+          echo "✅ All Lambda dependencies installed"
 
       - name: Build CDK project
         working-directory: infra
