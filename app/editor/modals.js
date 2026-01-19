@@ -7,8 +7,10 @@ export class ModalManager {
     openModal() {
         if (this.editor.mode === 'create') {
             this.showCreateModal();
-        } else {
+        } else if (this.editor.mode === 'save') {
             this.showSaveModal();
+        } else {
+            console.error('Unknown editor mode:', this.editor.mode);
         }
     }
 
@@ -109,6 +111,41 @@ export class ModalManager {
     }
 
     showSaveModal() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectName = urlParams.get('project');
+
+        if (!projectName) {
+            this.editor.ui.showStatus('No project name found', 'error');
+            return;
+        }
+
+        // Trigger email sending
+        this.editor.ui.showStatus('Sending verification code...', 'info');
+        fetch('https://api.e-info.click/auth/send-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ templateId: projectName })
+        })
+        .then(async res => {
+            if (!res.ok) {
+                // Try to parse error message, but handle non-JSON responses
+                try {
+                    const data = await res.json();
+                    throw new Error(data.error || `Server error: ${res.status}`);
+                } catch (e) {
+                    throw new Error(e.message || `Server error: ${res.status}`);
+                }
+            }
+            return res.json();
+        })
+        .then(data => {
+            this.editor.ui.showStatus('Verification code sent to email', 'success');
+        })
+        .catch(err => {
+            console.error('Error sending code:', err);
+            this.editor.ui.showStatus(err.message || 'Failed to send verification code', 'error');
+        });
+
         const modal = document.createElement('div');
         modal.className = 'modern-text-editor-overlay';
         modal.innerHTML = `

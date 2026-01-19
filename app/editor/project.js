@@ -161,22 +161,53 @@ export class ProjectManager {
     //     }
     // }
 
-    saveWithCode() {
+    async saveWithCode() {
         // Debounce check - prevent rapid repeated calls
         if (!this._canExecute('save')) {
             return;
         }
 
         const code = document.getElementById('verification-code').value.trim();
+        if (!code) {
+            this.editor.ui.showStatus('Please enter the verification code', 'error');
+            return;
+        }
 
-        // For demo purposes, accept '1234' as valid code
-        if (code === '1234') {
-            this.editor.saveChanges();
-            const modal = document.querySelector('.modern-text-editor-overlay');
-            modal.classList.add('removing');
-            setTimeout(() => { modal.remove(); }, 300);
-        } else {
-            this.editor.ui.showStatus('Invalid verification code', 'error');
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectName = urlParams.get('project');
+
+        this.editor.ui.showStatus('Verifying code...', 'info');
+
+        try {
+            const response = await fetch('https://api.e-info.click/auth/validate-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    templateId: projectName,
+                    code: code
+                })
+            });
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            if (response.ok && data.valid) {
+                this.editor.saveChanges();
+                const modal = document.querySelector('.modern-text-editor-overlay');
+                if (modal) {
+                    modal.classList.add('removing');
+                    setTimeout(() => { modal.remove(); }, 300);
+                }
+            } else {
+                this.editor.ui.showStatus(data.error || 'Invalid verification code', 'error');
+            }
+        } catch (error) {
+            console.error('Error validating code:', error);
+            this.editor.ui.showStatus(error.message || 'Validation failed. Please try again.', 'error');
         }
     }
 }

@@ -15,6 +15,8 @@ const lambdas = [
   'lambda/get-projects',
   'lambda/delete-project',
   'lambda/send-email',
+  'lambda/send-confirmation-code',
+  'lambda/validate-confirmation-code',
 ];
 
 const sharedSrc = path.join(__dirname, '..', 'shared');

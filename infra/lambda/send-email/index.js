@@ -5,6 +5,7 @@ import {
     sendGenerationCompleteEmail,
     sendGenerationFailedEmail,
     sendDeploymentCompleteEmail,
+    sendConfirmationCodeEmail,
 } from "./shared/emailService.js";
 import { createLogger, logMetric } from "./shared/logger.js";
 import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js";
@@ -120,6 +121,16 @@ export const handler = async (event, context) => {
                         data.projectName,
                         data.deploymentUrl,
                         data.operationId
+                    );
+                });
+                break;
+
+            case "confirmation-code":
+                messageId = await logMetric(logger, "send_confirmation_code", async () => {
+                    return sendConfirmationCodeEmail(
+                        email,
+                        data.projectName,
+                        data.code
                     );
                 });
                 break;

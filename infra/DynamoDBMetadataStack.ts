@@ -23,6 +23,7 @@ interface DynamoDBMetadataStackProps extends cdk.StackProps {
 export class DynamoDBMetadataStack extends cdk.Stack {
   public table: dynamodb.Table;
   public idempotencyTable: dynamodb.Table;
+  public confirmationCodesTable: dynamodb.Table;
 
   constructor(scope: cdk.App, id: string, props?: DynamoDBMetadataStackProps) {
     super(scope, id, props);
@@ -82,6 +83,35 @@ export class DynamoDBMetadataStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    // Global Secondary Index: Query by projectName
+    // Use case: "Find project owner by projectName"
+    this.table.addGlobalSecondaryIndex({
+      indexName: "projectName-index",
+      partitionKey: {
+        name: "projectName",
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // Confirmation Codes Table
+    // Stores temporary codes for save verification
+    // PK: templateId (projectName)
+    // TTL: 5 minutes
+    const confirmationCodesTable = new dynamodb.Table(this, "ConfirmationCodes", {
+      tableName: "confirmation-codes",
+      partitionKey: {
+        name: "templateId", // Matches projectName
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // data is temporary anyway
+      timeToLiveAttribute: "expiresAt",
+    });
+    
+    // Export for use by other stacks
+    this.confirmationCodesTable = confirmationCodesTable;
+
     // Idempotency table (Phase 2.4)
     // Stores request results to prevent duplicate processing
     const idempotencyTable = new dynamodb.Table(this, "Idempotency", {
@@ -134,6 +164,12 @@ export class DynamoDBMetadataStack extends cdk.Stack {
       value: idempotencyTable.tableName,
       description: "DynamoDB table name for request idempotency",
       exportName: "RequestIdempotencyTableName",
+    });
+
+    new cdk.CfnOutput(this, "ConfirmationCodesTableName", {
+      value: confirmationCodesTable.tableName,
+      description: "DynamoDB table name for confirmation codes",
+      exportName: "ConfirmationCodesTableName",
     });
   }
 

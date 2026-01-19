@@ -305,6 +305,8 @@ new AlertingStack(app, "AlertingStack", {
 new ProjectManagementStack(app, "ProjectManagementStack", {
     domain: config.domain,
     metadataTable: dynamoDBStack.table,
+    confirmationCodesTable: dynamoDBStack.confirmationCodesTable,
+    sendEmailFunction: emailTemplateStack.sendEmailFunction,
     env: {
         account: account,
         region: config.region,
