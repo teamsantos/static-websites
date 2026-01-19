@@ -188,7 +188,8 @@ export function injectContent(html, langs = {}, images = {}, textColors = {}, se
   }
 
   // 9. Clean up unused data-* attributes
-  result = result.replace(/\s+data-[a-z-]+=["'][^"']*["']/g, '');
+  // Skipped to preserve editor metadata
+  // result = result.replace(/\s+data-[a-z-]+=["'][^"']*["']/g, '');
 
   return result;
 }
