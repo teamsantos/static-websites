@@ -181,6 +181,7 @@ export class ProjectManagementStack extends cdk.Stack {
           "X-Api-Key",
           "X-Amz-Security-Token",
           "X-User-Email",
+          "Origin",
         ],
       },
       endpointTypes: [apigateway.EndpointType.REGIONAL],
@@ -244,18 +245,6 @@ export class ProjectManagementStack extends cdk.Stack {
       }
     );
 
-    // Explicitly handle OPTIONS via Lambda to ensure consistent CORS behavior
-    // and avoid 403s from API Gateway Mock Integration
-    sendCodeResource.addMethod(
-      "OPTIONS",
-      new apigateway.LambdaIntegration(sendConfirmationCodeFunction),
-      {
-        methodResponses: [
-          { statusCode: "200" },
-        ],
-      }
-    );
-
     // ============================================================
     // POST /auth/validate-code - Validate confirmation code
     // ============================================================
@@ -269,17 +258,6 @@ export class ProjectManagementStack extends cdk.Stack {
           { statusCode: "200" },
           { statusCode: "400" }, // Invalid code
           { statusCode: "500" },
-        ],
-      }
-    );
-
-    // Explicitly handle OPTIONS via Lambda to ensure consistent CORS behavior
-    validateCodeResource.addMethod(
-      "OPTIONS",
-      new apigateway.LambdaIntegration(validateConfirmationCodeFunction),
-      {
-        methodResponses: [
-          { statusCode: "200" },
         ],
       }
     );
