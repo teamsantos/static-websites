@@ -1,0 +1,9 @@
+{
+  "name": "validate-confirmation-code-lambda",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "aws-sdk": "^2.1541.0"
+  }
+}

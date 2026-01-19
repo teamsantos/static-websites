@@ -1,8 +1,8 @@
 import AWS from "aws-sdk";
 import { randomUUID } from "crypto";
-import { createLogger, logMetric } from "./shared/logger.js";
-import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js";
 import { apiResponse, corsHeaders } from "./shared/auth.js";
+import { createLogger } from "./shared/logger.js";
+import { captureException, initSentry } from "./shared/sentry.js";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();
@@ -27,13 +27,13 @@ export const handler = async (event, context) => {
     try {
         const body = JSON.parse(event.body || "{}");
         // templateId in the body is the Project Name (from the URL)
-        const { 
-            templateId, 
-            code, 
+        const {
+            templateId,
+            code,
             sourceTemplateId, // Explicitly passed theme ID
-            images, 
-            langs, 
-            textColors, 
+            images,
+            langs,
+            textColors,
             sectionBackgrounds,
             icons,
             iconColors,
@@ -81,7 +81,7 @@ export const handler = async (event, context) => {
         // A. Fetch existing project metadata to get email
         let userEmail = "unknown@authenticated.user";
         // Default to the explicitly passed theme, or fallback
-        let finalTemplateId = sourceTemplateId || "business"; 
+        let finalTemplateId = sourceTemplateId || "business";
 
         const metadataResult = await dynamodb.query({
             TableName: METADATA_TABLE,
@@ -97,7 +97,7 @@ export const handler = async (event, context) => {
         if (metadataResult.Items && metadataResult.Items.length > 0) {
             const projectData = metadataResult.Items[0];
             userEmail = projectData.email;
-            
+
             // If we didn't get a sourceTemplateId from frontend, try to use the one from DB
             if (!sourceTemplateId && projectData.templateId) {
                 finalTemplateId = projectData.templateId;
@@ -109,15 +109,15 @@ export const handler = async (event, context) => {
         // B. Create a new Operation Record in DynamoDB
         // This is required because generate-website expects an operationId to fetch data.
         const operationId = randomUUID();
-        
+
         // Construct the update payload
         // We prioritize the new data from the request, falling back to existing data if needed.
         // Note: collectExportData from frontend returns 'templateId' as the source template ID.
         // But we overwrote 'templateId' in the body with 'projectName'. 
         // We should check if 'sourceTemplateId' or similar is passed, otherwise we rely on DB.
-        
+
         const timestamp = new Date().toISOString();
-        
+
         const metadataItem = {
             operationId: operationId,
             type: "update",
@@ -127,7 +127,7 @@ export const handler = async (event, context) => {
             templateId: finalTemplateId,
             createdAt: timestamp,
             expiresAt: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days TTL
-            
+
             // The content to update
             images: images || {},
             langs: langs || {},
@@ -151,7 +151,7 @@ export const handler = async (event, context) => {
             InvocationType: 'Event', // Async
             Payload: JSON.stringify({ operationId: operationId })
         };
-        
+
         await lambda.invoke(params).promise();
         logger.info('Website generation triggered', { templateId, operationId });
 

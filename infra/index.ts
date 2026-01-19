@@ -26,6 +26,7 @@ const config = {
     domain: "e-info.click",
     s3Bucket: "teamsantos-static-websites",
     certificateRegion: "us-east-1",
+    wafEnabled: false,
 };
 
 const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('account');
@@ -202,17 +203,19 @@ const stripeCheckoutStack = new StripeCheckoutStack(app, "StripeCheckoutStack", 
 });
 
 // Create WAF for rate limiting
-new WAFStack(app, "WAFStack", {
-    env: {
-        account: account,
-        region: "us-east-1", // WAF must be in us-east-1 for CloudFront
-    },
-    tags: {
-        ManagedBy: "CDK",
-        Environment: "production",
-        Purpose: "RateLimiting",
-    },
-});
+if (config.wafEnabled) {
+    new WAFStack(app, "WAFStack", {
+        env: {
+            account: account,
+            region: "us-east-1", // WAF must be in us-east-1 for CloudFront
+        },
+        tags: {
+            ManagedBy: "CDK",
+            Environment: "production",
+            Purpose: "RateLimiting",
+        },
+    });
+}
 
 // Create Budget Alerts for cost controls
 new BudgetAlertStack(app, "BudgetAlertStack", {
