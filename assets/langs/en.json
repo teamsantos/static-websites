@@ -117,7 +117,7 @@
     {
       "name": "Basic",
       "description": [
-        "Use one of our templates"
+        "Use one of our templates or request a website (no extra charge)",
       ],
       "price": "€4.99/month",
       "svg": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>\n<path d='M9 12l2 2 4-4'/>\n<circle cx='12' cy='12' r='10'/>\n</svg>",
