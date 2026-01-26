@@ -315,13 +315,12 @@ export class CreateProjectStack extends cdk.Stack {
         if (props.metadataTable && props.confirmationCodesTable && props.sendEmailFunction) {
             
             const logGroup = new logs.LogGroup(this, "ProjectManagementLogs", {
-                logGroupName: "/aws/lambda/project-management",
+                logGroupName: "/aws/lambda/project-management-api",
                 retention: logs.RetentionDays.TWO_WEEKS,
                 removalPolicy: cdk.RemovalPolicy.DESTROY,
             });
 
             const getProjectsFunction = new lambda.Function(this, "GetProjectsFunction", {
-                functionName: "get-projects",
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/get-projects")),
@@ -337,7 +336,6 @@ export class CreateProjectStack extends cdk.Stack {
             props.metadataTable.grantReadData(getProjectsFunction);
 
             const deleteProjectFunction = new lambda.Function(this, "DeleteProjectFunction", {
-                functionName: "delete-project",
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/delete-project")),
@@ -353,7 +351,6 @@ export class CreateProjectStack extends cdk.Stack {
             props.metadataTable.grantReadWriteData(deleteProjectFunction);
 
             const sendConfirmationCodeFunction = new lambda.Function(this, "SendConfirmationCodeFunction", {
-                functionName: "send-confirmation-code",
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/send-confirmation-code")),
@@ -373,7 +370,6 @@ export class CreateProjectStack extends cdk.Stack {
             props.sendEmailFunction.grantInvoke(sendConfirmationCodeFunction);
 
             const validateConfirmationCodeFunction = new lambda.Function(this, "ValidateConfirmationCodeFunction", {
-                functionName: "validate-confirmation-code",
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/validate-confirmation-code")),
