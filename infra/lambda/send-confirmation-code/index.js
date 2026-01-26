@@ -1,8 +1,8 @@
 import AWS from "aws-sdk";
 import { randomInt } from "crypto";
-import { createLogger, logMetric } from "./shared/logger.js";
-import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js";
 import { apiResponse, corsHeaders } from "./shared/auth.js";
+import { createLogger } from "./shared/logger.js";
+import { captureException, initSentry } from "./shared/sentry.js";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();

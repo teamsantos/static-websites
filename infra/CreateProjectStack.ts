@@ -8,6 +8,7 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as path from "path";
 
 interface CreateProjectProps extends cdk.StackProps {
     ses_region: string;
@@ -16,6 +17,8 @@ interface CreateProjectProps extends cdk.StackProps {
     s3Bucket?: string;
     metadataTable?: dynamodb.Table;
     idempotencyTable?: dynamodb.Table;
+    confirmationCodesTable?: dynamodb.Table;
+    sendEmailFunction?: lambda.Function;
 }
 
 export class CreateProjectStack extends cdk.Stack {
@@ -26,6 +29,11 @@ export class CreateProjectStack extends cdk.Stack {
     public stripeWebhookFunctionName: string = "";
     public githubWebhookFunctionName: string = "";
     public healthCheckFunctionName: string = "";
+    public api: apigateway.RestApi;
+    public getProjectsFunctionName: string = "";
+    public deleteProjectFunctionName: string = "";
+    public sendConfirmationCodeFunctionName: string = "";
+    public validateConfirmationCodeFunctionName: string = "";
 
     constructor(scope: cdk.App, id: string, props: CreateProjectProps) {
         super(scope, id, props);
@@ -143,7 +151,7 @@ export class CreateProjectStack extends cdk.Stack {
             props.idempotencyTable.grantReadWriteData(createProjectFunction);
         }
 
-        const api = new apigateway.RestApi(this, 'CreateProjectApi', {
+        this.api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
             defaultCorsPreflightOptions: {
                 allowOrigins: apigateway.Cors.ALL_ORIGINS,
@@ -162,7 +170,7 @@ export class CreateProjectStack extends cdk.Stack {
         // Map domain to API
         new apigateway.BasePathMapping(this, 'ApiMapping', {
             domainName: apiDomain,
-            restApi: api,
+            restApi: this.api,
         });
 
         // Route53 A record for API domain
@@ -172,7 +180,7 @@ export class CreateProjectStack extends cdk.Stack {
             target: route53.RecordTarget.fromAlias(new route53Targets.ApiGatewayDomain(apiDomain)),
         });
 
-        const createProjectResource = api.root.addResource('create-project');
+        const createProjectResource = this.api.root.addResource('create-project');
         createProjectResource.addMethod('POST', new apigateway.LambdaIntegration(createProjectFunction, {
             integrationResponses: [
                 {
@@ -211,7 +219,7 @@ export class CreateProjectStack extends cdk.Stack {
             ],
         });
 
-        const generateWebsiteResource = api.root.addResource('generate-website');
+        const generateWebsiteResource = this.api.root.addResource('generate-website');
         generateWebsiteResource.addMethod('POST', new apigateway.LambdaIntegration(generateWebsiteFunction, {
             integrationResponses: [
                 {
@@ -283,7 +291,7 @@ export class CreateProjectStack extends cdk.Stack {
         }));
 
         // API Gateway endpoint for contact form
-        const contactFormResource = api.root.addResource('contact');
+        const contactFormResource = this.api.root.addResource('contact');
         contactFormResource.addMethod('POST', new apigateway.LambdaIntegration(contactFormFunction, {
             integrationResponses: [
                 { statusCode: '200' },
@@ -300,8 +308,107 @@ export class CreateProjectStack extends cdk.Stack {
             ],
         });
 
+        // ============================================================
+        // Project Management Logic (Merged)
+        // ============================================================
+        
+        if (props.metadataTable && props.confirmationCodesTable && props.sendEmailFunction) {
+            
+            const logGroup = new logs.LogGroup(this, "ProjectManagementLogs", {
+                logGroupName: "/aws/lambda/project-management",
+                retention: logs.RetentionDays.TWO_WEEKS,
+                removalPolicy: cdk.RemovalPolicy.DESTROY,
+            });
+
+            const getProjectsFunction = new lambda.Function(this, "GetProjectsFunction", {
+                functionName: "get-projects",
+                runtime: lambda.Runtime.NODEJS_20_X,
+                handler: "index.handler",
+                code: lambda.Code.fromAsset(path.join(__dirname, "lambda/get-projects")),
+                timeout: cdk.Duration.seconds(10),
+                memorySize: 256,
+                environment: {
+                    DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
+                    SENTRY_DSN: process.env.SENTRY_DSN || "",
+                },
+                logGroup,
+            });
+            this.getProjectsFunctionName = getProjectsFunction.functionName;
+            props.metadataTable.grantReadData(getProjectsFunction);
+
+            const deleteProjectFunction = new lambda.Function(this, "DeleteProjectFunction", {
+                functionName: "delete-project",
+                runtime: lambda.Runtime.NODEJS_20_X,
+                handler: "index.handler",
+                code: lambda.Code.fromAsset(path.join(__dirname, "lambda/delete-project")),
+                timeout: cdk.Duration.seconds(10),
+                memorySize: 256,
+                environment: {
+                    DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
+                    SENTRY_DSN: process.env.SENTRY_DSN || "",
+                },
+                logGroup,
+            });
+            this.deleteProjectFunctionName = deleteProjectFunction.functionName;
+            props.metadataTable.grantReadWriteData(deleteProjectFunction);
+
+            const sendConfirmationCodeFunction = new lambda.Function(this, "SendConfirmationCodeFunction", {
+                functionName: "send-confirmation-code",
+                runtime: lambda.Runtime.NODEJS_20_X,
+                handler: "index.handler",
+                code: lambda.Code.fromAsset(path.join(__dirname, "lambda/send-confirmation-code")),
+                timeout: cdk.Duration.seconds(10),
+                memorySize: 256,
+                environment: {
+                    DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
+                    DYNAMODB_CODES_TABLE: props.confirmationCodesTable.tableName,
+                    SEND_EMAIL_FUNCTION: props.sendEmailFunction.functionName,
+                    SENTRY_DSN: process.env.SENTRY_DSN || "",
+                },
+                logGroup,
+            });
+            this.sendConfirmationCodeFunctionName = sendConfirmationCodeFunction.functionName;
+            props.metadataTable.grantReadData(sendConfirmationCodeFunction);
+            props.confirmationCodesTable.grantWriteData(sendConfirmationCodeFunction);
+            props.sendEmailFunction.grantInvoke(sendConfirmationCodeFunction);
+
+            const validateConfirmationCodeFunction = new lambda.Function(this, "ValidateConfirmationCodeFunction", {
+                functionName: "validate-confirmation-code",
+                runtime: lambda.Runtime.NODEJS_20_X,
+                handler: "index.handler",
+                code: lambda.Code.fromAsset(path.join(__dirname, "lambda/validate-confirmation-code")),
+                timeout: cdk.Duration.seconds(30),
+                memorySize: 256,
+                environment: {
+                    DYNAMODB_CODES_TABLE: props.confirmationCodesTable.tableName,
+                    DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
+                    GENERATE_WEBSITE_FUNCTION: generateWebsiteFunction.functionName,
+                    SENTRY_DSN: process.env.SENTRY_DSN || "",
+                },
+                logGroup,
+            });
+            this.validateConfirmationCodeFunctionName = validateConfirmationCodeFunction.functionName;
+            props.confirmationCodesTable.grantReadData(validateConfirmationCodeFunction);
+            props.metadataTable.grantReadWriteData(validateConfirmationCodeFunction);
+            generateWebsiteFunction.grantInvoke(validateConfirmationCodeFunction);
+
+            // API Resources
+            const projectsResource = this.api.root.addResource("projects");
+            projectsResource.addMethod("GET", new apigateway.LambdaIntegration(getProjectsFunction));
+            
+            const projectIdResource = projectsResource.addResource("{id}");
+            projectIdResource.addMethod("DELETE", new apigateway.LambdaIntegration(deleteProjectFunction));
+
+            const authResource = this.api.root.addResource("auth");
+            const sendCodeResource = authResource.addResource("send-code");
+            sendCodeResource.addMethod("POST", new apigateway.LambdaIntegration(sendConfirmationCodeFunction));
+
+            const validateCodeResource = authResource.addResource("validate-code");
+            validateCodeResource.addMethod("POST", new apigateway.LambdaIntegration(validateConfirmationCodeFunction));
+        }
+
         new cdk.CfnOutput(this, 'ApiUrl', {
-            value: api.url,
+            value: this.api.url,
             description: 'API Gateway URL for creating projects (restricted to allowed origins)',
         });
         new cdk.CfnOutput(this, 'ApiCustomUrl', {

@@ -15,7 +15,6 @@ import { GitHubWebhookStack } from "./GitHubWebhookStack";
 import { HealthCheckStack } from "./HealthCheckStack";
 import { DashboardStack } from "./DashboardStack";
 import { AlertingStack } from "./AlertingStack";
-import { ProjectManagementStack } from "./ProjectManagementStack";
 import { EmailTemplateStack } from "./EmailTemplateStack";
 import { ContactFormStack } from "./ContactFormStack";
 
@@ -128,6 +127,21 @@ new ContactFormStack(app, "ContactFormStack", {
     sesRegion: config.certificateRegion 
 });
 
+// Create Email Template System (Phase 4.6) - Must be created before Stripe stack
+const emailTemplateStack = new EmailTemplateStack(app, "EmailTemplateStack", {
+    senderEmail: process.env.SENDER_EMAIL || "noreply@e-info.click",
+    frontendUrl: process.env.FRONTEND_URL || "https://editor.e-info.click",
+    env: {
+        account: account,
+        region: config.region,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "EmailNotifications",
+    },
+});
+
 // Create other infrastructure stacks
 const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
     ses_region: config.certificateRegion,
@@ -136,6 +150,8 @@ const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
     s3Bucket: config.s3Bucket,
     metadataTable: dynamoDBStack.table,
     idempotencyTable: dynamoDBStack.idempotencyTable,
+    confirmationCodesTable: dynamoDBStack.confirmationCodesTable,
+    sendEmailFunction: emailTemplateStack.sendEmailFunction,
     env: {
         account: account,
         region: config.region,
@@ -171,20 +187,7 @@ new StepFunctionsStack(app, "StepFunctionsStack", {
     },
 });
 
-// Create Email Template System (Phase 4.6) - Must be created before Stripe stack
-const emailTemplateStack = new EmailTemplateStack(app, "EmailTemplateStack", {
-    senderEmail: process.env.SENDER_EMAIL || "noreply@e-info.click",
-    frontendUrl: process.env.FRONTEND_URL || "https://editor.e-info.click",
-    env: {
-        account: account,
-        region: config.region,
-    },
-    tags: {
-        ManagedBy: "CDK",
-        Environment: "production",
-        Purpose: "EmailNotifications",
-    },
-});
+
 
 const stripeCheckoutStack = new StripeCheckoutStack(app, "StripeCheckoutStack", {
     domain: config.domain,
@@ -304,23 +307,6 @@ new AlertingStack(app, "AlertingStack", {
     },
 });
 
-// Create Project Management API (Phase 4.5)
-new ProjectManagementStack(app, "ProjectManagementStack", {
-    domain: config.domain,
-    metadataTable: dynamoDBStack.table,
-    confirmationCodesTable: dynamoDBStack.confirmationCodesTable,
-    sendEmailFunction: emailTemplateStack.sendEmailFunction,
-    generateWebsiteFunction: createProjectStack.generateWebsiteFunction,
-    env: {
-        account: account,
-        region: config.region,
-    },
-    tags: {
-        ManagedBy: "CDK",
-        Environment: "production",
-        Purpose: "ProjectManagement",
-    },
-});
 
 
 const projectsParam = app.node.tryGetContext("projects") as string | undefined;
