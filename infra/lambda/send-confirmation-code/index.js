@@ -48,7 +48,10 @@ export const handler = async (event, context) => {
 
         if (!metadataResult.Items || metadataResult.Items.length === 0) {
             logger.warn('Project not found', { templateId });
-            return apiResponse(404, { error: "Project not found" }, origin);
+            return apiResponse(404, {
+                error: `Project not found (${templateId})`,
+                logs: JSON.stringify(metadataResult)
+            }, origin);
         }
 
         const project = metadataResult.Items[0];
@@ -88,7 +91,12 @@ export const handler = async (event, context) => {
         await lambda.invoke(params).promise();
         logger.info('Confirmation email queued', { email });
 
-        return apiResponse(200, { message: "Confirmation code sent" }, origin);
+        return apiResponse(200, {
+            message: "Confirmation code sent",
+            templateId,
+            email,
+            expiresAt
+        }, origin);
 
     } catch (error) {
         logger.error('Failed to send confirmation code', {
@@ -96,6 +104,9 @@ export const handler = async (event, context) => {
             stack: error.stack
         });
         captureException(error);
-        return apiResponse(500, { error: "Internal server error" }, origin);
+        return apiResponse(500, {
+            error: "Internal server error",
+            debug: error.message
+        }, origin);
     }
 };
