@@ -6,6 +6,7 @@ import { captureException, initSentry } from "./shared/sentry.js";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();
+
 const CODES_TABLE = process.env.DYNAMODB_CODES_TABLE;
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE;
 const GENERATE_WEBSITE_FUNCTION = process.env.GENERATE_WEBSITE_FUNCTION || "generate-website";

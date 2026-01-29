@@ -364,7 +364,7 @@ class CreateProjectStack extends cdk.Stack {
                 logGroup,
             });
             this.validateConfirmationCodeFunctionName = validateConfirmationCodeFunction.functionName;
-            props.confirmationCodesTable.grantReadData(validateConfirmationCodeFunction);
+            props.confirmationCodesTable.grantReadWriteData(validateConfirmationCodeFunction);
             props.metadataTable.grantReadWriteData(validateConfirmationCodeFunction);
             generateWebsiteFunction.grantInvoke(validateConfirmationCodeFunction);
             // API Resources
