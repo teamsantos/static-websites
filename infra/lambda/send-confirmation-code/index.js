@@ -88,6 +88,7 @@ export const handler = async (event, context) => {
             })
         };
 
+        logger.info('Invoking send email function: ', JSON.stringify(params));
         await lambda.invoke(params).promise();
         logger.info('Confirmation email queued', { email });
 
