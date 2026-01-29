@@ -35,161 +35,101 @@ export function injectContent(html, langs = {}, images = {}, textColors = {}, se
     const escapedId = textId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     
     // For buttons and inputs (use value/placeholder)
-    // FIXED: Ensure closing > is preserved
     result = result.replace(
       new RegExp(`(<(?:button|input|submit)[^>]*data-text-id=["']${escapedId}["'][^>]*)>`, 'g'),
-      (match, beforeClosing) => {
-        // Check if value attribute already exists
-        if (beforeClosing.includes('value=')) {
-          // Replace existing value
-          const replaced = beforeClosing.replace(/value=["'][^"']*["']/, `value="${escapedText}"`);
-          return `${replaced}>`;
-        } else {
-          // Add new value attribute
-          return `${beforeClosing} value="${escapedText}">`;
-        }
-      }
+      `$1 value="${escapedText}">`
     );
 
     // For text nodes (innerText) - More careful pattern matching
-    // FIXED: Ensures we capture and preserve the full tag structure
+    // Ensures we don't match across tag boundaries incorrectly
     result = result.replace(
-      new RegExp(`(<([a-zA-Z][a-zA-Z0-9]*)[^>]*data-text-id=["']${escapedId}["'][^>]*>)(.*?)(<\\/\\2>)`, 'gs'),
-      `$1${escapedText}$4`
+      new RegExp(`(<[^>]*data-text-id=["']${escapedId}["'][^>]*>)(.*?)(</[^>]*>)`, 'g'),
+      `$1${escapedText}$3`
     );
 
-    // For title tags (specific case)
+    // For title tags
     result = result.replace(
-      new RegExp(`(<title[^>]*data-text-id=["']${escapedId}["'][^>]*>)(.*?)(<\\/title>)`, 'gi'),
+      new RegExp(`(<title[^>]*data-text-id=["']${escapedId}["'][^>]*>)(.*?)(</title>)`, 'g'),
       `$1${escapedText}$3`
     );
   }
 
-  // 2. Inject text colors (data-text-id + color)
-  // FIXED: Properly handle style attribute injection with closing >
-  for (const [textId, color] of Object.entries(textColors)) {
-    const escapedId = textId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
-    result = result.replace(
-      new RegExp(`<([a-zA-Z][a-zA-Z0-9]*)([^>]*data-text-id=["']${escapedId}["'][^>]*)>`, 'g'),
-      (match, tagName, attributes) => {
-        // Check if style attribute exists
-        if (attributes.includes('style=')) {
-          // Append to existing style
-          const updatedAttrs = attributes.replace(
-            /style=["']([^"']*)["']/,
-            (styleMatch, existingStyle) => {
-              const trimmed = existingStyle.trim();
-              const separator = trimmed && !trimmed.endsWith(';') ? '; ' : ' ';
-              return `style="${existingStyle}${separator}color: ${color};"`;
-            }
-          );
-          return `<${tagName}${updatedAttrs}>`;
-        } else {
-          // Add new style attribute
-          return `<${tagName}${attributes} style="color: ${color};">`;
-        }
+   // 2. Inject text colors (data-text-id + color)
+   for (const [textId, color] of Object.entries(textColors)) {
+     const escapedId = textId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     const styleRegex = new RegExp(`(<[^>]*data-text-id=["']${escapedId}["'][^>]*(?:style=["']([^"']*)["'])?[^>]*)>`, 'g');
+    result = result.replace(styleRegex, (match, p1) => {
+      const hasStyle = match.includes('style=');
+      if (hasStyle) {
+        return match.replace(/style=["']([^"']*)["']/, `style="$1; color: ${color}"`);
+      } else {
+        return p1.replace(/>$/, ` style="color: ${color}">`) + match.substring(p1.length + 1);
       }
-    );
+    });
   }
 
-  // 3. Inject alt text (data-alt-text-id)
-  for (const [altId, altText] of Object.entries(langs)) {
-    const escapedAlt = escapeHtml(altText);
-    const escapedId = altId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    result = result.replace(
-      new RegExp(`data-alt-text-id=["']${escapedId}["']`, 'g'),
-      `alt="${escapedAlt}"`
-    );
-  }
+   // 3. Inject alt text (data-alt-text-id)
+   for (const [altId, altText] of Object.entries(langs)) {
+     const escapedAlt = escapeHtml(altText);
+     const escapedId = altId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     result = result.replace(
+       new RegExp(`(data-alt-text-id=["']${escapedId}["'])`, 'g'),
+       `alt="${escapedAlt}"`
+     );
+   }
 
-  // 4. Inject title attributes (data-title-text-id)
-  for (const [titleId, titleText] of Object.entries(langs)) {
-    const escapedTitle = escapeHtml(titleText);
-    const escapedId = titleId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    result = result.replace(
-      new RegExp(`data-title-text-id=["']${escapedId}["']`, 'g'),
-      `title="${escapedTitle}"`
-    );
-  }
+   // 4. Inject title attributes (data-title-text-id)
+   for (const [titleId, titleText] of Object.entries(langs)) {
+     const escapedTitle = escapeHtml(titleText);
+     const escapedId = titleId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     result = result.replace(
+       new RegExp(`(data-title-text-id=["']${escapedId}["'])`, 'g'),
+       `title="${escapedTitle}"`
+     );
+   }
 
-  // 5. Inject meta content (data-meta-content-id)
-  for (const [metaId, metaText] of Object.entries(langs)) {
-    const escapedId = metaId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    result = result.replace(
-      new RegExp(`data-meta-content-id=["']${escapedId}["']`, 'g'),
-      `content="${escapeHtml(metaText)}"`
-    );
-  }
+   // 5. Inject meta content (data-meta-content-id)
+   for (const [metaId, metaText] of Object.entries(langs)) {
+     const escapedId = metaId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     result = result.replace(
+       new RegExp(`(data-meta-content-id=["']${escapedId}["'])`, 'g'),
+       `content="${escapeHtml(metaText)}"`
+     );
+   }
 
-  // 6. Inject image sources (data-image-src)
-  for (const [imageKey, imageUrl] of Object.entries(images)) {
-    const escapedId = imageKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    result = result.replace(
-      new RegExp(`data-image-src=["']${escapedId}["']`, 'g'),
-      `src="${imageUrl}"`
-    );
-  }
+   // 6. Inject image sources (data-image-src)
+   for (const [imageKey, imageUrl] of Object.entries(images)) {
+     const escapedId = imageKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     result = result.replace(
+       new RegExp(`data-image-src=["']${escapedId}["']`, 'g'),
+       `src="${imageUrl}"`
+     );
+   }
 
-  // 7. Inject background images (data-bg-image)
-  // FIXED: Properly handle style attribute for background images
-  for (const [bgKey, bgUrl] of Object.entries(images)) {
-    const escapedId = bgKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
-    result = result.replace(
-      new RegExp(`<([a-zA-Z][a-zA-Z0-9]*)([^>]*data-bg-image=["']${escapedId}["'][^>]*)>`, 'g'),
-      (match, tagName, attributes) => {
-        // Check if style attribute exists
-        if (attributes.includes('style=')) {
-          // Append to existing style
-          const updatedAttrs = attributes.replace(
-            /style=["']([^"']*)["']/,
-            (styleMatch, existingStyle) => {
-              const trimmed = existingStyle.trim();
-              const separator = trimmed && !trimmed.endsWith(';') ? '; ' : ' ';
-              return `style="${existingStyle}${separator}background-image: url('${bgUrl}');"`;
-            }
-          );
-          return `<${tagName}${updatedAttrs}>`;
-        } else {
-          // Add new style attribute
-          return `<${tagName}${attributes} style="background-image: url('${bgUrl}');">`;
-        }
+   // 7. Inject background images (data-bg-image)
+   for (const [bgKey, bgUrl] of Object.entries(images)) {
+     const escapedId = bgKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     result = result.replace(
+       new RegExp(`(data-bg-image=["']${escapedId}["'][^>]*)>`, 'g'),
+       `$1 style="background-image: url('${bgUrl}')">`
+     );
+   }
+
+   // 8. Inject section background colors (data-section-id)
+   for (const [sectionId, bgColor] of Object.entries(sectionBackgrounds)) {
+     const escapedId = sectionId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     const styleRegex = new RegExp(`(<[^>]*data-section-id=["']${escapedId}["'][^>]*(?:style=["']([^"']*)["'])?[^>]*)>`, 'g');
+    result = result.replace(styleRegex, (match, p1) => {
+      if (match.includes('style=')) {
+        return match.replace(/style=["']([^"']*)["']/, `style="$1; background-color: ${bgColor}"`);
+      } else {
+        return p1.replace(/>$/, ` style="background-color: ${bgColor}">`) + match.substring(p1.length + 1);
       }
-    );
-  }
-
-  // 8. Inject section background colors (data-section-id)
-  // FIXED: Properly handle style attribute with closing >
-  for (const [sectionId, bgColor] of Object.entries(sectionBackgrounds)) {
-    const escapedId = sectionId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
-    result = result.replace(
-      new RegExp(`<([a-zA-Z][a-zA-Z0-9]*)([^>]*data-section-id=["']${escapedId}["'][^>]*)>`, 'g'),
-      (match, tagName, attributes) => {
-        // Check if style attribute exists
-        if (attributes.includes('style=')) {
-          // Append to existing style
-          const updatedAttrs = attributes.replace(
-            /style=["']([^"']*)["']/,
-            (styleMatch, existingStyle) => {
-              const trimmed = existingStyle.trim();
-              const separator = trimmed && !trimmed.endsWith(';') ? '; ' : ' ';
-              return `style="${existingStyle}${separator}background-color: ${bgColor};"`;
-            }
-          );
-          return `<${tagName}${updatedAttrs}>`;
-        } else {
-          // Add new style attribute
-          return `<${tagName}${attributes} style="background-color: ${bgColor};">`;
-        }
-      }
-    );
+    });
   }
 
   // 9. Clean up unused data-* attributes
-  // Skipped to preserve editor metadata
-  // result = result.replace(/\s+data-[a-z-]+=["'][^"']*["']/g, '');
+  result = result.replace(/\s+data-[a-z-]+=["'][^"']*["']/g, '');
 
   return result;
 }
@@ -230,19 +170,23 @@ export function validateContentBeforeInjection(content) {
     }
   }
 
-  // Check for data: URLs in images (allow them but log warning)
+  // Check for data: URLs in images
   for (const url of Object.values(images)) {
     if (typeof url === 'string' && /^data:/.test(url)) {
-      console.warn(`Warning: data: URL detected in images: ${url.substring(0, 50)}...`);
-      // Don't reject - data URLs are valid for base64 images
+      return {
+        valid: false,
+        error: `Invalid image URL (data: not allowed): ${url.substring(0, 50)}`
+      };
     }
   }
 
   // Check for invalid color values
   for (const color of Object.values(colors)) {
-    if (typeof color === 'string' && !/^#[0-9a-f]{3,8}$/i.test(color) && !/^rgb/i.test(color) && !/^hsl/i.test(color)) {
-      console.warn(`Warning: Unusual color format: ${color}`);
-      // Don't reject - CSS supports many color formats (named colors, etc.)
+    if (typeof color === 'string' && !/^#[0-9a-f]{3,8}$/i.test(color) && !/^rgb/.test(color)) {
+      return {
+        valid: false,
+        error: `Invalid color format: ${color}`
+      };
     }
   }
 

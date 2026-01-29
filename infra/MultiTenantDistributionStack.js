@@ -67,6 +67,7 @@ class MultiTenantDistributionStack extends cdk.Stack {
         // Create CloudFront Function to rewrite paths based on hostname
         // Supports subdomain-based routing (generating.e-info.click/)
         // All projects are stored under /projects prefix in S3
+        // Shared files (e.g., /shared/contact-form.js) are served from common location
         const pathRewriteFunction = new cloudfront.Function(this, "PathRewriteFunction", {
             code: cloudfront.FunctionCode.fromInline(`
 function handler(event) {
@@ -85,6 +86,13 @@ function handler(event) {
     
     // Normalize URI - remove duplicate slashes
     var uri = request.uri.replace(/\\/+/g, '/');
+    
+    // Shared files are served from common /shared/ folder in S3
+    // e.g., /shared/contact-form.js -> /shared/contact-form.js (no project prefix)
+    if (uri.indexOf('/shared/') === 0) {
+        request.uri = uri;
+        return request;
+    }
     
     // Rewrite URI based on the path
     if (uri === '/' || uri === '') {
@@ -147,7 +155,25 @@ function handler(event) {
             recordName: `*.${props.hostedZoneDomainName}`,
             target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(this.distribution)),
         });
-        // Output distribution details
+        // Add SES CNAME records for domain verification
+        new route53.CnameRecord(this, "SESVerificationRecord1", {
+            zone: hostedZone,
+            recordName: "tlo4lw6ugpyyyctfmc4owy7tsij3scqo._domainkey.e-info.click",
+            domainName: "tlo4lw6ugpyyyctfmc4owy7tsij3scqo.dkim.amazonses.com",
+            ttl: cdk.Duration.hours(1),
+        });
+        new route53.CnameRecord(this, "SESVerificationRecord2", {
+            zone: hostedZone,
+            recordName: "ebjhxt3lbu6sfocsdbbea4je7ieohq66._domainkey.e-info.click",
+            domainName: "ebjhxt3lbu6sfocsdbbea4je7ieohq66.dkim.amazonses.com",
+            ttl: cdk.Duration.hours(1),
+        });
+        new route53.CnameRecord(this, "SESVerificationRecord3", {
+            zone: hostedZone,
+            recordName: "u5r7ztbhdyru4xgdz7icdi2yoprp6wkx._domainkey.e-info.click",
+            domainName: "u5r7ztbhdyru4xgdz7icdi2yoprp6wkx.dkim.amazonses.com",
+            ttl: cdk.Duration.hours(1),
+        });
         new cdk.CfnOutput(this, "DistributionId", {
             value: this.distributionId,
             description: "CloudFront distribution ID",

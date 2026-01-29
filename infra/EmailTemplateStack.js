@@ -85,7 +85,7 @@ class EmailTemplateStack extends cdk.Stack {
             environment: {
                 SENDER_EMAIL: props.senderEmail,
                 FRONTEND_URL: props.frontendUrl,
-                SES_REGION: this.region,
+                SES_REGION: props.sesRegion || this.region,
                 SENTRY_DSN: process.env.SENTRY_DSN || "",
             },
             logGroup,

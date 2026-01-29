@@ -131,6 +131,7 @@ new ContactFormStack(app, "ContactFormStack", {
 const emailTemplateStack = new EmailTemplateStack(app, "EmailTemplateStack", {
     senderEmail: process.env.SENDER_EMAIL || "noreply@e-info.click",
     frontendUrl: process.env.FRONTEND_URL || "https://editor.e-info.click",
+    sesRegion: config.certificateRegion,
     env: {
         account: account,
         region: config.region,
