@@ -186,9 +186,9 @@ export const sendDeploymentCompleteEmail = async (
 /**
  * Send confirmation code email
  */
-export const sendConfirmationCodeEmail = async (email, code) => {
+export const sendConfirmationCodeEmail = async (email, projectName, code) => {
     const htmlBody = getConfirmationCodeTemplate(code);
-    const textBody = `Your verification code is: ${code}`;
+    const textBody = `${projectName} your verification code is: ${code}`;
 
     return sendEmail(
         email,
