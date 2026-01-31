@@ -31,7 +31,7 @@ export const handler = async (event, context) => {
         const {
             templateId,
             code,
-            sourceTemplateId, // Explicitly passed theme ID
+            sourceTemplateId,
             images,
             langs,
             textColors,
@@ -46,10 +46,7 @@ export const handler = async (event, context) => {
         }
 
         logger.info('Validate confirmation code request', { templateId });
-        logger.debug('Validate confirmation code payload', { body });
-        logger.info('Validate confirmation code payload', { body });
 
-        // 1. Get code from DynamoDB
         const result = await dynamodb.get({
             TableName: CODES_TABLE,
             Key: {
@@ -62,8 +59,8 @@ export const handler = async (event, context) => {
             return apiResponse(400, { error: "Invalid or expired code" }, origin);
         }
 
-        const storedCode = String(result.Item.code); // Ensure string
-        const inputCode = String(code); // Ensure string
+        const storedCode = String(result.Item.code);
+        const inputCode = String(code);
         const expiresAt = result.Item.expiresAt;
         const now = Math.floor(Date.now() / 1000);
 
@@ -81,11 +78,6 @@ export const handler = async (event, context) => {
         logger.info('Code validated successfully', { templateId });
 
         // 3. Trigger website regeneration
-        // A. Fetch existing project metadata to get email
-        let userEmail = "unknown@authenticated.user";
-        // Default to the explicitly passed theme, or fallback
-        let finalTemplateId = sourceTemplateId || "business";
-
         const metadataResult = await dynamodb.query({
             TableName: METADATA_TABLE,
             IndexName: "projectName-index",
@@ -96,6 +88,9 @@ export const handler = async (event, context) => {
             Limit: 1,
             ScanIndexForward: false // Get the latest record (assuming sort key helps, or just best effort)
         }).promise();
+
+        let userEmail;
+        let finalTemplateId = sourceTemplateId;
 
         if (metadataResult.Items && metadataResult.Items.length > 0) {
             const projectData = metadataResult.Items[0];
@@ -114,11 +109,6 @@ export const handler = async (event, context) => {
         const operationId = randomUUID();
 
         // Construct the update payload
-        // We prioritize the new data from the request, falling back to existing data if needed.
-        // Note: collectExportData from frontend returns 'templateId' as the source template ID.
-        // But we overwrote 'templateId' in the body with 'projectName'. 
-        // We should check if 'sourceTemplateId' or similar is passed, otherwise we rely on DB.
-
         const timestamp = new Date().toISOString();
 
         const metadataItem = {
@@ -151,7 +141,7 @@ export const handler = async (event, context) => {
         // C. Invoke generate-website with the operationId
         const params = {
             FunctionName: GENERATE_WEBSITE_FUNCTION,
-            InvocationType: 'Event', // Async
+            InvocationType: 'Event',
             Payload: JSON.stringify({ operationId: operationId })
         };
 
