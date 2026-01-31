@@ -1,9 +1,8 @@
 import AWS from "aws-sdk";
-import { randomUUID } from "crypto";
 import crypto from 'crypto';
-import { apiResponse, corsHeaders } from "./shared/auth.js";
-import { createLogger } from "./shared/logger.js";
-import { captureException, initSentry } from "./shared/sentry.js";
+import { apiResponse, corsHeaders } from "@app/shared/auth";
+import { createLogger } from "@app/shared/logger";
+import { captureException, initSentry } from "@app/shared/sentry";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();
@@ -12,6 +11,7 @@ const secretsManager = new AWS.SecretsManager();
 const CODES_TABLE = process.env.DYNAMODB_CODES_TABLE;
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE;
 const GENERATE_WEBSITE_FUNCTION = process.env.GENERATE_WEBSITE_FUNCTION || "generate-website";
+let cachedHmacSecret = null;
 
 export const handler = async (event, context) => {
     initSentry('validate-confirmation-code', context);
@@ -108,15 +108,18 @@ export const handler = async (event, context) => {
 
         // B. Create a new Operation Record in DynamoDB
         // This is required because generate-website expects an operationId to fetch data.
-        const operationId = randomUUID();
+        const operationId = crypto.randomUUID();
 
         // Compute HMAC signature over operationId so the downstream lambda can
         // verify that the operation was created by this function.
-        let hmacSecret = null;
+        let hmacSecret = cachedHmacSecret;
         try {
-            if (!process.env.HMAC_SECRET_NAME) throw new Error('HMAC_SECRET_NAME env var not set');
-            const secretResp = await secretsManager.getSecretValue({ SecretId: process.env.HMAC_SECRET_NAME }).promise();
-            hmacSecret = secretResp.SecretString;
+            if (!hmacSecret) {
+                if (!process.env.HMAC_SECRET_NAME) throw new Error('HMAC_SECRET_NAME env var not set');
+                const secretResp = await secretsManager.getSecretValue({ SecretId: process.env.HMAC_SECRET_NAME }).promise();
+                hmacSecret = secretResp.SecretString;
+                cachedHmacSecret = hmacSecret;
+            }
         } catch (err) {
             logger.error('Failed to load HMAC secret from Secrets Manager', { error: err.message });
             throw err;

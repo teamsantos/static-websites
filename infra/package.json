@@ -5,8 +5,7 @@
   "main": "index.ts",
   "type": "commonjs",
   "scripts": {
-    "copy-shared": "node copy-shared-to-lambdas.js",
-    "build": "npm run copy-shared && tsc",
+    "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",

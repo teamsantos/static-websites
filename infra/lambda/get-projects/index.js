@@ -1,7 +1,7 @@
 import AWS from "aws-sdk";
-import { validateEmailToken, corsHeaders, apiResponse } from "./shared/auth.js";
-import { createLogger, logMetric } from "./shared/logger.js";
-import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js";
+import { validateEmailToken, corsHeaders, apiResponse } from "@app/shared/auth";
+import { createLogger, logMetric } from "@app/shared/logger";
+import { initSentry, captureException, addBreadcrumb } from "@app/shared/sentry";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE || "websites-metadata";

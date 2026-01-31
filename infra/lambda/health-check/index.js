@@ -1,6 +1,6 @@
 import AWS from "aws-sdk";
-import { createLogger, logMetric } from "./shared/logger.js";
-import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js";
+import { createLogger, logMetric } from "@app/shared/logger";
+import { initSentry, captureException, addBreadcrumb } from "@app/shared/sentry";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const sqs = new AWS.SQS();

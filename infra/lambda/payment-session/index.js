@@ -1,10 +1,10 @@
 import AWS from "aws-sdk";
 import Stripe from "stripe";
 import { v4 as uuidv4 } from "uuid";
-import { generateIdempotencyKey, withIdempotency } from "./shared/idempotency.js";
-import { createLogger, logMetric } from "./shared/logger.js";
-import { addBreadcrumb, captureException, initSentry } from "./shared/sentry.js";
-import { validatePaymentSessionRequest } from "./shared/validators.js";
+import { generateIdempotencyKey, withIdempotency } from "@app/shared/idempotency";
+import { createLogger, logMetric } from "@app/shared/logger";
+import { addBreadcrumb, captureException, initSentry } from "@app/shared/sentry";
+import { validatePaymentSessionRequest } from "@app/shared/validators";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 

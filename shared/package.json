@@ -1,0 +1,10 @@
+{
+  "name": "@app/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities for Lambda functions",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    "./*": "./*.js"
+  }
+}

@@ -1,9 +1,10 @@
 import AWS from "aws-sdk";
 import { Octokit } from "octokit";
-import { cacheLanguageFile, cacheTemplate, getCacheStats, getLanguageFile, getTemplate } from "./shared/cache.js";
-import { optimizeImage, uploadOptimizedImages } from "./shared/imageOptimization.js";
-import { createLogger } from "./shared/logger.js";
-import { injectContent } from "./shared/templateInjection.js";
+import crypto from "crypto";
+import { cacheLanguageFile, cacheTemplate, getCacheStats, getLanguageFile, getTemplate } from "@app/shared/cache";
+import { optimizeImage, uploadOptimizedImages } from "@app/shared/imageOptimization";
+import { createLogger } from "@app/shared/logger";
+import { injectContent } from "@app/shared/templateInjection";
 
 // Note: X-Ray tracing disabled by default (requires aws-xray-sdk-core package)
 // To enable X-Ray: add aws-xray-sdk-core to dependencies and uncomment code below
@@ -23,22 +24,26 @@ let logger = null;
 // Cache secrets to avoid fetching on every invocation
 let cachedGithubToken = null;
 let cachedGithubConfig = null;
+let cachedHmacSecret = null;
 
 async function getSecrets() {
-    if (!cachedGithubToken || !cachedGithubConfig) {
-        const [tokenSecret, configSecret] = await Promise.all([
+    if (!cachedGithubToken || !cachedGithubConfig || !cachedHmacSecret) {
+        const [tokenSecret, configSecret, hmacSecret] = await Promise.all([
             secretsManager.getSecretValue({ SecretId: process.env.GITHUB_TOKEN_SECRET_NAME }).promise(),
-            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_CONFIG_SECRET_NAME }).promise()
+            secretsManager.getSecretValue({ SecretId: process.env.GITHUB_CONFIG_SECRET_NAME }).promise(),
+            secretsManager.getSecretValue({ SecretId: process.env.HMAC_SECRET_NAME }).promise()
         ]);
 
         cachedGithubToken = tokenSecret.SecretString;
         cachedGithubConfig = JSON.parse(configSecret.SecretString);
+        cachedHmacSecret = hmacSecret.SecretString;
     }
 
     return {
         githubToken: cachedGithubToken,
         githubOwner: cachedGithubConfig.owner,
-        githubRepo: cachedGithubConfig.repo
+        githubRepo: cachedGithubConfig.repo,
+        hmacSecret: cachedHmacSecret
     };
 }
 
@@ -316,7 +321,7 @@ async function generateWebsiteCore(operationId) {
     const processedImages = await processImages(images, projectName);
 
     // Get secrets from AWS Secrets Manager
-    const { githubToken, githubOwner, githubRepo } = await getSecrets();
+    const { githubToken, githubOwner, githubRepo, hmacSecret } = await getSecrets();
 
     const octokit = new Octokit({
         auth: githubToken,
@@ -331,10 +336,7 @@ async function generateWebsiteCore(operationId) {
     let signatureValid = false;
     try {
         if (signature) {
-            if (!process.env.HMAC_SECRET_NAME) throw new Error('HMAC_SECRET_NAME env var not set');
-            const secretResp = await secretsManager.getSecretValue({ SecretId: process.env.HMAC_SECRET_NAME }).promise();
-            const hmacSecret = secretResp.SecretString;
-            const expected = require('crypto').createHmac('sha256', hmacSecret).update(operationId).digest('hex');
+            const expected = crypto.createHmac('sha256', hmacSecret).update(operationId).digest('hex');
             signatureValid = expected === signature;
             if (!signatureValid) {
                 logger.warn('HMAC signature mismatch for operationId', { operationId });
@@ -375,6 +377,9 @@ async function generateWebsiteCore(operationId) {
     } else if (metadata.source === 'validate-confirmation-code' && !projectExists) {
         logger.debug(`Operation originated from validate-confirmation-code but project does not exist; treating as create for project ${projectName}`);
     } else {
+        if (projectExists) {
+            throw new Error(`Project ${projectName} already exists. Updates must be signed and originate from validate-confirmation-code.`);
+        }
         logger.debug(`Operation did not originate from validate-confirmation-code; treating as create for project ${projectName}`);
     }
 
@@ -571,7 +576,6 @@ async function handleSQSEvent(event) {
 async function handleAPIGatewayEvent(event) {
     // Handle CORS preflight OPTIONS requests
     if (event.httpMethod === 'OPTIONS') {
-        logger.info()
         return {
             statusCode: 200,
             headers: {

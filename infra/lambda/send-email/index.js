@@ -6,9 +6,9 @@ import {
     sendGenerationFailedEmail,
     sendDeploymentCompleteEmail,
     sendConfirmationCodeEmail,
-} from "./shared/emailService.js";
-import { createLogger, logMetric } from "./shared/logger.js";
-import { initSentry, captureException, addBreadcrumb } from "./shared/sentry.js";
+} from "@app/shared/emailService";
+import { createLogger, logMetric } from "@app/shared/logger";
+import { initSentry, captureException, addBreadcrumb } from "@app/shared/sentry";
 
 /**
  * SendEmail Lambda Handler

@@ -183,6 +183,21 @@ export const sendDeploymentCompleteEmail = async (
     );
 };
 
+/**
+ * Send confirmation code for project save
+ */
+export const sendConfirmationCodeEmail = async (email, projectName, code) => {
+    const htmlBody = getConfirmationCodeTemplate(email, projectName, code);
+    const textBody = `Your verification code for ${projectName} is: ${code}`;
+
+    return sendEmail(
+        email,
+        `Verification Code - ${projectName}`,
+        htmlBody,
+        textBody
+    );
+};
+
 // ============================================================
 // HTML Email Templates
 // ============================================================

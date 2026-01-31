@@ -1,10 +1,9 @@
 {
-  "name": "validate-confirmation-code-lambda",
+  "name": "get-projects-lambda",
   "version": "1.0.0",
-  "main": "index.js",
   "type": "module",
+  "description": "Lambda function for get-projects",
   "dependencies": {
-    "aws-sdk": "^2.1541.0",
     "@app/shared": "file:../../../shared"
   }
 }

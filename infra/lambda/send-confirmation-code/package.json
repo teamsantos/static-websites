@@ -4,6 +4,7 @@
   "main": "index.js",
   "type": "module",
   "dependencies": {
-    "aws-sdk": "^2.1541.0"
+    "aws-sdk": "^2.1541.0",
+    "@app/shared": "file:../../../shared"
   }
 }
