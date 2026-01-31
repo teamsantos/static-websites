@@ -146,7 +146,7 @@ export const handler = async (event, context) => {
         };
 
         await lambda.invoke(params).promise();
-        logger.info('Website generation triggered', { templateId, operationId });
+        logger.info(`${GENERATE_WEBSITE_FUNCTION} triggered`, { templateId, operationId });
 
         // 4. Delete code after successful use
         await dynamodb.delete({
