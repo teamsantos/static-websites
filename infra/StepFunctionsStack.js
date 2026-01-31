@@ -77,23 +77,6 @@ class StepFunctionsStack extends cdk.Stack {
                 message: "Metadata validation passed",
             }),
         });
-        // Step 3: Call generate-website Lambda
-        const invokeGenerateWebsiteStep = new sfnTasks.LambdaInvoke(this, "InvokeGenerateWebsite", {
-            lambdaFunction: generateWebsiteLambda,
-            resultPath: "$.generationResult",
-            resultSelector: {
-                statusCode: stepfunctions.JsonPath.numberAt("$.statusCode"),
-                body: stepfunctions.JsonPath.stringAt("$.body"),
-            },
-            retryOnServiceExceptions: true,
-        });
-        // Retry policy: 3 attempts with exponential backoff
-        invokeGenerateWebsiteStep.addRetry({
-            errors: ["States.TaskFailed", "States.Timeout"],
-            interval: cdk.Duration.seconds(2),
-            maxAttempts: 3,
-            backoffRate: 2,
-        });
         // Step 4: Update status to 'completed' in DynamoDB
         const updateCompletedStatusStep = new sfnTasks.DynamoUpdateItem(this, "UpdateCompletedStatus", {
             table: metadataTable,
@@ -142,16 +125,45 @@ class StepFunctionsStack extends cdk.Stack {
                 message: "Website generation completed successfully",
             }),
         });
+        // Step 3: Call generate-website Lambda (or Dummy if not provided)
+        let invokeGenerateWebsiteStep;
+        if (generateWebsiteLambda) {
+            invokeGenerateWebsiteStep = new sfnTasks.LambdaInvoke(this, "InvokeGenerateWebsite", {
+                lambdaFunction: generateWebsiteLambda,
+                resultPath: "$.generationResult",
+                resultSelector: {
+                    statusCode: stepfunctions.JsonPath.numberAt("$.statusCode"),
+                    body: stepfunctions.JsonPath.stringAt("$.body"),
+                },
+                retryOnServiceExceptions: true,
+            });
+            // Retry policy: 3 attempts with exponential backoff
+            invokeGenerateWebsiteStep.addRetry({
+                errors: ["States.TaskFailed", "States.Timeout"],
+                interval: cdk.Duration.seconds(2),
+                maxAttempts: 3,
+                backoffRate: 2,
+            });
+            // Add error handling to the invoke step
+            invokeGenerateWebsiteStep.addCatch(failureState, {
+                errors: ["States.ALL"],
+                resultPath: "$.error",
+            });
+        }
+        else {
+            invokeGenerateWebsiteStep = new stepfunctions.Pass(this, "InvokeGenerateWebsiteDummy", {
+                result: stepfunctions.Result.fromObject({
+                    statusCode: 200,
+                    body: "Dummy execution"
+                }),
+                resultPath: "$.generationResult"
+            });
+        }
         const definition = getMetadataStep
             .next(validateMetadataStep)
             .next(invokeGenerateWebsiteStep)
             .next(updateCompletedStatusStep)
             .next(successState);
-        // Add error handling to the invoke step
-        invokeGenerateWebsiteStep.addCatch(failureState, {
-            errors: ["States.ALL"],
-            resultPath: "$.error",
-        });
         // Create the state machine
         this.stateMachine = new stepfunctions.StateMachine(this, "WebsiteGenerationStateMachine", {
             definition,

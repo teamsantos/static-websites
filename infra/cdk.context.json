@@ -1,1 +1,12 @@
-{}
+{
+  "hosted-zone:account=396913706953:domainName=e-info.click:region=us-east-1": {
+    "Id": "/hostedzone/Z0068973FIJHW12TF0OH",
+    "Name": "e-info.click."
+  },
+  "ssm:account=396913706953:parameterName=/acm/certificates/e-info.click:region=us-east-1": "arn:aws:acm:us-east-1:396913706953:certificate/ea002807-23d1-481d-b483-f91dcdd43e71",
+  "ssm:account=396913706953:parameterName=/acm/certificates/template.e-info.click:region=us-east-1": "arn:aws:acm:us-east-1:396913706953:certificate/3be9cdd6-50ef-4fd2-bedb-76790fc54da2",
+  "hosted-zone:account=396913706953:domainName=e-info.click:region=eu-south-2": {
+    "Id": "/hostedzone/Z0068973FIJHW12TF0OH",
+    "Name": "e-info.click."
+  }
+}

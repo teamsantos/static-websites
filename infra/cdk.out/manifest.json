@@ -11,7 +11,7 @@
     },
     "MultiTenantDistribution": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/us-east-1",
+      "environment": "aws://396913706953/us-east-1",
       "properties": {
         "templateFile": "MultiTenantDistribution.template.json",
         "terminationProtection": false,
@@ -21,16 +21,16 @@
           "Purpose": "MultiTenantDistribution"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/7c28a68b58410b153e73204566aca7e787844a1028aca204a2eaf47aaf3c4f7c.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-us-east-1/4051e7eeab06337adc4516ae7b8a477c54800303159c9b19d5c418428441844b.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "MultiTenantDistribution.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-us-east-1",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-us-east-1",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -40,39 +40,6 @@
       ],
       "metadata": {
         "/MultiTenantDistribution": [
-          {
-            "type": "aws:cdk:error",
-            "data": "Found zones: [] for dns:e-info.click, privateZone:undefined, vpcId:undefined, but wanted exactly 1 zone",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
-              "Function.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
-              "Function.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:27:47)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:40:33)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "node:internal/main/run_main_module:36:49"
-            ]
-          },
           {
             "type": "aws:cdk:stack-tags",
             "data": [
@@ -89,54 +56,6 @@
                 "Value": "MultiTenantDistribution"
               }
             ]
-          }
-        ],
-        "/MultiTenantDistribution/CertManager": [
-          {
-            "type": "aws:cdk:error",
-            "data": "SSM parameter not available in account 941058531133, region us-east-1: /acm/certificates/e-info.click",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
-              "Function.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
-              "Function.valueFromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-ssm/lib/parameter.js:1:8254)",
-              "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:39:53)",
-              "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:32:29)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:40:33)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "node:internal/main/run_main_module:36:49"
-            ]
-          }
-        ],
-        "/MultiTenantDistribution/CertManager/WildcardCertificate/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CertManagerWildcardCertificate24DD7CEC"
-          }
-        ],
-        "/MultiTenantDistribution/CertManager/CertificateParameter/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CertManagerCertificateParameter462FB0B2"
           }
         ],
         "/MultiTenantDistribution/CertManager/CertificateSource": [
@@ -181,7 +100,7 @@
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
               "new MultiTenantDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/MultiTenantDistributionStack.ts:113:29)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:40:33)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:39:33)",
               "Module._compile (node:internal/modules/cjs/loader:1706:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
@@ -291,7 +210,7 @@
     },
     "TemplateDistribution": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/us-east-1",
+      "environment": "aws://396913706953/us-east-1",
       "properties": {
         "templateFile": "TemplateDistribution.template.json",
         "terminationProtection": false,
@@ -301,16 +220,16 @@
           "Purpose": "TemplateDistribution"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-us-east-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-us-east-1/17cdb9834977d46e9c7445df15befdb03e1d6f985c6d2564495868623d093128.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-us-east-1/b6ca49b767261f72115190f6f40c60f38ff075e0d1c4ae8e32fec821f69593c0.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "TemplateDistribution.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-us-east-1",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-us-east-1",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -320,39 +239,6 @@
       ],
       "metadata": {
         "/TemplateDistribution": [
-          {
-            "type": "aws:cdk:error",
-            "data": "Found zones: [] for dns:e-info.click, privateZone:undefined, vpcId:undefined, but wanted exactly 1 zone",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
-              "Function.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
-              "Function.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new TemplateDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/TemplateDistributionStack.ts:27:47)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:62:30)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "node:internal/main/run_main_module:36:49"
-            ]
-          },
           {
             "type": "aws:cdk:stack-tags",
             "data": [
@@ -369,54 +255,6 @@
                 "Value": "TemplateDistribution"
               }
             ]
-          }
-        ],
-        "/TemplateDistribution/CertManager": [
-          {
-            "type": "aws:cdk:error",
-            "data": "SSM parameter not available in account 941058531133, region us-east-1: /acm/certificates/template.e-info.click",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
-              "Function.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
-              "Function.valueFromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-ssm/lib/parameter.js:1:8254)",
-              "new CertificateManager (/Users/fmpi.santos/Projects/static-websites/infra/CertificateManager.ts:39:53)",
-              "new TemplateDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/TemplateDistributionStack.ts:32:29)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:62:30)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "node:internal/main/run_main_module:36:49"
-            ]
-          }
-        ],
-        "/TemplateDistribution/CertManager/WildcardCertificate/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CertManagerWildcardCertificate24DD7CEC"
-          }
-        ],
-        "/TemplateDistribution/CertManager/CertificateParameter/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CertManagerCertificateParameter462FB0B2"
           }
         ],
         "/TemplateDistribution/CertManager/CertificateSource": [
@@ -461,7 +299,7 @@
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-cloudfront/lib/distribution.js:1:3900)",
               "new Distribution2 (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:488)",
               "new TemplateDistributionStack (/Users/fmpi.santos/Projects/static-websites/infra/TemplateDistributionStack.ts:103:29)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:62:30)",
+              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:61:30)",
               "Module._compile (node:internal/modules/cjs/loader:1706:14)",
               "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
               "Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
@@ -553,7 +391,7 @@
     },
     "DynamoDBMetadata": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "DynamoDBMetadata.template.json",
         "terminationProtection": false,
@@ -563,16 +401,16 @@
           "Purpose": "MetadataStorage"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/fb82ba8ec1c5d6cba43b01c8064eedecd911d1709de80fc63b940d2ad79b7da0.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/fb82ba8ec1c5d6cba43b01c8064eedecd911d1709de80fc63b940d2ad79b7da0.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "DynamoDBMetadata.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -739,7 +577,7 @@
     },
     "StaticWebsitesBucket": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "StaticWebsitesBucket.template.json",
         "terminationProtection": false,
@@ -749,16 +587,16 @@
           "Purpose": "StaticWebsiteHosting"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/90bffe9296740da54841825e73fd392ce6f667d2599cd6d1e4afe3b15c60dd9f.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/6546d3184ed77b298b0dce644ff792b51cbbf410f14f09be3bc4765bbadd4b92.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "StaticWebsitesBucket.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -863,7 +701,7 @@
     },
     "CloudWatchLogsBucket": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "CloudWatchLogsBucket.template.json",
         "terminationProtection": false,
@@ -873,16 +711,16 @@
           "Purpose": "CloudWatchLogsArchival"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/0bc0e8d4662d7849edd964ce884266105db51840bbe23e23c5a31ed83fefb436.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/0bc0e8d4662d7849edd964ce884266105db51840bbe23e23c5a31ed83fefb436.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "CloudWatchLogsBucket.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -966,7 +804,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/ea19da988b7aba83168d8e6f33b5e1c53e78e3e83e2bbce22fe0d4bb1c80b770.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/56c1e7149883bb6b63403cc73af57d16bb7150cff90f3f09a08ff2b00d56217e.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -1073,7 +911,7 @@
     },
     "EmailTemplateStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "EmailTemplateStack.template.json",
         "terminationProtection": false,
@@ -1083,16 +921,16 @@
           "Purpose": "EmailNotifications"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/e04da16f42d62edc6bc1561a40a4920483d96791457894cd45ab06ace14ce492.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/30caab9bd9dae0aaa048b0923a55eb77ed84c0051307e9b557428cf68ea950f5.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "EmailTemplateStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -1211,21 +1049,21 @@
     },
     "CreateProjectStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "CreateProjectStack.template.json",
         "terminationProtection": false,
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/b47bc4d480847cfbf77cb101b811f61d6019642d3dca47bdf4991ddf13440ecc.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/fd1e8ff8977d408e9a7d66a21ff755b4c30b5bce8035a624872824c212d3b75b.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "CreateProjectStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -1237,41 +1075,6 @@
         "CreateProjectStack.assets"
       ],
       "metadata": {
-        "/CreateProjectStack": [
-          {
-            "type": "aws:cdk:error",
-            "data": "Found zones: [] for dns:e-info.click, privateZone:undefined, vpcId:undefined, but wanted exactly 1 zone",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
-              "Function.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
-              "Function.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new CreateProjectStack (/Users/fmpi.santos/Projects/static-websites/infra/CreateProjectStack.ts:43:47)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:147:28)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "node:internal/main/run_main_module:36:49"
-            ]
-          }
-        ],
         "/CreateProjectStack/ApiCertificate/CertificateRequestorFunction": [
           {
             "type": "aws:cdk:is-custom-resource-handler-runtime-family",
@@ -1407,7 +1210,7 @@
         "/CreateProjectStack/CreateProjectApi/Deployment/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "CreateProjectApiDeployment97BD92522d7bb0e58363bf3ecc0a61566be309bb"
+            "data": "CreateProjectApiDeployment97BD925215646151630896ed13fb1218770a0492"
           }
         ],
         "/CreateProjectStack/CreateProjectApi/DeploymentStage.prod/Resource": [
@@ -1668,40 +1471,28 @@
             "data": "ApiAliasRecordBCE933A3"
           }
         ],
-        "/CreateProjectStack/ContactFormFunction/ServiceRole/Resource": [
+        "/CreateProjectStack/GetProjectsLogGroup/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "ContactFormFunctionServiceRole567E8CEC"
+            "data": "GetProjectsLogGroup7AFF7D71"
           }
         ],
-        "/CreateProjectStack/ContactFormFunction/ServiceRole/DefaultPolicy/Resource": [
+        "/CreateProjectStack/DeleteProjectLogGroup/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "ContactFormFunctionServiceRoleDefaultPolicy1F9C7460"
+            "data": "DeleteProjectLogGroup745EA469"
           }
         ],
-        "/CreateProjectStack/ContactFormFunction/Resource": [
+        "/CreateProjectStack/SendCodeLogGroup/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "ContactFormFunction3D969332"
+            "data": "SendCodeLogGroup02304687"
           }
         ],
-        "/CreateProjectStack/ContactFormFunction/LogRetention/Resource": [
+        "/CreateProjectStack/ValidateCodeLogGroup/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "ContactFormFunctionLogRetentionA3E592DC"
-          }
-        ],
-        "/CreateProjectStack/ContactFormLogRetention/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ContactFormLogRetentionEF0CB4B7"
-          }
-        ],
-        "/CreateProjectStack/ProjectManagementLogs/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ProjectManagementLogs17DD6D23"
+            "data": "ValidateCodeLogGroup3C115D70"
           }
         ],
         "/CreateProjectStack/GetProjectsFunction/ServiceRole/Resource": [
@@ -1812,12 +1603,6 @@
             "data": "ExportsOutputFnGetAttGenerateWebsiteFunctionE00554AAArn7C5CC3AC"
           }
         ],
-        "/CreateProjectStack/Exports/Output{\"Ref\":\"GenerateWebsiteFunctionE00554AA\"}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputRefGenerateWebsiteFunctionE00554AABE867BCE"
-          }
-        ],
         "/CreateProjectStack/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
@@ -1843,7 +1628,7 @@
     },
     "QueueStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "QueueStack.template.json",
         "terminationProtection": false,
@@ -1853,16 +1638,16 @@
           "Purpose": "AsyncWebsiteGeneration"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/08c5acadedd2cdc4a7961634aebccd5973dbcfde2bf9d236bd013ef70897886b.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/08c5acadedd2cdc4a7961634aebccd5973dbcfde2bf9d236bd013ef70897886b.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "QueueStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -1993,7 +1778,7 @@
     },
     "StepFunctionsStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "StepFunctionsStack.template.json",
         "terminationProtection": false,
@@ -2003,16 +1788,16 @@
           "Purpose": "WorkflowOrchestration"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/ca5acb9fe5275d9835d76c50b5bd8f8c520a984cb2cba47be61764b457139205.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/6992a980668b0ba79f03c8e2821bf73c4e2d029339bec059b1c0e954e5f0f12b.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "StepFunctionsStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -2103,21 +1888,21 @@
     },
     "StripeCheckoutStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "StripeCheckoutStack.template.json",
         "terminationProtection": false,
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/baec3d007f4ab89991e3074236ed3decd28eb59d707cf90f898310bebce6bc83.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/6dde72064ca5051606e6cead1e8a09fba6f5b761b6619e41e874d55546fbcb1a.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "StripeCheckoutStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -2129,41 +1914,6 @@
         "StripeCheckoutStack.assets"
       ],
       "metadata": {
-        "/StripeCheckoutStack": [
-          {
-            "type": "aws:cdk:error",
-            "data": "Found zones: [] for dns:e-info.click, privateZone:undefined, vpcId:undefined, but wanted exactly 1 zone",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
-              "Function.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
-              "Function.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new StripeCheckoutStack (/Users/fmpi.santos/Projects/static-websites/infra/PaymentSessionStack.ts:33:43)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:193:29)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "node:internal/main/run_main_module:36:49"
-            ]
-          }
-        ],
         "/StripeCheckoutStack/StripeApiCertificate/CertificateRequestorFunction": [
           {
             "type": "aws:cdk:is-custom-resource-handler-runtime-family",
@@ -2293,7 +2043,7 @@
         "/StripeCheckoutStack/StripeApi/Deployment/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "StripeApiDeployment43FB4EE180c60ed3ce81f1a4c59770ee67a77cc3"
+            "data": "StripeApiDeployment43FB4EE1840d298077ab77bb529ac277bb3bba6d"
           }
         ],
         "/StripeCheckoutStack/StripeApi/DeploymentStage.prod/Resource": [
@@ -2398,18 +2148,6 @@
             "data": "CDKMetadata"
           }
         ],
-        "/StripeCheckoutStack/Exports/Output{\"Ref\":\"StripeCheckoutFunctionFAA66D03\"}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputRefStripeCheckoutFunctionFAA66D03CFAD860B"
-          }
-        ],
-        "/StripeCheckoutStack/Exports/Output{\"Ref\":\"StripeWebhookFunction73CC65ED\"}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputRefStripeWebhookFunction73CC65ED7615367B"
-          }
-        ],
         "/StripeCheckoutStack/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
@@ -2435,7 +2173,7 @@
     },
     "BudgetAlertStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "BudgetAlertStack.template.json",
         "terminationProtection": false,
@@ -2445,16 +2183,16 @@
           "Purpose": "CostControls"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/1b6ad4715d6d19c59f640b6148047e5b632c9fe5090cf6a1e3ef39db55161328.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/1b6ad4715d6d19c59f640b6148047e5b632c9fe5090cf6a1e3ef39db55161328.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "BudgetAlertStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -2543,7 +2281,7 @@
     },
     "GitHubWebhookStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "GitHubWebhookStack.template.json",
         "terminationProtection": false,
@@ -2553,16 +2291,16 @@
           "Purpose": "DeploymentTracking"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/828864f52f2262d11cb9f9ac41283fb253cc16a17c9a134c8946960e651f00e0.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/f9f2b5ec7806934c11467d19f202646c9b966a7398614a02640b80965bbe798b.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "GitHubWebhookStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -2573,39 +2311,6 @@
       ],
       "metadata": {
         "/GitHubWebhookStack": [
-          {
-            "type": "aws:cdk:error",
-            "data": "Found zones: [] for dns:e-info.click, privateZone:undefined, vpcId:undefined, but wanted exactly 1 zone",
-            "trace": [
-              "Annotations.addMessage (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1978)",
-              "Annotations.addError (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1440)",
-              "Function.getValue (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/core/lib/context-provider.js:2:1771)",
-              "Function.fromLookup (/Users/fmpi.santos/Projects/static-websites/infra/node_modules/aws-cdk-lib/aws-route53/lib/hosted-zone.js:1:3587)",
-              "new GitHubWebhookStack (/Users/fmpi.santos/Projects/static-websites/infra/GitHubWebhookStack.ts:37:43)",
-              "Object.<anonymous> (/Users/fmpi.santos/Projects/static-websites/infra/index.ts:239:28)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Module.m._compile (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1618:23)",
-              "Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Object.require.extensions.<computed> [as .ts] (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "phase4 (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:649:14)",
-              "bootstrap (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:95:10)",
-              "main (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:55:10)",
-              "Object.<anonymous> (/Users/fmpi.santos/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/bin.ts:800:3)",
-              "Module._compile (node:internal/modules/cjs/loader:1706:14)",
-              "Object.Module._extensions..js (node:internal/modules/cjs/loader:1839:10)",
-              "Module.load (node:internal/modules/cjs/loader:1441:32)",
-              "Function.Module._load (node:internal/modules/cjs/loader:1263:12)",
-              "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-              "wrapModuleLoad (node:internal/modules/cjs/loader:237:24)",
-              "Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)",
-              "node:internal/main/run_main_module:36:49"
-            ]
-          },
           {
             "type": "aws:cdk:stack-tags",
             "data": [
@@ -2723,7 +2428,7 @@
         "/GitHubWebhookStack/GitHubWebhookApi/Deployment/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "GitHubWebhookApiDeployment97C3ADAF8a3105286230a0bdcc9d33f293ccf142"
+            "data": "GitHubWebhookApiDeployment97C3ADAF8130231d3a4210f094859ba73356ebe9"
           }
         ],
         "/GitHubWebhookStack/GitHubWebhookApi/DeploymentStage.prod/Resource": [
@@ -2804,12 +2509,6 @@
             "data": "CDKMetadata"
           }
         ],
-        "/GitHubWebhookStack/Exports/Output{\"Ref\":\"GitHubWebhookFunctionA7279CB5\"}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputRefGitHubWebhookFunctionA7279CB5316C9338"
-          }
-        ],
         "/GitHubWebhookStack/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
@@ -2835,7 +2534,7 @@
     },
     "HealthCheckStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "HealthCheckStack.template.json",
         "terminationProtection": false,
@@ -2845,16 +2544,16 @@
           "Purpose": "HealthMonitoring"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/2c5a0ee1895906193773b4eead76cb300d495541f054587f661c711b8823f0c8.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/9d8a971f1c0a2935f5a5da2f764a1dd3311a01b39130c334fcc49a178ef59aae.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "HealthCheckStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -2952,7 +2651,7 @@
         "/HealthCheckStack/HealthCheckApi/Deployment/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "HealthCheckApiDeployment9A0D0C6F3693df94fb93f6a598a2918536e35551"
+            "data": "HealthCheckApiDeployment9A0D0C6F7daf2a7533023e5fc5caecfe93a5d68c"
           }
         ],
         "/HealthCheckStack/HealthCheckApi/DeploymentStage.prod/Resource": [
@@ -3015,12 +2714,6 @@
             "data": "CDKMetadata"
           }
         ],
-        "/HealthCheckStack/Exports/Output{\"Ref\":\"HealthCheckFunctionC4679183\"}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputRefHealthCheckFunctionC46791832701A52A"
-          }
-        ],
         "/HealthCheckStack/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
@@ -3046,7 +2739,7 @@
     },
     "DashboardStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "DashboardStack.template.json",
         "terminationProtection": false,
@@ -3056,26 +2749,23 @@
           "Purpose": "Monitoring"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/458ad80857a8569c2b1925ea1c60123103ab61a23456d59b2ff673a1988389bf.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/9417e62a3fb95cd7467a1f5c47ae594957a9c9bcf81ae2e69bfe23818a08dfb6.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "DashboardStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
       },
       "dependencies": [
-        "StripeCheckoutStack",
-        "CreateProjectStack",
         "DynamoDBMetadata",
         "QueueStack",
-        "HealthCheckStack",
         "DashboardStack.assets"
       ],
       "metadata": {
@@ -3135,7 +2825,7 @@
     },
     "AlertingStack": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://941058531133/eu-south-2",
+      "environment": "aws://396913706953/eu-south-2",
       "properties": {
         "templateFile": "AlertingStack.template.json",
         "terminationProtection": false,
@@ -3145,27 +2835,23 @@
           "Purpose": "Alerting"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-deploy-role-941058531133-eu-south-2",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-cfn-exec-role-941058531133-eu-south-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-941058531133-eu-south-2/cc32348572d337a68acd457bb858ab9bdeb99ebe82df4d1dae72de31e129729b.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-deploy-role-396913706953-eu-south-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-cfn-exec-role-396913706953-eu-south-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-396913706953-eu-south-2/dbcf2db216efd4f7c085c323a77d27e341ce0f0e58c801199d9526dde2b6b408.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "AlertingStack.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2",
+          "arn": "arn:${AWS::Partition}:iam::396913706953:role/cdk-hnb659fds-lookup-role-396913706953-eu-south-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
       },
       "dependencies": [
-        "StripeCheckoutStack",
-        "CreateProjectStack",
-        "GitHubWebhookStack",
         "DynamoDBMetadata",
         "QueueStack",
-        "HealthCheckStack",
         "AlertingStack.assets"
       ],
       "metadata": {
@@ -3769,59 +3455,5 @@
       }
     }
   },
-  "missing": [
-    {
-      "key": "hosted-zone:account=941058531133:domainName=e-info.click:region=us-east-1",
-      "provider": "hosted-zone",
-      "props": {
-        "dummyValue": {
-          "Id": "DUMMY",
-          "Name": "e-info.click"
-        },
-        "account": "941058531133",
-        "region": "us-east-1",
-        "domainName": "e-info.click",
-        "lookupRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-us-east-1"
-      }
-    },
-    {
-      "key": "ssm:account=941058531133:parameterName=/acm/certificates/e-info.click:region=us-east-1",
-      "provider": "ssm",
-      "props": {
-        "dummyValue": "dummy-value-for-/acm/certificates/e-info.click",
-        "ignoreErrorOnMissingContext": false,
-        "account": "941058531133",
-        "region": "us-east-1",
-        "parameterName": "/acm/certificates/e-info.click",
-        "lookupRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-us-east-1"
-      }
-    },
-    {
-      "key": "ssm:account=941058531133:parameterName=/acm/certificates/template.e-info.click:region=us-east-1",
-      "provider": "ssm",
-      "props": {
-        "dummyValue": "dummy-value-for-/acm/certificates/template.e-info.click",
-        "ignoreErrorOnMissingContext": false,
-        "account": "941058531133",
-        "region": "us-east-1",
-        "parameterName": "/acm/certificates/template.e-info.click",
-        "lookupRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-us-east-1"
-      }
-    },
-    {
-      "key": "hosted-zone:account=941058531133:domainName=e-info.click:region=eu-south-2",
-      "provider": "hosted-zone",
-      "props": {
-        "dummyValue": {
-          "Id": "DUMMY",
-          "Name": "e-info.click"
-        },
-        "account": "941058531133",
-        "region": "eu-south-2",
-        "domainName": "e-info.click",
-        "lookupRoleArn": "arn:${AWS::Partition}:iam::941058531133:role/cdk-hnb659fds-lookup-role-941058531133-eu-south-2"
-      }
-    }
-  ],
   "minimumCliVersion": "2.1025.0"
 }

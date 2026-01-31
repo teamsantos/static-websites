@@ -248,38 +248,41 @@ class CreateProjectStack extends cdk.Stack {
             ],
         });
         // Contact Form Lambda - handles form submissions from generated websites
-        const contactFormFunction = new lambda.Function(this, 'ContactFormFunction', {
-            functionName: 'contact-form',
-            runtime: lambda.Runtime.NODEJS_18_X,
-            code: lambda.Code.fromAsset('lambda/contact-form'),
-            handler: 'index.handler',
-            environment: {
-                GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
-                GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                FROM_EMAIL: 'noreply@e-info.click',
-                AWS_SES_REGION: props?.ses_region || "us-east-1",
-            },
-            timeout: cdk.Duration.seconds(15),
-            memorySize: 256,
-            description: 'Handles contact form submissions from generated websites',
-        });
+        let contactFormFunction = props.contactFormFunction;
+        if (!contactFormFunction) {
+            contactFormFunction = new lambda.Function(this, 'ContactFormFunction', {
+                functionName: 'contact-form',
+                runtime: lambda.Runtime.NODEJS_18_X,
+                code: lambda.Code.fromAsset('lambda/contact-form'),
+                handler: 'index.handler',
+                environment: {
+                    GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
+                    GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
+                    FROM_EMAIL: 'noreply@e-info.click',
+                    AWS_SES_REGION: props?.ses_region || "us-east-1",
+                },
+                timeout: cdk.Duration.seconds(15),
+                memorySize: 256,
+                description: 'Handles contact form submissions from generated websites',
+            });
+            // Set CloudWatch log retention to 30 days
+            new logs.LogRetention(this, 'ContactFormLogRetention', {
+                logGroupName: contactFormFunction.logGroup.logGroupName,
+                retention: logs.RetentionDays.ONE_MONTH,
+            });
+            // Grant permissions to read the secrets
+            githubTokenSecret.grantRead(contactFormFunction);
+            githubConfigSecret.grantRead(contactFormFunction);
+            contactFormFunction.addToRolePolicy(new iam.PolicyStatement({
+                actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
+                resources: [`${githubTokenSecret.secretArn}-*`, `${githubConfigSecret.secretArn}-*`],
+            }));
+            contactFormFunction.addToRolePolicy(new iam.PolicyStatement({
+                actions: ['ses:SendEmail'],
+                resources: ['*'],
+            }));
+        }
         this.contactFormFunctionName = contactFormFunction.functionName;
-        // Set CloudWatch log retention to 30 days
-        new logs.LogRetention(this, 'ContactFormLogRetention', {
-            logGroupName: contactFormFunction.logGroup.logGroupName,
-            retention: logs.RetentionDays.ONE_MONTH,
-        });
-        // Grant permissions to read the secrets
-        githubTokenSecret.grantRead(contactFormFunction);
-        githubConfigSecret.grantRead(contactFormFunction);
-        contactFormFunction.addToRolePolicy(new iam.PolicyStatement({
-            actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
-            resources: [`${githubTokenSecret.secretArn}-*`, `${githubConfigSecret.secretArn}-*`],
-        }));
-        contactFormFunction.addToRolePolicy(new iam.PolicyStatement({
-            actions: ['ses:SendEmail'],
-            resources: ['*'],
-        }));
         // API Gateway endpoint for contact form
         const contactFormResource = this.api.root.addResource('contact');
         contactFormResource.addMethod('POST', new apigateway.LambdaIntegration(contactFormFunction, {

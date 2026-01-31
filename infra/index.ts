@@ -123,7 +123,7 @@ new CloudWatchLogsStack(app, "CloudWatchLogsBucket", {
     },
 });
 
-new ContactFormStack(app, "ContactFormStack", {
+const contactFormStack = new ContactFormStack(app, "ContactFormStack", {
     sesRegion: config.certificateRegion 
 });
 
@@ -153,6 +153,7 @@ const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
     idempotencyTable: dynamoDBStack.idempotencyTable,
     confirmationCodesTable: dynamoDBStack.confirmationCodesTable,
     sendEmailFunction: emailTemplateStack.sendEmailFunction,
+    contactFormFunction: contactFormStack.contactFormFunction,
     env: {
         account: account,
         region: config.region,
@@ -267,11 +268,11 @@ const healthCheckStack = new HealthCheckStack(app, "HealthCheckStack", {
 
 // Create CloudWatch monitoring dashboard
 new DashboardStack(app, "DashboardStack", {
-    paymentSessionFunctionName: stripeCheckoutStack.paymentSessionFunctionName,
-    generateWebsiteFunctionName: createProjectStack.generateWebsiteFunctionName,
-    stripeWebhookFunctionName: stripeCheckoutStack.stripeWebhookFunctionName,
-    githubWebhookFunctionName: githubWebhookStack.githubWebhookFunctionName,
-    healthCheckFunctionName: healthCheckStack.healthCheckFunctionName,
+    paymentSessionFunctionName: "payment-session",
+    generateWebsiteFunctionName: "generate-website",
+    stripeWebhookFunctionName: "stripe-webhook",
+    githubWebhookFunctionName: "github-webhook",
+    healthCheckFunctionName: "health-check",
     metadataTableName: dynamoDBStack.table.tableName,
     queueUrl: queueStack.queue.queueUrl,
     queueName: queueStack.queue.queueName,
@@ -289,11 +290,11 @@ new DashboardStack(app, "DashboardStack", {
 
 // Create SNS alerts for critical issues
 new AlertingStack(app, "AlertingStack", {
-    paymentSessionFunctionName: stripeCheckoutStack.paymentSessionFunctionName,
-    generateWebsiteFunctionName: createProjectStack.generateWebsiteFunctionName,
-    stripeWebhookFunctionName: stripeCheckoutStack.stripeWebhookFunctionName,
-    githubWebhookFunctionName: githubWebhookStack.githubWebhookFunctionName,
-    healthCheckFunctionName: healthCheckStack.healthCheckFunctionName,
+    paymentSessionFunctionName: "payment-session",
+    generateWebsiteFunctionName: "generate-website",
+    stripeWebhookFunctionName: "stripe-webhook",
+    githubWebhookFunctionName: "github-webhook",
+    healthCheckFunctionName: "health-check",
     metadataTableName: dynamoDBStack.table.tableName,
     queueName: queueStack.queue.queueName,
     adminEmail: process.env.ADMIN_EMAIL || "admin@e-info.click",
