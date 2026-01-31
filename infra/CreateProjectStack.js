@@ -68,6 +68,9 @@ class CreateProjectStack extends cdk.Stack {
         // Reference the secrets
         const githubTokenSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubToken', 'github-token');
         const githubConfigSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubConfig', 'github-config');
+        // HMAC secret used to sign/verify operation IDs between lambdas
+        // Make sure a secret with name 'hmac-secret' exists in Secrets Manager
+        const hmacSecret = secretsmanager.Secret.fromSecretNameV2(this, 'HMACSecret', 'hmac-secret');
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
             functionName: 'create-project',
             runtime: lambda.Runtime.NODEJS_18_X,
@@ -113,6 +116,7 @@ class CreateProjectStack extends cdk.Stack {
             environment: {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
+                HMAC_SECRET_NAME: hmacSecret.secretName,
                 FROM_EMAIL: 'noreply@e-info.click',
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
@@ -131,6 +135,7 @@ class CreateProjectStack extends cdk.Stack {
         // Grant permissions to generate-website Lambda
         githubTokenSecret.grantRead(generateWebsiteFunction);
         githubConfigSecret.grantRead(generateWebsiteFunction);
+        hmacSecret.grantRead(generateWebsiteFunction);
         generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
             resources: [`${githubTokenSecret.secretArn}-*`, `${githubConfigSecret.secretArn}-*`],
@@ -374,25 +379,27 @@ class CreateProjectStack extends cdk.Stack {
             props.metadataTable.grantReadData(sendConfirmationCodeFunction);
             props.confirmationCodesTable.grantWriteData(sendConfirmationCodeFunction);
             props.sendEmailFunction.grantInvoke(sendConfirmationCodeFunction);
-            const validateConfirmationCodeFunction = new lambda.Function(this, "ValidateConfirmationCodeFunction", {
-                functionName: 'validate-confirmation-code',
-                runtime: lambda.Runtime.NODEJS_20_X,
-                handler: "index.handler",
-                code: lambda.Code.fromAsset(path.join(__dirname, "lambda/validate-confirmation-code")),
-                timeout: cdk.Duration.seconds(30),
-                memorySize: 256,
-                environment: {
-                    DYNAMODB_CODES_TABLE: props.confirmationCodesTable.tableName,
-                    DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
-                    GENERATE_WEBSITE_FUNCTION: generateWebsiteFunction.functionName,
-                    SENTRY_DSN: process.env.SENTRY_DSN || "",
-                },
-                logGroup: validateCodeLogGroup,
-            });
+                const validateConfirmationCodeFunction = new lambda.Function(this, "ValidateConfirmationCodeFunction", {
+                    functionName: 'validate-confirmation-code',
+                    runtime: lambda.Runtime.NODEJS_20_X,
+                    handler: "index.handler",
+                    code: lambda.Code.fromAsset(path.join(__dirname, "lambda/validate-confirmation-code")),
+                    timeout: cdk.Duration.seconds(30),
+                    memorySize: 256,
+                    environment: {
+                        DYNAMODB_CODES_TABLE: props.confirmationCodesTable.tableName,
+                        DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
+                        GENERATE_WEBSITE_FUNCTION: generateWebsiteFunction.functionName,
+                        HMAC_SECRET_NAME: hmacSecret.secretName,
+                        SENTRY_DSN: process.env.SENTRY_DSN || "",
+                    },
+                    logGroup: validateCodeLogGroup,
+                });
             this.validateConfirmationCodeFunctionName = validateConfirmationCodeFunction.functionName;
             props.confirmationCodesTable.grantReadWriteData(validateConfirmationCodeFunction);
             props.metadataTable.grantReadWriteData(validateConfirmationCodeFunction);
             generateWebsiteFunction.grantInvoke(validateConfirmationCodeFunction);
+            hmacSecret.grantRead(validateConfirmationCodeFunction);
             // API Resources
             const projectsResource = this.api.root.addResource("projects");
             projectsResource.addMethod("GET", new apigateway.LambdaIntegration(getProjectsFunction));

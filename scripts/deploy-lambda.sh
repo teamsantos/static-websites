@@ -36,12 +36,21 @@ deploy_lambda() {
   # Navigate to the directory to zip contents at root level
   # This is standard for AWS Lambda zips
   pushd "$lambda_path" > /dev/null
+  if ! npm ci --omit=dev --no-audit --no-fund; then
+      echo "Error: npm ci failed"
+      rm -rf node_modules
+      popd > /dev/null
+      rm -rf "$temp_dir"
+      exit 1
+  fi
+
   if ! zip -rq "$zip_file" .; then
     echo "Error: Failed to zip lambda content."
     popd > /dev/null
     rm -rf "$temp_dir"
     exit 1
   fi
+  rm -rf node_modules
   popd > /dev/null
 
   local aws_profile="${AWS_PROFILE:-static-websites}"
