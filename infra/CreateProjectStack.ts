@@ -55,6 +55,7 @@ export class CreateProjectStack extends cdk.Stack {
         const githubConfigSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubConfig', 'github-config');
 
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
+            functionName: 'create-project',
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset('lambda/create-project'),
             handler: 'index.handler',
@@ -97,6 +98,7 @@ export class CreateProjectStack extends cdk.Stack {
         }));
 
         const generateWebsiteFunction = new lambda.Function(this, 'GenerateWebsiteFunction', {
+            functionName: 'generate-website',
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset('lambda/generate-website'),
             handler: 'index.handler',
@@ -254,6 +256,7 @@ export class CreateProjectStack extends cdk.Stack {
 
         // Contact Form Lambda - handles form submissions from generated websites
         const contactFormFunction = new lambda.Function(this, 'ContactFormFunction', {
+            functionName: 'contact-form',
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset('lambda/contact-form'),
             handler: 'index.handler',
@@ -340,6 +343,7 @@ export class CreateProjectStack extends cdk.Stack {
             });
 
             const getProjectsFunction = new lambda.Function(this, "GetProjectsFunction", {
+                functionName: 'get-projects',
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/get-projects")),
@@ -355,6 +359,7 @@ export class CreateProjectStack extends cdk.Stack {
             props.metadataTable.grantReadData(getProjectsFunction);
 
             const deleteProjectFunction = new lambda.Function(this, "DeleteProjectFunction", {
+                functionName: 'delete-project',
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/delete-project")),
@@ -370,6 +375,7 @@ export class CreateProjectStack extends cdk.Stack {
             props.metadataTable.grantReadWriteData(deleteProjectFunction);
 
             const sendConfirmationCodeFunction = new lambda.Function(this, "SendConfirmationCodeFunction", {
+                functionName: 'send-confirmation-code',
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/send-confirmation-code")),
@@ -389,6 +395,7 @@ export class CreateProjectStack extends cdk.Stack {
             props.sendEmailFunction.grantInvoke(sendConfirmationCodeFunction);
 
             const validateConfirmationCodeFunction = new lambda.Function(this, "ValidateConfirmationCodeFunction", {
+                functionName: 'validate-confirmation-code',
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/validate-confirmation-code")),

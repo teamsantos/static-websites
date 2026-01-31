@@ -56,6 +56,7 @@ class StripeCheckoutStack extends cdk.Stack {
         });
         // Lambda for Stripe Checkout
         const checkoutFunction = new lambda.Function(this, "StripeCheckoutFunction", {
+            functionName: 'payment-session',
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset("lambda/payment-session"),
             handler: "index.handler",
@@ -75,6 +76,7 @@ class StripeCheckoutStack extends cdk.Stack {
         }
         // Lambda for Stripe Webhook
         const webhookFunction = new lambda.Function(this, "StripeWebhookFunction", {
+            functionName: 'stripe-webhook',
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset("lambda/stripe-webhook"),
             handler: "index.handler",

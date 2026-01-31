@@ -67,6 +67,7 @@ class GitHubWebhookStack extends cdk.Stack {
         });
         // Lambda for GitHub webhook
         const webhookFunction = new lambda.Function(this, "GitHubWebhookFunction", {
+            functionName: 'github-webhook',
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset("lambda/github-webhook"),
             handler: "index.handler",

@@ -65,6 +65,7 @@ class HealthCheckStack extends cdk.Stack {
         super(scope, id, props);
         // Lambda for health check
         const healthCheckFunction = new lambda.Function(this, "HealthCheckFunction", {
+            functionName: 'health-check',
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset("lambda/health-check"),
             handler: "index.handler",

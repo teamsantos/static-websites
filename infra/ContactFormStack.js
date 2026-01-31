@@ -47,6 +47,7 @@ class ContactFormStack extends cdk.Stack {
         const githubConfigSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubConfig', 'github-config');
         // Create the Lambda function for handling contact form submissions
         this.contactFormFunction = new lambda.Function(this, 'ContactFormFunction', {
+            functionName: 'contact-form',
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset('lambda/contact-form'),
             handler: 'index.handler',

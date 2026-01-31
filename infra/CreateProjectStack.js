@@ -69,6 +69,7 @@ class CreateProjectStack extends cdk.Stack {
         const githubTokenSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubToken', 'github-token');
         const githubConfigSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubConfig', 'github-config');
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
+            functionName: 'create-project',
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset('lambda/create-project'),
             handler: 'index.handler',
@@ -105,6 +106,7 @@ class CreateProjectStack extends cdk.Stack {
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
         }));
         const generateWebsiteFunction = new lambda.Function(this, 'GenerateWebsiteFunction', {
+            functionName: 'generate-website',
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset('lambda/generate-website'),
             handler: 'index.handler',
@@ -247,6 +249,7 @@ class CreateProjectStack extends cdk.Stack {
         });
         // Contact Form Lambda - handles form submissions from generated websites
         const contactFormFunction = new lambda.Function(this, 'ContactFormFunction', {
+            functionName: 'contact-form',
             runtime: lambda.Runtime.NODEJS_18_X,
             code: lambda.Code.fromAsset('lambda/contact-form'),
             handler: 'index.handler',
@@ -298,12 +301,29 @@ class CreateProjectStack extends cdk.Stack {
         // Project Management Logic (Merged)
         // ============================================================
         if (props.metadataTable && props.confirmationCodesTable && props.sendEmailFunction) {
-            const logGroup = new logs.LogGroup(this, "ProjectManagementLogs", {
-                logGroupName: "/aws/lambda/project-management-api",
+            // Define separate log groups for each function
+            const getProjectsLogGroup = new logs.LogGroup(this, "GetProjectsLogGroup", {
+                logGroupName: "/aws/lambda/get-projects",
+                retention: logs.RetentionDays.TWO_WEEKS,
+                removalPolicy: cdk.RemovalPolicy.DESTROY,
+            });
+            const deleteProjectLogGroup = new logs.LogGroup(this, "DeleteProjectLogGroup", {
+                logGroupName: "/aws/lambda/delete-project",
+                retention: logs.RetentionDays.TWO_WEEKS,
+                removalPolicy: cdk.RemovalPolicy.DESTROY,
+            });
+            const sendCodeLogGroup = new logs.LogGroup(this, "SendCodeLogGroup", {
+                logGroupName: "/aws/lambda/send-confirmation-code",
+                retention: logs.RetentionDays.TWO_WEEKS,
+                removalPolicy: cdk.RemovalPolicy.DESTROY,
+            });
+            const validateCodeLogGroup = new logs.LogGroup(this, "ValidateCodeLogGroup", {
+                logGroupName: "/aws/lambda/validate-confirmation-code",
                 retention: logs.RetentionDays.TWO_WEEKS,
                 removalPolicy: cdk.RemovalPolicy.DESTROY,
             });
             const getProjectsFunction = new lambda.Function(this, "GetProjectsFunction", {
+                functionName: 'get-projects',
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/get-projects")),
@@ -313,11 +333,12 @@ class CreateProjectStack extends cdk.Stack {
                     DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
                     SENTRY_DSN: process.env.SENTRY_DSN || "",
                 },
-                logGroup,
+                logGroup: getProjectsLogGroup,
             });
             this.getProjectsFunctionName = getProjectsFunction.functionName;
             props.metadataTable.grantReadData(getProjectsFunction);
             const deleteProjectFunction = new lambda.Function(this, "DeleteProjectFunction", {
+                functionName: 'delete-project',
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/delete-project")),
@@ -327,11 +348,12 @@ class CreateProjectStack extends cdk.Stack {
                     DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
                     SENTRY_DSN: process.env.SENTRY_DSN || "",
                 },
-                logGroup,
+                logGroup: deleteProjectLogGroup,
             });
             this.deleteProjectFunctionName = deleteProjectFunction.functionName;
             props.metadataTable.grantReadWriteData(deleteProjectFunction);
             const sendConfirmationCodeFunction = new lambda.Function(this, "SendConfirmationCodeFunction", {
+                functionName: 'send-confirmation-code',
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/send-confirmation-code")),
@@ -343,13 +365,14 @@ class CreateProjectStack extends cdk.Stack {
                     SEND_EMAIL_FUNCTION: props.sendEmailFunction.functionName,
                     SENTRY_DSN: process.env.SENTRY_DSN || "",
                 },
-                logGroup,
+                logGroup: sendCodeLogGroup,
             });
             this.sendConfirmationCodeFunctionName = sendConfirmationCodeFunction.functionName;
             props.metadataTable.grantReadData(sendConfirmationCodeFunction);
             props.confirmationCodesTable.grantWriteData(sendConfirmationCodeFunction);
             props.sendEmailFunction.grantInvoke(sendConfirmationCodeFunction);
             const validateConfirmationCodeFunction = new lambda.Function(this, "ValidateConfirmationCodeFunction", {
+                functionName: 'validate-confirmation-code',
                 runtime: lambda.Runtime.NODEJS_20_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/validate-confirmation-code")),
@@ -361,7 +384,7 @@ class CreateProjectStack extends cdk.Stack {
                     GENERATE_WEBSITE_FUNCTION: generateWebsiteFunction.functionName,
                     SENTRY_DSN: process.env.SENTRY_DSN || "",
                 },
-                logGroup,
+                logGroup: validateCodeLogGroup,
             });
             this.validateConfirmationCodeFunctionName = validateConfirmationCodeFunction.functionName;
             props.confirmationCodesTable.grantReadWriteData(validateConfirmationCodeFunction);
