@@ -1,10 +1,12 @@
 #!/bin/bash
 
-# Get the absolute path to the project root
-# (assuming this script is in [project_root]/scripts/)
+# Use the script file location as the canonical base and build the
+# lambda path relative to it. This makes the script independent of
+# where it's invoked from — it always starts from the location of
+# scripts/deploy-lambda.sh and then goes up one level to ../infra/lambda.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-LAMBDA_BASE_DIR="${PROJECT_ROOT}/infra/lambda"
+# Resolve LAMBDA_BASE_DIR from the script directory (scripts/) -> ../infra/lambda
+LAMBDA_BASE_DIR="$(cd "$SCRIPT_DIR/.." &> /dev/null && pwd)/infra/lambda"
 
 echo "Lambda base directory: $LAMBDA_BASE_DIR"
 

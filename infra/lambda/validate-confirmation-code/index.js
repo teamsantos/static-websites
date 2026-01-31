@@ -46,6 +46,8 @@ export const handler = async (event, context) => {
         }
 
         logger.info('Validate confirmation code request', { templateId });
+        logger.debug('Validate confirmation code payload', { body });
+        logger.info('Validate confirmation code payload', { body });
 
         // 1. Get code from DynamoDB
         const result = await dynamodb.get({

@@ -314,8 +314,27 @@ export class CreateProjectStack extends cdk.Stack {
         
         if (props.metadataTable && props.confirmationCodesTable && props.sendEmailFunction) {
             
-            const logGroup = new logs.LogGroup(this, "ProjectManagementLogs", {
-                logGroupName: "/aws/lambda/project-management-api",
+            // Define separate log groups for each function
+            const getProjectsLogGroup = new logs.LogGroup(this, "GetProjectsLogGroup", {
+                logGroupName: "/aws/lambda/get-projects",
+                retention: logs.RetentionDays.TWO_WEEKS,
+                removalPolicy: cdk.RemovalPolicy.DESTROY,
+            });
+
+            const deleteProjectLogGroup = new logs.LogGroup(this, "DeleteProjectLogGroup", {
+                logGroupName: "/aws/lambda/delete-project",
+                retention: logs.RetentionDays.TWO_WEEKS,
+                removalPolicy: cdk.RemovalPolicy.DESTROY,
+            });
+
+            const sendCodeLogGroup = new logs.LogGroup(this, "SendCodeLogGroup", {
+                logGroupName: "/aws/lambda/send-confirmation-code",
+                retention: logs.RetentionDays.TWO_WEEKS,
+                removalPolicy: cdk.RemovalPolicy.DESTROY,
+            });
+
+            const validateCodeLogGroup = new logs.LogGroup(this, "ValidateCodeLogGroup", {
+                logGroupName: "/aws/lambda/validate-confirmation-code",
                 retention: logs.RetentionDays.TWO_WEEKS,
                 removalPolicy: cdk.RemovalPolicy.DESTROY,
             });
@@ -330,7 +349,7 @@ export class CreateProjectStack extends cdk.Stack {
                     DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
                     SENTRY_DSN: process.env.SENTRY_DSN || "",
                 },
-                logGroup,
+                logGroup: getProjectsLogGroup,
             });
             this.getProjectsFunctionName = getProjectsFunction.functionName;
             props.metadataTable.grantReadData(getProjectsFunction);
@@ -345,7 +364,7 @@ export class CreateProjectStack extends cdk.Stack {
                     DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
                     SENTRY_DSN: process.env.SENTRY_DSN || "",
                 },
-                logGroup,
+                logGroup: deleteProjectLogGroup,
             });
             this.deleteProjectFunctionName = deleteProjectFunction.functionName;
             props.metadataTable.grantReadWriteData(deleteProjectFunction);
@@ -362,7 +381,7 @@ export class CreateProjectStack extends cdk.Stack {
                     SEND_EMAIL_FUNCTION: props.sendEmailFunction.functionName,
                     SENTRY_DSN: process.env.SENTRY_DSN || "",
                 },
-                logGroup,
+                logGroup: sendCodeLogGroup,
             });
             this.sendConfirmationCodeFunctionName = sendConfirmationCodeFunction.functionName;
             props.metadataTable.grantReadData(sendConfirmationCodeFunction);
@@ -381,7 +400,7 @@ export class CreateProjectStack extends cdk.Stack {
                     GENERATE_WEBSITE_FUNCTION: generateWebsiteFunction.functionName,
                     SENTRY_DSN: process.env.SENTRY_DSN || "",
                 },
-                logGroup,
+                logGroup: validateCodeLogGroup,
             });
             this.validateConfirmationCodeFunctionName = validateConfirmationCodeFunction.functionName;
             props.confirmationCodesTable.grantReadWriteData(validateConfirmationCodeFunction);
