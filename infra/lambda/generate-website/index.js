@@ -1,9 +1,9 @@
 import AWS from "aws-sdk";
 import { Octokit } from "octokit";
-import { validateImages, validateLanguageStrings, validateColorsObject } from "./shared/validators.js";
-import { injectContent, validateContentBeforeInjection } from "./shared/templateInjection.js";
-import { optimizeImage, uploadOptimizedImages, generateSrcset } from "./shared/imageOptimization.js";
-import { getTemplate, cacheTemplate, getLanguageFile, cacheLanguageFile, getCacheStats } from "./shared/cache.js";
+import { cacheLanguageFile, cacheTemplate, getCacheStats, getLanguageFile, getTemplate } from "./shared/cache.js";
+import { optimizeImage, uploadOptimizedImages } from "./shared/imageOptimization.js";
+import { createLogger } from "./shared/logger.js";
+import { injectContent } from "./shared/templateInjection.js";
 
 // Note: X-Ray tracing disabled by default (requires aws-xray-sdk-core package)
 // To enable X-Ray: add aws-xray-sdk-core to dependencies and uncomment code below
@@ -18,7 +18,7 @@ const s3 = new AWS.S3();
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const secretsManager = new AWS.SecretsManager();
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE || "websites-metadata";
-const QUEUE_URL = process.env.SQS_QUEUE_URL;
+let logger = null;
 
 // Cache secrets to avoid fetching on every invocation
 let cachedGithubToken = null;
@@ -40,29 +40,6 @@ async function getSecrets() {
         githubOwner: cachedGithubConfig.owner,
         githubRepo: cachedGithubConfig.repo
     };
-}
-
-async function getMetadataFromS3(operationId) {
-    try {
-        const bucketName = process.env.S3_BUCKET_NAME;
-        const response = await s3.getObject({
-            Bucket: bucketName,
-            Key: 'metadata.json'
-        }).promise();
-
-        const metadataContent = response.Body.toString('utf-8');
-        const metadata = JSON.parse(metadataContent);
-
-        if (!metadata[operationId]) {
-            throw new Error(`Operation ID '${operationId}' not found in metadata`);
-        }
-
-        const operationMetadata = metadata[operationId];
-        return operationMetadata;
-    } catch (error) {
-        console.error('Error fetching metadata from S3:', error);
-        throw error;
-    }
 }
 
 async function processImages(images, projectName) {
@@ -91,21 +68,21 @@ async function processImages(images, projectName) {
                 (async () => {
                     try {
                         // Optimize image (generates multiple sizes and formats)
-                        console.log(`[Performance] Starting image optimization for ${imageName}...`);
+                        logger.info(`[Performance] Starting image optimization for ${imageName}...`);
                         const optimizedImages = await optimizeImage(imageData, imageName, imageFormat);
 
                         // Upload all variants to S3 in parallel
                         const s3Paths = await uploadOptimizedImages(optimizedImages, projectName, imageName);
-                        
+
                         // Return responsive image URL with srcset
                         updatedImages[key] = s3Paths.md || `/images/${imageName}.${imageFormat}`;
-                        console.log(`[Performance] Image optimized and uploaded: ${imageName}`);
+                        logger.info(`[Performance] Image optimized and uploaded: ${imageName}`);
                     } catch (error) {
                         // Fallback: upload original image if optimization fails
-                        console.warn(`[Performance] Image optimization failed for ${imageName}, uploading original:`, error);
+                        logger.warn(`[Performance] Image optimization failed for ${imageName}, uploading original:`, error);
                         const s3Key = `projects/${projectName}/images/${imageName}.${imageFormat}`;
                         const buffer = Buffer.from(imageData, 'base64');
-                        
+
                         await s3.putObject({
                             Bucket: bucketName,
                             Key: s3Key,
@@ -126,9 +103,9 @@ async function processImages(images, projectName) {
 
     // Wait for all image uploads to complete in parallel
     if (uploadPromises.length > 0) {
-        console.log(`[Performance] Uploading ${uploadPromises.length} images in parallel...`);
+        logger.info(`[Performance] Uploading ${uploadPromises.length} images in parallel...`);
         await Promise.all(uploadPromises);
-        console.log(`[Performance] All images uploaded successfully`);
+        logger.info(`[Performance] All images uploaded successfully`);
     }
 
     return updatedImages;
@@ -147,7 +124,7 @@ async function getTemplateFromS3(templateId) {
         const templateHtml = response.Body.toString('utf-8');
         return templateHtml;
     } catch (error) {
-        console.error(`Error fetching template from S3:`, error);
+        logger.error(`Error fetching template from S3:`, error);
         throw error;
     }
 }
@@ -159,7 +136,7 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, c
         // Load base template HTML (with caching)
         let templateHtml = getTemplate(templateId);
         if (!templateHtml) {
-            console.log(`[Cache] Template ${templateId} not cached, fetching from S3...`);
+            logger.info(`[Cache] Template ${templateId} not cached, fetching from S3...`);
             templateHtml = await getTemplateFromS3(`${templateId}`.toLowerCase());
             cacheTemplate(templateId, templateHtml);
         }
@@ -206,15 +183,15 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, c
         const mergedImages = { ...baseImages, ...customImages };
 
         // PERFORMANCE: Use regex-based injection (10x faster than JSDOM)
-        console.log(`[Performance] Starting HTML injection using regex-based method...`);
+        logger.info(`[Performance] Starting HTML injection using regex-based method...`);
         const finalHtml = injectContent(templateHtml, mergedLangs, mergedImages, customTextColors, customSectionBackgrounds);
 
         const elapsed = Date.now() - startTime;
-        console.log(`[Performance] HTML generation completed in ${elapsed}ms`);
+        logger.info(`[Performance] HTML generation completed in ${elapsed}ms`);
 
         return finalHtml;
     } catch (error) {
-        console.error('Error generating HTML from template:', error);
+        logger.error('Error generating HTML from template:', error);
         throw error;
     }
 }
@@ -230,9 +207,9 @@ async function uploadIndexHtmlToS3(html, projectName) {
     try {
         const bucketName = process.env.S3_BUCKET_NAME;
         const s3Key = `projects/${projectName}/index.html`;
-        
-        console.log(`[S3] Uploading index.html for project: ${projectName}`);
-        
+
+        logger.info(`[S3] Uploading index.html for project: ${projectName}`);
+
         const uploadResponse = await s3.putObject({
             Bucket: bucketName,
             Key: s3Key,
@@ -244,13 +221,13 @@ async function uploadIndexHtmlToS3(html, projectName) {
                 'project-name': projectName,
             }
         }).promise();
-        
+
         const s3Path = `https://${bucketName}.s3.eu-south-2.amazonaws.com/${s3Key}`;
-        console.log(`[S3] Successfully uploaded index.html to: ${s3Path}`);
-        
+        logger.info(`[S3] Successfully uploaded index.html to: ${s3Path}`);
+
         return s3Path;
     } catch (error) {
-        console.error(`[S3] Error uploading index.html:`, error);
+        logger.error(`[S3] Error uploading index.html:`, error);
         throw error;
     }
 }
@@ -265,24 +242,24 @@ async function invalidateCloudFront(projectName) {
     try {
         // Get CloudFront distribution ID from CloudFormation stack
         const cloudformation = new AWS.CloudFormation();
-        
-        console.log(`[CloudFront] Getting distribution ID for project: ${projectName}`);
-        
+
+        logger.info(`[CloudFront] Getting distribution ID for project: ${projectName}`);
+
         const stackResponse = await cloudformation.describeStacks({
             StackName: 'MultiTenantDistribution'
         }).promise();
-        
+
         const distributionId = stackResponse.Stacks[0].Outputs.find(
             output => output.OutputKey === 'DistributionId'
         )?.OutputValue;
-        
+
         if (!distributionId) {
-            console.warn(`[CloudFront] Could not find distribution ID, skipping invalidation`);
+            logger.warn(`[CloudFront] Could not find distribution ID, skipping invalidation`);
             return null;
         }
-        
+
         const cloudfront = new AWS.CloudFront();
-        
+
         const invalidationParams = {
             DistributionId: distributionId,
             InvalidationBatch: {
@@ -298,16 +275,16 @@ async function invalidateCloudFront(projectName) {
                 CallerReference: `${projectName}-${Date.now()}`
             }
         };
-        
+
         const invalidationResponse = await cloudfront.createInvalidation(invalidationParams).promise();
-        
-        console.log(`[CloudFront] Invalidation created: ${invalidationResponse.Invalidation.Id}`);
-        
+
+        logger.info(`[CloudFront] Invalidation created: ${invalidationResponse.Invalidation.Id}`);
+
         return invalidationResponse.Invalidation.Id;
     } catch (error) {
-        console.error(`[CloudFront] Error invalidating cache:`, error);
+        logger.error(`[CloudFront] Error invalidating cache:`, error);
         // Don't throw - cache invalidation failure shouldn't block deployment
-        console.warn(`[CloudFront] Continuing without cache invalidation`);
+        logger.warn(`[CloudFront] Continuing without cache invalidation`);
         return null;
     }
 }
@@ -328,7 +305,7 @@ async function generateWebsiteCore(operationId) {
     }
 
     const metadata = metadataResponse.Item;
-    const { images, langs, templateId, email, projectName, textColors, sectionBackgrounds } = metadata;
+    const { images, langs, templateId, email, projectName, textColors, sectionBackgrounds, signature } = metadata;
 
     // Validate metadata
     if (!images || !langs || !templateId || !email || !projectName) {
@@ -348,23 +325,57 @@ async function generateWebsiteCore(operationId) {
     const owner = githubOwner;
     const repo = githubRepo;
 
-    let isUpdate = false;
+    // Verify signature if present to ensure the operation was created by
+    // validate-confirmation-code (defends against spoofing the `source` field).
+    // Load HMAC secret from Secrets Manager and verify HMAC(operationId).
+    let signatureValid = false;
     try {
-        // Check if project exists
-        const path = `projects/${projectName}`;
+        if (signature) {
+            if (!process.env.HMAC_SECRET_NAME) throw new Error('HMAC_SECRET_NAME env var not set');
+            const secretResp = await secretsManager.getSecretValue({ SecretId: process.env.HMAC_SECRET_NAME }).promise();
+            const hmacSecret = secretResp.SecretString;
+            const expected = require('crypto').createHmac('sha256', hmacSecret).update(operationId).digest('hex');
+            signatureValid = expected === signature;
+            if (!signatureValid) {
+                logger.warn('HMAC signature mismatch for operationId', { operationId });
+            }
+        }
+    } catch (err) {
+        logger.error('Failed to verify HMAC signature', { error: err.message });
+        // If signature verification fails due to missing secret or error,
+        // we deliberately treat it as invalid instead of throwing, to avoid
+        // blocking generation for non-validated callers. Adjust policy if needed.
+        signatureValid = false;
+    }
+
+    // Check if project exists in the repo (used to know whether updating an
+    // existing project makes sense). This check runs for all invocations but
+    // we only mark the operation as an update when it also originates from
+    // the validate-confirmation-code lambda AND the signature is valid.
+    let projectExists = false;
+    try {
         await octokit.rest.repos.getContent({
             owner,
             repo,
-            path,
+            path: `projects/${projectName}`,
         });
-
-        // If no error, project exists, this is an update
-        isUpdate = true;
+        projectExists = true;
     } catch (error) {
         if (error.status !== 404) {
             throw error;
         }
-        // 404 means not exists, this is a create
+        // 404 -> project does not exist
+    }
+
+    const isUpdate = (metadata.source === 'validate-confirmation-code') && signatureValid && projectExists;
+    if (isUpdate) {
+        logger.debug(`Operation originated from validate-confirmation-code, signature valid and project exists; treating as update for project ${projectName}`);
+    } else if (metadata.source === 'validate-confirmation-code' && !signatureValid) {
+        logger.warn(`Operation source claims validate-confirmation-code but signature is invalid for project ${projectName}; treating as create`);
+    } else if (metadata.source === 'validate-confirmation-code' && !projectExists) {
+        logger.debug(`Operation originated from validate-confirmation-code but project does not exist; treating as create for project ${projectName}`);
+    } else {
+        logger.debug(`Operation did not originate from validate-confirmation-code; treating as create for project ${projectName}`);
     }
 
     // Generate HTML from template and custom data
@@ -390,7 +401,7 @@ async function generateWebsiteCore(operationId) {
             sha: currentFile.data.sha,
         });
 
-        console.log(`[DEBUG] Successfully updated index.html for project: ${projectName}`);
+        logger.info(`[DEBUG] Successfully updated index.html for project: ${projectName}`);
     } else {
         // For new projects, create both files in a single commit
         const commitMessage = `Add ${projectName} project`;
@@ -467,15 +478,15 @@ async function generateWebsiteCore(operationId) {
     }
 
     // Upload generated index.html to S3
-    console.log(`[Deployment] Starting S3 upload for project: ${projectName}`);
+    logger.info(`[Deployment] Starting S3 upload for project: ${projectName}`);
     const s3Path = await uploadIndexHtmlToS3(html, projectName);
-    console.log(`[Deployment] Successfully uploaded to S3: ${s3Path}`);
+    logger.info(`[Deployment] Successfully uploaded to S3: ${s3Path}`);
 
     // Invalidate CloudFront cache
-    console.log(`[Deployment] Invalidating CloudFront cache for project: ${projectName}`);
+    logger.info(`[Deployment] Invalidating CloudFront cache for project: ${projectName}`);
     const invalidationId = await invalidateCloudFront(projectName);
     if (invalidationId) {
-        console.log(`[Deployment] CloudFront cache invalidation initiated: ${invalidationId}`);
+        logger.info(`[Deployment] CloudFront cache invalidation initiated: ${invalidationId}`);
     }
 
     // Send email only for new projects
@@ -522,30 +533,30 @@ async function handleSQSEvent(event) {
 
     for (const record of event.Records) {
         try {
-            console.log(`[SQS] Processing message: ${record.messageId}`);
-            
+            logger.info(`[SQS] Processing message: ${record.messageId}`);
+
             let messageBody;
             try {
                 messageBody = JSON.parse(record.body);
             } catch (error) {
-                console.error(`[SQS] Failed to parse message body for ${record.messageId}:`, error);
+                logger.error(`[SQS] Failed to parse message body for ${record.messageId}:`, error);
                 batchItemFailures.push({ itemId: record.messageId });
                 continue;
             }
 
             const { operationId } = messageBody;
             if (!operationId) {
-                console.error(`[SQS] Missing operationId in message ${record.messageId}`);
+                logger.error(`[SQS] Missing operationId in message ${record.messageId}`);
                 batchItemFailures.push({ itemId: record.messageId });
                 continue;
             }
 
             // Generate website
             await generateWebsiteCore(operationId);
-            console.log(`[SQS] Successfully processed operationId: ${operationId}`);
+            logger.info(`[SQS] Successfully processed operationId: ${operationId}`);
 
         } catch (error) {
-            console.error(`[SQS] Error processing message ${record.messageId}:`, error);
+            logger.error(`[SQS] Error processing message ${record.messageId}:`, error);
             batchItemFailures.push({ itemId: record.messageId });
         }
     }
@@ -560,6 +571,7 @@ async function handleSQSEvent(event) {
 async function handleAPIGatewayEvent(event) {
     // Handle CORS preflight OPTIONS requests
     if (event.httpMethod === 'OPTIONS') {
+        logger.info()
         return {
             statusCode: 200,
             headers: {
@@ -629,12 +641,12 @@ async function handleAPIGatewayEvent(event) {
 
     try {
         const result = await generateWebsiteCore(operationId);
-        
+
         // Log performance metrics
         const cacheStats = getCacheStats();
-        console.log(`[Metrics] Cache stats:`, cacheStats);
-        console.log(`[Metrics] Lambda memory:`, process.memoryUsage());
-        
+        logger.info(`[Metrics] Cache stats:`, cacheStats);
+        logger.info(`[Metrics] Lambda memory:`, process.memoryUsage());
+
         return {
             statusCode: 200,
             headers: {
@@ -647,8 +659,8 @@ async function handleAPIGatewayEvent(event) {
         };
 
     } catch (error) {
-        console.error('Error in generate-website API handler:', error);
-        console.error('Error stack:', error.stack);
+        logger.error('Error in generate-website API handler:', error);
+        logger.error('Error stack:', error.stack);
         return {
             statusCode: 500,
             headers: {
@@ -668,14 +680,17 @@ async function handleAPIGatewayEvent(event) {
  * Main Handler
  * Routes to appropriate handler based on event source
  */
-export const handler = async (event) => {
+export const handler = async (event, context) => {
+    if (!logger)
+        logger = createLogger("generate-website", context)
     // Detect event source: SQS events have 'Records' with 'eventSource' === 'aws:sqs'
     if (event.Records && event.Records[0]?.eventSource === 'aws:sqs') {
-        console.log('[HANDLER] Routing to SQS event handler');
+        logger.info('[HANDLER] Routing to SQS event handler');
         return await handleSQSEvent(event);
     }
 
     // Otherwise, treat as API Gateway event
-    console.log('[HANDLER] Routing to API Gateway event handler');
+    logger.info('[HANDLER] Routing to API Gateway event handler');
+
     return await handleAPIGatewayEvent(event);
 };

@@ -1,11 +1,13 @@
 import AWS from "aws-sdk";
 import { randomUUID } from "crypto";
+import crypto from 'crypto';
 import { apiResponse, corsHeaders } from "./shared/auth.js";
 import { createLogger } from "./shared/logger.js";
 import { captureException, initSentry } from "./shared/sentry.js";
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();
+const secretsManager = new AWS.SecretsManager();
 
 const CODES_TABLE = process.env.DYNAMODB_CODES_TABLE;
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE;
@@ -108,12 +110,31 @@ export const handler = async (event, context) => {
         // This is required because generate-website expects an operationId to fetch data.
         const operationId = randomUUID();
 
+        // Compute HMAC signature over operationId so the downstream lambda can
+        // verify that the operation was created by this function.
+        let hmacSecret = null;
+        try {
+            if (!process.env.HMAC_SECRET_NAME) throw new Error('HMAC_SECRET_NAME env var not set');
+            const secretResp = await secretsManager.getSecretValue({ SecretId: process.env.HMAC_SECRET_NAME }).promise();
+            hmacSecret = secretResp.SecretString;
+        } catch (err) {
+            logger.error('Failed to load HMAC secret from Secrets Manager', { error: err.message });
+            throw err;
+        }
+
+        const signature = crypto.createHmac('sha256', hmacSecret).update(operationId).digest('hex');
+
         // Construct the update payload
         const timestamp = new Date().toISOString();
 
         const metadataItem = {
             operationId: operationId,
             type: "update",
+            // Indicate the origin of this operation so downstream lambdas can
+            // decide behavior based on the caller.
+            source: "validate-confirmation-code",
+            // HMAC signature proving the origin
+            signature,
             status: "processing",
             projectName: templateId,
             email: userEmail,
