@@ -24,6 +24,7 @@ interface CreateProjectProps extends cdk.StackProps {
     confirmationCodesTable?: dynamodb.Table;
     sendEmailFunction?: lambda.Function;
     contactFormFunction?: lambda.Function;
+    distributionId?: string;
 }
 
 export class CreateProjectStack extends cdk.Stack {
@@ -116,7 +117,9 @@ export class CreateProjectStack extends cdk.Stack {
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
-                HMAC_SECRET_NAME: hmacSecret.secretName
+                HMAC_SECRET_NAME: hmacSecret.secretName,
+                CLOUDFORMATION_REGION: props?.certificateRegion || "us-east-1",
+                DISTRIBUTION_ID: props.distributionId || ""
             },
             timeout: cdk.Duration.seconds(300), // 5 minutes - account for slow GitHub operations
         });
@@ -156,7 +159,7 @@ export class CreateProjectStack extends cdk.Stack {
         // distribution when creating invalidations.
         generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['cloudformation:DescribeStacks'],
-            resources: [`arn:aws:cloudformation:${this.region}:${this.account}:stack/MultiTenantDistribution/*`],
+            resources: [`arn:aws:cloudformation:${props?.certificateRegion || 'us-east-1'}:${this.account}:stack/MultiTenantDistribution/*`],
         }));
 
         // Allow CloudFront invalidation operations for distributions in this account.

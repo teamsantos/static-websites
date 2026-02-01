@@ -156,6 +156,8 @@ const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
     confirmationCodesTable: dynamoDBStack.confirmationCodesTable,
     sendEmailFunction: emailTemplateStack.sendEmailFunction,
     contactFormFunction: contactFormStack.contactFormFunction,
+    distributionId: multiTenantDistribution.distributionId,
+    crossRegionReferences: true,
     env: {
         account: account,
         region: config.region,

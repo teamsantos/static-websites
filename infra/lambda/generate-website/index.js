@@ -247,18 +247,26 @@ async function uploadIndexHtmlToS3(html, projectName) {
  */
 async function invalidateCloudFront(projectName) {
     try {
-        // Get CloudFront distribution ID from CloudFormation stack
-        const cloudformation = new AWS.CloudFormation();
+        let distributionId = process.env.DISTRIBUTION_ID;
 
-        logger.info(`[CloudFront] Getting distribution ID for project: ${projectName}`);
+        if (!distributionId) {
+            // Fallback: Get CloudFront distribution ID from CloudFormation stack
+            const cloudformation = new AWS.CloudFormation({
+                region: process.env.CLOUDFORMATION_REGION || 'us-east-1'
+            });
 
-        const stackResponse = await cloudformation.describeStacks({
-            StackName: 'MultiTenantDistribution'
-        }).promise();
+            logger.info(`[CloudFront] Getting distribution ID for project: ${projectName}`);
 
-        const distributionId = stackResponse.Stacks[0].Outputs.find(
-            output => output.OutputKey === 'DistributionId'
-        )?.OutputValue;
+            const stackResponse = await cloudformation.describeStacks({
+                StackName: 'MultiTenantDistribution'
+            }).promise();
+
+            distributionId = stackResponse.Stacks[0].Outputs.find(
+                output => output.OutputKey === 'DistributionId'
+            )?.OutputValue;
+        } else {
+             logger.info(`[CloudFront] Using configured distribution ID: ${distributionId}`);
+        }
 
         if (!distributionId) {
             logger.warn(`[CloudFront] Could not find distribution ID, skipping invalidation`);
