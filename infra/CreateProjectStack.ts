@@ -116,9 +116,7 @@ export class CreateProjectStack extends cdk.Stack {
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
-                HMAC_SECRET_NAME: hmacSecret.secretName,
-                // Import the CloudFront distribution id exported by MultiTenantDistributionStack
-                CLOUDFRONT_DISTRIBUTION_ID: cdk.Fn.importValue('MultiTenantDistributionId')
+                HMAC_SECRET_NAME: hmacSecret.secretName
             },
             timeout: cdk.Duration.seconds(300), // 5 minutes - account for slow GitHub operations
         });
