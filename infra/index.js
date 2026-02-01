@@ -53,6 +53,7 @@ const AlertingStack_1 = require("./AlertingStack");
 const EmailTemplateStack_1 = require("./EmailTemplateStack");
 const ContactFormStack_1 = require("./ContactFormStack");
 const app = new cdk.App();
+const constants_1 = require("../shared/constants");
 const config = {
     region: "eu-south-2",
     domain: "e-info.click",
@@ -145,7 +146,7 @@ const contactFormStack = new ContactFormStack_1.ContactFormStack(app, "ContactFo
 });
 // Create Email Template System (Phase 4.6) - Must be created before Stripe stack
 const emailTemplateStack = new EmailTemplateStack_1.EmailTemplateStack(app, "EmailTemplateStack", {
-    senderEmail: process.env.SENDER_EMAIL || "noreply@e-info.click",
+    senderEmail: process.env.SENDER_EMAIL || constants_1.DEFAULT_SENDER_EMAIL,
     frontendUrl: process.env.FRONTEND_URL || "https://editor.e-info.click",
     sesRegion: config.certificateRegion,
     env: {

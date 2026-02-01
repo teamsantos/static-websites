@@ -19,6 +19,7 @@ import { EmailTemplateStack } from "./EmailTemplateStack";
 import { ContactFormStack } from "./ContactFormStack";
 
 const app = new cdk.App();
+import { DEFAULT_SENDER_EMAIL } from "../shared/constants";
 
 const config = {
     region: "eu-south-2",
@@ -129,7 +130,7 @@ const contactFormStack = new ContactFormStack(app, "ContactFormStack", {
 
 // Create Email Template System (Phase 4.6) - Must be created before Stripe stack
 const emailTemplateStack = new EmailTemplateStack(app, "EmailTemplateStack", {
-    senderEmail: process.env.SENDER_EMAIL || "noreply@e-info.click",
+    senderEmail: process.env.SENDER_EMAIL || DEFAULT_SENDER_EMAIL,
     frontendUrl: process.env.FRONTEND_URL || "https://editor.e-info.click",
     sesRegion: config.certificateRegion,
     env: {

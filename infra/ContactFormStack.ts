@@ -3,6 +3,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
+import { DEFAULT_SENDER_EMAIL } from "../shared/constants";
 
 interface ContactFormStackProps extends cdk.StackProps {
     sesRegion?: string;
@@ -27,7 +28,7 @@ export class ContactFormStack extends cdk.Stack {
             environment: {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                FROM_EMAIL: 'noreply@e-info.click',
+                FROM_EMAIL: DEFAULT_SENDER_EMAIL,
                 AWS_SES_REGION: props?.sesRegion || "us-east-1",
             },
             timeout: cdk.Duration.seconds(15),

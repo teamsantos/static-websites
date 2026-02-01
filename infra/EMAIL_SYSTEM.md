@@ -262,7 +262,7 @@ await sendPaymentConfirmationEmail(logger, email, projectName, priceId, operatio
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| SENDER_EMAIL | Yes | noreply@e-info.click | SES verified email address |
+| SENDER_EMAIL | Yes | no-reply@e-info.click | SES verified email address |
 | FRONTEND_URL | Yes | https://editor.e-info.click | Link in emails |
 | SES_REGION | No | us-east-1 | AWS SES region |
 | SENTRY_DSN | No | - | Error tracking (optional) |
@@ -272,7 +272,7 @@ await sendPaymentConfirmationEmail(logger, email, projectName, priceId, operatio
 **Sandbox Mode** (Development):
 ```bash
 # Verify sender email
-aws ses verify-email-identity --email-address noreply@e-info.click --region us-east-1
+aws ses verify-email-identity --email-address no-reply@e-info.click --region us-east-1
 
 # Verify recipient emails (for testing)
 aws ses verify-email-identity --email-address test@example.com --region us-east-1

@@ -14,10 +14,11 @@
  */
 
 import AWS from "aws-sdk";
+import { DEFAULT_SENDER_EMAIL } from "./constants";
 
 const SES = new AWS.SES({ region: process.env.SES_REGION || "us-east-1" });
 
-const SENDER_EMAIL = process.env.SENDER_EMAIL || "noreply@e-info.click";
+const SENDER_EMAIL = process.env.SENDER_EMAIL || DEFAULT_SENDER_EMAIL;
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://editor.e-info.click";
 
 /**

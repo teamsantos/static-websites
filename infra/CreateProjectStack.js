@@ -44,6 +44,7 @@ const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
 const route53Targets = __importStar(require("aws-cdk-lib/aws-route53-targets"));
 const secretsmanager = __importStar(require("aws-cdk-lib/aws-secretsmanager"));
 const path = __importStar(require("path"));
+const constants_1 = require("../shared/constants");
 class CreateProjectStack extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
@@ -79,7 +80,7 @@ class CreateProjectStack extends cdk.Stack {
             environment: {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                FROM_EMAIL: 'noreply@e-info.click',
+                FROM_EMAIL: constants_1.DEFAULT_SENDER_EMAIL,
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
@@ -117,7 +118,7 @@ class CreateProjectStack extends cdk.Stack {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
                 HMAC_SECRET_NAME: hmacSecret.secretName,
-                FROM_EMAIL: 'noreply@e-info.click',
+                FROM_EMAIL: constants_1.DEFAULT_SENDER_EMAIL,
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata"
@@ -263,7 +264,7 @@ class CreateProjectStack extends cdk.Stack {
                 environment: {
                     GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                     GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                    FROM_EMAIL: 'noreply@e-info.click',
+                    FROM_EMAIL: constants_1.DEFAULT_SENDER_EMAIL,
                     AWS_SES_REGION: props?.ses_region || "us-east-1",
                 },
                 timeout: cdk.Duration.seconds(15),

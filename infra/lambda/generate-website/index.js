@@ -2,6 +2,7 @@ import AWS from "aws-sdk";
 import { Octokit } from "octokit";
 import crypto from "crypto";
 import { cacheLanguageFile, cacheTemplate, getCacheStats, getLanguageFile, getTemplate } from "@app/shared/cache";
+import { DEFAULT_SENDER_EMAIL } from "@app/shared/constants";
 import { optimizeImage, uploadOptimizedImages } from "@app/shared/imageOptimization";
 import { createLogger } from "@app/shared/logger";
 import { injectContent } from "@app/shared/templateInjection";
@@ -496,8 +497,10 @@ async function generateWebsiteCore(operationId) {
 
     // Send email only for new projects
     if (!isUpdate) {
+        const fromEmail = process.env.FROM_EMAIL || DEFAULT_SENDER_EMAIL;
+
         const params = {
-            Source: 'no-reply@e-info.click',
+            Source: fromEmail,
             Destination: {
                 ToAddresses: [email],
             },

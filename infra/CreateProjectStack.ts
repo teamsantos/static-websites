@@ -1,14 +1,15 @@
 import * as cdk from "aws-cdk-lib";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
-import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as path from "path";
+import { DEFAULT_SENDER_EMAIL } from "../shared/constants";
 
 interface CreateProjectProps extends cdk.StackProps {
     ses_region: string;
@@ -63,7 +64,7 @@ export class CreateProjectStack extends cdk.Stack {
             environment: {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                FROM_EMAIL: 'noreply@e-info.click',
+                FROM_EMAIL: DEFAULT_SENDER_EMAIL,
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
@@ -98,6 +99,8 @@ export class CreateProjectStack extends cdk.Stack {
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
         }));
 
+        const hmacSecret = secretsmanager.Secret.fromSecretNameV2(this, 'HMACSecret', 'hmac-secret');
+
         const generateWebsiteFunction = new lambda.Function(this, 'GenerateWebsiteFunction', {
             functionName: 'generate-website',
             runtime: lambda.Runtime.NODEJS_18_X,
@@ -106,10 +109,11 @@ export class CreateProjectStack extends cdk.Stack {
             environment: {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                FROM_EMAIL: 'noreply@e-info.click',
+                FROM_EMAIL: DEFAULT_SENDER_EMAIL,
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
-                DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata"
+                DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
+                HMAC_SECRET_NAME: hmacSecret.secretName
             },
             timeout: cdk.Duration.seconds(300), // 5 minutes - account for slow GitHub operations
         });
@@ -257,7 +261,7 @@ export class CreateProjectStack extends cdk.Stack {
 
         // Contact Form Lambda - handles form submissions from generated websites
         let contactFormFunction = props.contactFormFunction;
-        
+
         if (!contactFormFunction) {
             contactFormFunction = new lambda.Function(this, 'ContactFormFunction', {
                 functionName: 'contact-form',
@@ -267,7 +271,7 @@ export class CreateProjectStack extends cdk.Stack {
                 environment: {
                     GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                     GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                    FROM_EMAIL: 'noreply@e-info.click',
+                    FROM_EMAIL: DEFAULT_SENDER_EMAIL,
                     AWS_SES_REGION: props?.ses_region || "us-east-1",
                 },
                 timeout: cdk.Duration.seconds(15),
@@ -319,9 +323,9 @@ export class CreateProjectStack extends cdk.Stack {
         // ============================================================
         // Project Management Logic (Merged)
         // ============================================================
-        
+
         if (props.metadataTable && props.confirmationCodesTable && props.sendEmailFunction) {
-            
+
             // Define separate log groups for each function
             const getProjectsLogGroup = new logs.LogGroup(this, "GetProjectsLogGroup", {
                 logGroupName: "/aws/lambda/get-projects",
@@ -407,6 +411,7 @@ export class CreateProjectStack extends cdk.Stack {
                 timeout: cdk.Duration.seconds(30),
                 memorySize: 256,
                 environment: {
+                    HMAC_SECRET_NAME: hmacSecret.secretName,
                     DYNAMODB_CODES_TABLE: props.confirmationCodesTable.tableName,
                     DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
                     GENERATE_WEBSITE_FUNCTION: generateWebsiteFunction.functionName,
@@ -422,7 +427,7 @@ export class CreateProjectStack extends cdk.Stack {
             // API Resources
             const projectsResource = this.api.root.addResource("projects");
             projectsResource.addMethod("GET", new apigateway.LambdaIntegration(getProjectsFunction));
-            
+
             const projectIdResource = projectsResource.addResource("{id}");
             projectIdResource.addMethod("DELETE", new apigateway.LambdaIntegration(deleteProjectFunction));
 

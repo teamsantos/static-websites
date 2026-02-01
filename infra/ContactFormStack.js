@@ -39,6 +39,7 @@ const iam = __importStar(require("aws-cdk-lib/aws-iam"));
 const lambda = __importStar(require("aws-cdk-lib/aws-lambda"));
 const logs = __importStar(require("aws-cdk-lib/aws-logs"));
 const secretsmanager = __importStar(require("aws-cdk-lib/aws-secretsmanager"));
+const constants_1 = require("../shared/constants");
 class ContactFormStack extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
@@ -54,7 +55,7 @@ class ContactFormStack extends cdk.Stack {
             environment: {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                FROM_EMAIL: 'noreply@e-info.click',
+                    FROM_EMAIL: constants_1.DEFAULT_SENDER_EMAIL,
                 AWS_SES_REGION: props?.sesRegion || "us-east-1",
             },
             timeout: cdk.Duration.seconds(15),

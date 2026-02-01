@@ -115,8 +115,12 @@ export const handler = async (event, context) => {
         let hmacSecret = cachedHmacSecret;
         try {
             if (!hmacSecret) {
-                if (!process.env.HMAC_SECRET_NAME) throw new Error('HMAC_SECRET_NAME env var not set');
-                const secretResp = await secretsManager.getSecretValue({ SecretId: process.env.HMAC_SECRET_NAME }).promise();
+                // Fall back to the conventional secret name if the env var isn't set.
+                const secretName = process.env.HMAC_SECRET_NAME || 'hmac-secret';
+                if (!process.env.HMAC_SECRET_NAME) {
+                    logger.warn('HMAC_SECRET_NAME env var not set, falling back to default secret name', { fallback: secretName });
+                }
+                const secretResp = await secretsManager.getSecretValue({ SecretId: secretName }).promise();
                 hmacSecret = secretResp.SecretString;
                 cachedHmacSecret = hmacSecret;
             }
