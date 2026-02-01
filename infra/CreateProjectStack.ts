@@ -132,6 +132,7 @@ export class CreateProjectStack extends cdk.Stack {
         });
 
         // Grant permissions to generate-website Lambda
+        hmacSecret.grantRead(generateWebsiteFunction);
         githubTokenSecret.grantRead(generateWebsiteFunction);
         githubConfigSecret.grantRead(generateWebsiteFunction);
 
@@ -210,24 +211,24 @@ export class CreateProjectStack extends cdk.Stack {
                 },
             ],
         }), {
-            methodResponses: [
-                {
-                    statusCode: '200',
-                },
-                {
-                    statusCode: '400',
-                },
-                {
-                    statusCode: '403',
-                },
-                {
-                    statusCode: '409',
-                },
-                {
-                    statusCode: '500',
-                },
-            ],
-        });
+                methodResponses: [
+                    {
+                        statusCode: '200',
+                    },
+                    {
+                        statusCode: '400',
+                    },
+                    {
+                        statusCode: '403',
+                    },
+                    {
+                        statusCode: '409',
+                    },
+                    {
+                        statusCode: '500',
+                    },
+                ],
+            });
 
         const generateWebsiteResource = this.api.root.addResource('generate-website');
         generateWebsiteResource.addMethod('POST', new apigateway.LambdaIntegration(generateWebsiteFunction, {
@@ -246,21 +247,21 @@ export class CreateProjectStack extends cdk.Stack {
                 },
             ],
         }), {
-            methodResponses: [
-                {
-                    statusCode: '200',
-                },
-                {
-                    statusCode: '400',
-                },
-                {
-                    statusCode: '403',
-                },
-                {
-                    statusCode: '500',
-                },
-            ],
-        });
+                methodResponses: [
+                    {
+                        statusCode: '200',
+                    },
+                    {
+                        statusCode: '400',
+                    },
+                    {
+                        statusCode: '403',
+                    },
+                    {
+                        statusCode: '500',
+                    },
+                ],
+            });
 
         // Contact Form Lambda - handles form submissions from generated websites
         let contactFormFunction = props.contactFormFunction;
@@ -315,13 +316,13 @@ export class CreateProjectStack extends cdk.Stack {
                 { statusCode: '500' },
             ],
         }), {
-            methodResponses: [
-                { statusCode: '200' },
-                { statusCode: '400' },
-                { statusCode: '404' },
-                { statusCode: '500' },
-            ],
-        });
+                methodResponses: [
+                    { statusCode: '200' },
+                    { statusCode: '400' },
+                    { statusCode: '404' },
+                    { statusCode: '500' },
+                ],
+            });
 
         // ============================================================
         // Project Management Logic (Merged)
@@ -426,6 +427,8 @@ export class CreateProjectStack extends cdk.Stack {
             props.confirmationCodesTable.grantReadWriteData(validateConfirmationCodeFunction);
             props.metadataTable.grantReadWriteData(validateConfirmationCodeFunction);
             generateWebsiteFunction.grantInvoke(validateConfirmationCodeFunction);
+
+            hmacSecret.grantRead(validateConfirmationCodeFunction);
 
             // API Resources
             const projectsResource = this.api.root.addResource("projects");
