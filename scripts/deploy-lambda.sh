@@ -37,11 +37,31 @@ deploy_lambda() {
   # This is standard for AWS Lambda zips
   pushd "$lambda_path" > /dev/null
   if ! npm ci --omit=dev --no-audit --no-fund; then
-      echo "Error: npm ci failed"
-      rm -rf node_modules
-      popd > /dev/null
-      rm -rf "$temp_dir"
-      exit 1
+    echo "Error: npm ci failed"
+    rm -rf node_modules
+    popd > /dev/null
+    rm -rf "$temp_dir"
+    exit 1
+  fi
+
+  # Ensure the lambda always bundles the freshest copy of the local shared utilities
+  # Some package managers copy/pack file: dependencies; to be certain we include the
+  # working tree version (latest changes), overwrite the installed package with
+  # a direct copy from the repository `shared/` folder if it exists.
+  SHARED_SRC_DIR="$(cd "$SCRIPT_DIR/.." >/dev/null && pwd)/shared"
+  if [ -d "$SHARED_SRC_DIR" ]; then
+    echo "Including latest shared/ into lambda bundle..."
+    mkdir -p node_modules/@app
+    rm -rf node_modules/@app/shared
+    # Copy atomically (preserve files). Use rsync when available for speed, fall back to cp.
+    if command -v rsync >/dev/null 2>&1; then
+      rsync -a --delete "$SHARED_SRC_DIR/" node_modules/@app/shared/
+    else
+      mkdir -p node_modules/@app/shared
+      cp -a "$SHARED_SRC_DIR/." node_modules/@app/shared/
+    fi
+  else
+    echo "Warning: shared/ directory not found at $SHARED_SRC_DIR — continuing without local overlay"
   fi
 
   if ! zip -rq "$zip_file" .; then

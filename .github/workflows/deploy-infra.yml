@@ -174,6 +174,13 @@ jobs:
             if [ -d "$dir" ] && [ -f "$dir/package.json" ]; then
               echo "Installing dependencies for $(basename "$dir")..."
               (cd "$dir" && npm ci)
+              
+              # Ensure @app/shared has the latest changes
+              if grep -q "@app/shared" "$dir/package.json"; then
+                echo "Updating @app/shared..."
+                (cd "$dir" && npm install @app/shared)
+              fi
+              
               echo "✅ Dependencies installed for $(basename "$dir")"
             fi
           done
