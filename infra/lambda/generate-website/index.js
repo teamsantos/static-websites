@@ -3,7 +3,7 @@ import { Octokit } from "octokit";
 import crypto from "crypto";
 import { cacheLanguageFile, cacheTemplate, getCacheStats, getLanguageFile, getTemplate } from "@app/shared/cache";
 // Use infra-compiled constant to allow regeneration from TS sources
-import { DEFAULT_SENDER_EMAIL } from "@app/constants";
+import { DEFAULT_SENDER_EMAIL } from "@app/shared/constants";
 import { optimizeImage, uploadOptimizedImages } from "@app/shared/imageOptimization";
 import { createLogger } from "@app/shared/logger";
 import { injectContent } from "@app/shared/templateInjection";

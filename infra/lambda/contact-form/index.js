@@ -1,7 +1,7 @@
 // Using AWS SDK v2 with ES6 modules (type: module)
 import AWS from "aws-sdk";
 import { Octokit } from "octokit";
-import { DEFAULT_SENDER_EMAIL } from "@app/constants";
+import { DEFAULT_SENDER_EMAIL } from "@app/shared/constants";
 
 const ses = new AWS.SES({ region: process.env.AWS_SES_REGION || "us-east-1" });
 const secretsManager = new AWS.SecretsManager();
