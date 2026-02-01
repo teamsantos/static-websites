@@ -1,7 +1,7 @@
-import AWS from "aws-sdk";
-import { Octokit } from "octokit";
-import crypto from "crypto";
 import { cacheLanguageFile, cacheTemplate, getCacheStats, getLanguageFile, getTemplate } from "@app/shared/cache";
+import AWS from "aws-sdk";
+import crypto from "crypto";
+import { Octokit } from "octokit";
 // Use infra-compiled constant to allow regeneration from TS sources
 import { DEFAULT_SENDER_EMAIL } from "@app/shared/constants";
 import { optimizeImage, uploadOptimizedImages } from "@app/shared/imageOptimization";
@@ -579,6 +579,7 @@ async function handleSQSEvent(event) {
  */
 async function handleAPIGatewayEvent(event) {
     // Handle CORS preflight OPTIONS requests
+    logger.debug(JSON.stringify(event))
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 200,
@@ -619,18 +620,20 @@ async function handleAPIGatewayEvent(event) {
     }
 
     let requestBody;
-    try {
-        requestBody = JSON.parse(event.body);
-    } catch (error) {
-        return {
-            statusCode: 400,
-            headers: {
-                'Access-Control-Allow-Origin': origin || '*',
-                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                'Access-Control-Allow-Methods': 'POST,OPTIONS',
-            },
-            body: JSON.stringify({ error: 'Invalid JSON in request body' }),
-        };
+    if (event.body) {
+        try {
+            requestBody = JSON.parse(event.body);
+        } catch (error) {
+            return {
+                statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': origin || '*',
+                    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+                },
+                body: JSON.stringify({ error: 'Invalid JSON in request body', message: error }),
+            };
+        }
     }
 
     const { operationId } = requestBody;
@@ -694,11 +697,14 @@ export const handler = async (event, context) => {
     // Detect event source: SQS events have 'Records' with 'eventSource' === 'aws:sqs'
     if (event.Records && event.Records[0]?.eventSource === 'aws:sqs') {
         logger.info('[HANDLER] Routing to SQS event handler');
-        return await handleSQSEvent(event);
+        const result = await handleSQSEvent(event);
+        logger.debug({ handlerResult: result });
+        return result;
     }
 
     // Otherwise, treat as API Gateway event
     logger.info('[HANDLER] Routing to API Gateway event handler');
-
-    return await handleAPIGatewayEvent(event);
+    const result = await handleAPIGatewayEvent(event);
+    logger.debug({ handlerResult: result });
+    return result;
 };

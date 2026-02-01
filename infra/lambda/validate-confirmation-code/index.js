@@ -134,6 +134,57 @@ export const handler = async (event, context) => {
         // Construct the update payload
         const timestamp = new Date().toISOString();
 
+        // Normalize image paths so generate-website sees the same shape
+        // as the payment-session / create-project flows. Frontend sometimes
+        // sends relative paths like "./images/foo.png" which would be
+        // emitted into the generated HTML unchanged (resulting in "./..." paths).
+        // Convert those to absolute-like S3/project paths so they resolve
+        // when injected into the template.
+        const normalizedImages = {};
+        if (images && typeof images === 'object') {
+            for (const [k, v] of Object.entries(images)) {
+                // Leave URLs and data URLs untouched
+                if (typeof v !== 'string') {
+                    normalizedImages[k] = v;
+                    continue;
+                }
+
+                const lower = v.toLowerCase();
+                if (lower.startsWith('http://') || lower.startsWith('https://') || lower.startsWith('data:')) {
+                    normalizedImages[k] = v;
+                    continue;
+                }
+
+                // If already a project path, ensure it has a leading slash
+                if (v.startsWith('/projects/')) {
+                    normalizedImages[k] = v;
+                    continue;
+                }
+                if (v.startsWith('projects/')) {
+                    normalizedImages[k] = `/${v}`;
+                    continue;
+                }
+
+                // Normalize any relative or images/* or /images/* or plain filenames
+                // into the canonical /projects/<project>/images/<rest> path.
+                // Remove leading ./ or ../ sequences and leading slashes
+                let cleaned = v.replace(/^(?:\.\/|\.\.\/)+/, '').replace(/^\/+/, '');
+
+                // If path starts with images/, strip that prefix
+                if (cleaned.startsWith('images/')) {
+                    cleaned = cleaned.replace(/^images\//, '');
+                }
+
+                // If cleaned is empty for some reason, skip normalization
+                if (!cleaned) {
+                    normalizedImages[k] = v;
+                    continue;
+                }
+
+                normalizedImages[k] = `/projects/${templateId}/images/${cleaned}`;
+            }
+        }
+
         const metadataItem = {
             operationId: operationId,
             type: "update",
@@ -150,7 +201,7 @@ export const handler = async (event, context) => {
             expiresAt: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days TTL
 
             // The content to update
-            images: images || {},
+            images: Object.keys(normalizedImages).length > 0 ? normalizedImages : (images || {}),
             langs: langs || {},
             textColors: textColors || {},
             sectionBackgrounds: sectionBackgrounds || {},
@@ -167,10 +218,13 @@ export const handler = async (event, context) => {
         logger.info('Created update operation', { operationId, templateId });
 
         // C. Invoke generate-website with the operationId
+        // Invoke generate-website simulating an API Gateway payload so the
+        // target lambda can parse `event.body` as it does for HTTP requests.
         const params = {
             FunctionName: GENERATE_WEBSITE_FUNCTION,
             InvocationType: 'Event',
-            Payload: JSON.stringify({ operationId: operationId })
+            // Wrap operationId inside a `body` string to match API Gateway shape
+            Payload: JSON.stringify({ body: JSON.stringify({ operationId: operationId }) })
         };
 
         await lambda.invoke(params).promise();

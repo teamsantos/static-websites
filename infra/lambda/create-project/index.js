@@ -59,8 +59,29 @@ async function processImages(images, projectName) {
 
             updatedImages[key] = `/projects/${projectName}/images/${imageName}`;
         } else {
-            // Assume it's already a path or other valid value
-            updatedImages[key] = value;
+            // Assume it's already a path or other valid value. Normalize to
+            // canonical /projects/<project>/images/<...> when it looks like a
+            // relative or images/* path so downstream consumers see a
+            // consistent shape.
+            if (typeof value === 'string') {
+                let v = value;
+                // leave absolute URLs and data URLs untouched
+                const lower = v.toLowerCase();
+                if (lower.startsWith('http://') || lower.startsWith('https://') || lower.startsWith('data:')) {
+                    updatedImages[key] = value;
+                } else {
+                    // Remove leading ./ or ../ or / and images/ prefix
+                    let cleaned = v.replace(/^(?:\.\/|\.\.\/)+/, '').replace(/^\/+/, '');
+                    if (cleaned.startsWith('images/')) cleaned = cleaned.replace(/^images\//, '');
+                    if (cleaned) {
+                        updatedImages[key] = `/projects/${projectName}/images/${cleaned}`;
+                    } else {
+                        updatedImages[key] = value;
+                    }
+                }
+            } else {
+                updatedImages[key] = value;
+            }
         }
     }
 

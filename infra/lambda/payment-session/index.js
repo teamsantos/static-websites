@@ -37,6 +37,46 @@ async function projectNameExists(logger, s3, bucketName, projectName) {
         }
     }
 }
+
+/**
+ * Normalize image paths to canonical /projects/<project>/images/<...> shape.
+ * Leaves http(s) and data URLs untouched.
+ */
+function normalizeImagesForProject(images = {}, projectName) {
+    const normalized = {};
+    for (const [k, v] of Object.entries(images || {})) {
+        if (typeof v !== 'string') {
+            normalized[k] = v;
+            continue;
+        }
+
+        const lower = v.toLowerCase();
+        if (lower.startsWith('http://') || lower.startsWith('https://') || lower.startsWith('data:')) {
+            normalized[k] = v;
+            continue;
+        }
+
+        if (v.startsWith('/projects/')) {
+            normalized[k] = v;
+            continue;
+        }
+        if (v.startsWith('projects/')) {
+            normalized[k] = `/${v}`;
+            continue;
+        }
+
+        // Clean relative prefixes and leading slashes
+        let cleaned = v.replace(/^(?:\.\/|\.\.\/)+/, '').replace(/^\/+/, '');
+        if (cleaned.startsWith('images/')) cleaned = cleaned.replace(/^images\//, '');
+        if (!cleaned) {
+            normalized[k] = v;
+            continue;
+        }
+
+        normalized[k] = `/projects/${projectName}/images/${cleaned}`;
+    }
+    return normalized;
+}
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE || "websites-metadata";
@@ -186,11 +226,12 @@ export const handler = async (event, context) => {
                 data: { sessionId: session.id, operationId: operationKey }
             });
 
-            // ✅ Save metadata to DynamoDB
+            // ✅ Normalize images and save metadata to DynamoDB
+            const normalizedImages = normalizeImagesForProject(images || {}, projectName);
             await saveMetadata(logger, operationKey, {
                 email,
                 projectName,
-                images,
+                images: Object.keys(normalizedImages).length > 0 ? normalizedImages : (images || {}),
                 langs: cleanedLangs,
                 textColors,
                 sectionBackgrounds,
