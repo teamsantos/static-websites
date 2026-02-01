@@ -116,7 +116,9 @@ export class CreateProjectStack extends cdk.Stack {
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
-                HMAC_SECRET_NAME: hmacSecret.secretName
+                HMAC_SECRET_NAME: hmacSecret.secretName,
+                // Import the CloudFront distribution id exported by MultiTenantDistributionStack
+                CLOUDFRONT_DISTRIBUTION_ID: cdk.Fn.importValue('MultiTenantDistributionId')
             },
             timeout: cdk.Duration.seconds(300), // 5 minutes - account for slow GitHub operations
         });
@@ -149,6 +151,25 @@ export class CreateProjectStack extends cdk.Stack {
         generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['s3:GetObject', 's3:PutObject'],
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
+        }));
+
+        // Allow the function to describe the CloudFormation stack that exports the
+        // CloudFront distribution ID. This is used by the runtime to look up the
+        // distribution when creating invalidations.
+        generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['cloudformation:DescribeStacks'],
+            resources: [`arn:aws:cloudformation:${this.region}:${this.account}:stack/MultiTenantDistribution/*`],
+        }));
+
+        // Allow CloudFront invalidation operations for distributions in this account.
+        // CloudFront ARNs include the account ID; restrict to the account where possible.
+        generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: [
+                'cloudfront:CreateInvalidation',
+                'cloudfront:GetDistribution',
+                'cloudfront:GetDistributionConfig'
+            ],
+            resources: [`arn:aws:cloudfront::${this.account}:distribution/*`],
         }));
 
         // Grant DynamoDB permissions for lambdas
