@@ -14,11 +14,13 @@
  */
 
 import AWS from "aws-sdk";
-import { DEFAULT_SENDER_EMAIL } from "./constants";
 
 const SES = new AWS.SES({ region: process.env.SES_REGION || "us-east-1" });
 
-const SENDER_EMAIL = process.env.SENDER_EMAIL || DEFAULT_SENDER_EMAIL;
+// Fallback directly to the canonical address. CDK sets FROM_EMAIL in Lambda
+// environments; otherwise SENDER_EMAIL env var may be used. If neither is set,
+// fall back to the canonical address.
+const SENDER_EMAIL = process.env.SENDER_EMAIL || process.env.FROM_EMAIL || "no-reply@e-info.click";
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://editor.e-info.click";
 
 /**

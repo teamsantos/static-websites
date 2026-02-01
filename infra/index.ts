@@ -19,7 +19,8 @@ import { EmailTemplateStack } from "./EmailTemplateStack";
 import { ContactFormStack } from "./ContactFormStack";
 
 const app = new cdk.App();
-import { DEFAULT_SENDER_EMAIL } from "../shared/constants";
+// Import compiled JS constant to avoid ts-node requiring .ts files as CJS
+import { DEFAULT_SENDER_EMAIL } from "./constants";
 
 const config = {
     region: "eu-south-2",

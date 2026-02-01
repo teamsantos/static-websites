@@ -3,7 +3,8 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
-import { DEFAULT_SENDER_EMAIL } from "../shared/constants";
+// Use compiled JS import to avoid ts-node ESM/CJS interop issues
+import { DEFAULT_SENDER_EMAIL } from "./constants";
 
 interface ContactFormStackProps extends cdk.StackProps {
     sesRegion?: string;

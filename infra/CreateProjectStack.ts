@@ -9,7 +9,10 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import * as path from "path";
-import { DEFAULT_SENDER_EMAIL } from "../shared/constants";
+// Import the compiled JS constant to avoid ts-node attempting to require the
+// .ts file as CommonJS (which fails in ESM packages). Point to the .js file
+// so runtime loads the JS module.
+import { DEFAULT_SENDER_EMAIL } from "./constants";
 
 interface CreateProjectProps extends cdk.StackProps {
     ses_region: string;
