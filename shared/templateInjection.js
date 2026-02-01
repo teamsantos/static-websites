@@ -187,8 +187,15 @@ export function injectContent(html, langs = {}, images = {}, textColors = {}, se
     );
   }
 
-  // 9. Clean up unused data-* attributes
-  result = result.replace(/\s+data-[a-z-]+=["'][^"']*["']/g, '');
+  // 9. Preserve data-* attributes
+  // NOTE: Previously we removed all `data-*` attributes here which caused
+  // `data-text-id`, `data-image-src`, `data-alt-text-id`, and other
+  // editor annotations to be stripped from the generated HTML. That made
+  // it impossible for the editor to re-open or re-edit the site later.
+  //
+  // Keep data-* attributes in the output so the editor and other tooling
+  // can continue to rely on them. If you want to remove specific
+  // attributes instead, replace the line above with a targeted regex.
 
   return result;
 }
