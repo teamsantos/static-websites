@@ -53,7 +53,7 @@ async function processImages(images, projectName) {
     const updatedImages = {};
     const bucketName = process.env.S3_BUCKET_NAME;
     const uploadPromises = [];
-
+    logger.debug("images: ", images)
     for (const [key, value] of Object.entries(images)) {
         // Check if it's a URL (starts with http/https) or a data URL (base64 image content)
         if (typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://'))) {
@@ -265,7 +265,7 @@ async function invalidateCloudFront(projectName) {
                 output => output.OutputKey === 'DistributionId'
             )?.OutputValue;
         } else {
-             logger.info(`[CloudFront] Using configured distribution ID: ${distributionId}`);
+            logger.info(`[CloudFront] Using configured distribution ID: ${distributionId}`);
         }
 
         if (!distributionId) {
