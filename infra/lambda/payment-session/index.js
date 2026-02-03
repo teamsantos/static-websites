@@ -41,9 +41,12 @@ async function projectNameExists(logger, s3, bucketName, projectName) {
 /**
  * Normalize image paths to canonical /projects/<project>/images/<...> shape.
  * Leaves http(s) and data URLs untouched.
+ * Handles temporary uploads (temp-uploads/) by mapping them to final project paths.
  */
 function normalizeImagesForProject(images = {}, projectName) {
     const normalized = {};
+    const tempImageMoves = {};
+
     for (const [k, v] of Object.entries(images || {})) {
         if (typeof v !== 'string') {
             normalized[k] = v;
@@ -54,6 +57,32 @@ function normalizeImagesForProject(images = {}, projectName) {
         if (lower.startsWith('http://') || lower.startsWith('https://') || lower.startsWith('data:')) {
             normalized[k] = v;
             continue;
+        }
+
+        // Handle temporary uploads from S3
+        if (v.startsWith('temp-uploads/')) {
+             // Format: temp-uploads/UUID-filename.ext
+             // We want to extract the original filename.
+             // The key structure is: temp-uploads/<36-char-uuid>-<original-filename>
+             
+             const parts = v.split('/');
+             const filenameWithUuid = parts.length > 1 ? parts[1] : parts[0];
+             
+             // Extract filename: UUID is 36 chars + 1 hyphen = 37 chars prefix
+             let filename = filenameWithUuid;
+             if (filenameWithUuid.length > 37) {
+                 filename = filenameWithUuid.substring(37);
+             }
+             
+             // Ensure clean filename
+             filename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+             
+             const finalKey = `projects/${projectName}/images/${filename}`;
+             const finalPath = `/${finalKey}`; 
+             
+             normalized[k] = finalPath;
+             tempImageMoves[v] = finalKey;
+             continue;
         }
 
         if (v.startsWith('/projects/')) {
@@ -75,7 +104,7 @@ function normalizeImagesForProject(images = {}, projectName) {
 
         normalized[k] = `/projects/${projectName}/images/${cleaned}`;
     }
-    return normalized;
+    return { normalized, tempImageMoves };
 }
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();
@@ -227,11 +256,13 @@ export const handler = async (event, context) => {
             });
 
             // ✅ Normalize images and save metadata to DynamoDB
-            const normalizedImages = normalizeImagesForProject(images || {}, projectName);
+            const { normalized: normalizedImages, tempImageMoves } = normalizeImagesForProject(images || {}, projectName);
+            
             await saveMetadata(logger, operationKey, {
                 email,
                 projectName,
                 images: Object.keys(normalizedImages).length > 0 ? normalizedImages : (images || {}),
+                tempImageMoves, // Save the moves mapping for generation step
                 langs: cleanedLangs,
                 textColors,
                 sectionBackgrounds,

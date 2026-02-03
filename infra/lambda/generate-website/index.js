@@ -59,6 +59,9 @@ async function processImages(images, projectName) {
         if (typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://'))) {
             // It's already a URL, keep as is
             updatedImages[key] = value;
+        } else if (typeof value === 'string' && value.startsWith('/projects/')) {
+            // It's a path to a project file (possibly moved from temp)
+            updatedImages[key] = value;
         } else if (typeof value === 'string' && value.startsWith('data:image/')) {
             // It's base64 image data, optimize and upload to S3 (PARALLEL)
             const matches = value.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/);
@@ -306,6 +309,46 @@ async function invalidateCloudFront(projectName) {
 
 
 /**
+ * Move temporary images from temp-uploads/ to their final destination
+ */
+async function moveTempImages(tempImageMoves) {
+    if (!tempImageMoves || Object.keys(tempImageMoves).length === 0) {
+        return;
+    }
+
+    const bucketName = process.env.S3_BUCKET_NAME;
+    const movePromises = Object.entries(tempImageMoves).map(async ([sourceKey, destKey]) => {
+        try {
+            logger.info(`[S3] Moving image from ${sourceKey} to ${destKey}`);
+            
+            // Copy object
+            await s3.copyObject({
+                Bucket: bucketName,
+                CopySource: `${bucketName}/${sourceKey}`,
+                Key: destKey,
+                CacheControl: "public, max-age=31536000",
+                ContentType: "image/jpeg" // We might want to detect this, but S3 metadata usually carries it over
+            }).promise();
+
+            // Delete original (optional, but good for cleanup)
+            // We can rely on lifecycle rules too, but explicit delete is faster cleanup
+            await s3.deleteObject({
+                Bucket: bucketName,
+                Key: sourceKey
+            }).promise();
+
+            logger.info(`[S3] Successfully moved image to ${destKey}`);
+        } catch (error) {
+            logger.error(`[S3] Failed to move image from ${sourceKey} to ${destKey}:`, error);
+            // Don't throw, proceed with other images. 
+            // If copy fails, the image link in HTML will be broken (404), but site will generate.
+        }
+    });
+
+    await Promise.all(movePromises);
+}
+
+/**
  * Core website generation logic (used by both API Gateway and SQS handlers)
  */
 async function generateWebsiteCore(operationId) {
@@ -320,11 +363,16 @@ async function generateWebsiteCore(operationId) {
     }
 
     const metadata = metadataResponse.Item;
-    const { images, langs, templateId, email, projectName, textColors, sectionBackgrounds, signature } = metadata;
+    const { images, langs, templateId, email, projectName, textColors, sectionBackgrounds, signature, tempImageMoves } = metadata;
 
     // Validate metadata
     if (!images || !langs || !templateId || !email || !projectName) {
         throw new Error('Invalid metadata: missing required fields (images, langs, templateId, email, projectName)');
+    }
+
+    // Move temporary images to permanent location if needed
+    if (tempImageMoves) {
+        await moveTempImages(tempImageMoves);
     }
 
     // Process images: upload new ones to S3 and update paths

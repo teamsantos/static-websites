@@ -417,6 +417,7 @@ export class EditingManager {
 
         // Clear the image
         this.selectedImageSrc = '';
+        this.selectedFile = null;
 
         // Update preview
         if (preview.tagName === 'IMG') {
@@ -442,7 +443,8 @@ export class EditingManager {
         // Don't remove modal - let user preview and save
     }
 
-    processNewImage(file) {
+    processNewImage(file, imageId) {
+        this.selectedFile = file;
         const reader = new FileReader();
         reader.onload = (e) => {
             const newSrc = e.target.result;
@@ -472,8 +474,19 @@ export class EditingManager {
     saveImageEdit(imageId, saveBtn) {
         // Apply the selected image to the actual element
         if (this.editor.currentEditingElement) {
-            this.editor.currentEditingElement.setAttribute('src', this.selectedImageSrc);
-            this.editor.images[imageId] = this.selectedImageSrc;
+            // Check if explicitly cleared (empty string) or if we have a new selection
+            if (this.selectedImageSrc !== null) {
+                this.editor.currentEditingElement.setAttribute('src', this.selectedImageSrc);
+                this.editor.images[imageId] = this.selectedImageSrc;
+
+                // Update the file registry
+                if (this.selectedFile) {
+                    this.editor.imageFiles[imageId] = this.selectedFile;
+                } else if (this.selectedImageSrc === '') {
+                    // Image was removed
+                    delete this.editor.imageFiles[imageId];
+                }
+            }
             this.editor.ui.showStatus('Image updated successfully', 'success');
         }
 
@@ -483,6 +496,7 @@ export class EditingManager {
         this.editor.cancelCurrentEdit();
         this.currentModal = null;
         this.selectedImageSrc = null;
+        this.selectedFile = null;
     }
 
     // Available Font Awesome icons for selection (commonly used icons)

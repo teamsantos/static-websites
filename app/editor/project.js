@@ -60,10 +60,19 @@ export class ProjectManager {
 
         this.editor.ui.showStatus('Creating project...', 'info');
 
-        // Get the export data (images, langs, templateId)
-        const exportData = this.editor.collectExportData();
-
         try {
+            // Upload images first
+            let s3Keys = {};
+            if (Object.keys(this.editor.imageFiles).length > 0) {
+                s3Keys = await this.editor.upload.uploadImages();
+            }
+
+            // Get the export data (images, langs, templateId)
+            const exportData = this.editor.collectExportData();
+
+            // Replace Base64 images with S3 keys in the export data
+            const imagesWithKeys = { ...exportData.images, ...s3Keys };
+
             const response = await fetch("https://pay.e-info.click/checkout-session", {
                 method: "POST",
                 headers: {
@@ -71,6 +80,7 @@ export class ProjectManager {
                 },
                 body: JSON.stringify({
                     ...exportData,
+                    images: imagesWithKeys, // Use the updated images map
                     email,
                     projectName,
                     priceId: "price_1S5P4zHSl67hemuh5NUTtsRg"

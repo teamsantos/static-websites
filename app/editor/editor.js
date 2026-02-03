@@ -8,12 +8,14 @@ import { EditingManager } from './editing.js';
 import { UtilsManager } from './utils.js';
 import { SectionManager } from './sections.js';
 import { HeroImagesEditor } from './hero-images.js';
+import { UploadManager } from './upload.js';
 
 class TemplateEditor {
     constructor() {
         this.templateContent = null;
         this.translations = {};
         this.images = {};
+        this.imageFiles = {}; // Store raw File objects for upload
         this.icons = {};
         this.iconColors = {};
         this.iconStyles = {};
@@ -38,6 +40,7 @@ class TemplateEditor {
         this.utils = new UtilsManager(this);
         this.sections = new SectionManager(this);
         this.heroImages = new HeroImagesEditor(this);
+        this.upload = new UploadManager(this);
 
         this.init();
     }

@@ -346,6 +346,46 @@ export class CreateProjectStack extends cdk.Stack {
                 ],
             });
 
+        // Request Upload Lambda - Generates presigned URLs for temporary uploads
+        const requestUploadFunction = new lambda.Function(this, 'RequestUploadFunction', {
+            functionName: 'request-upload',
+            runtime: lambda.Runtime.NODEJS_18_X,
+            code: lambda.Code.fromAsset('lambda/request-upload'),
+            handler: 'index.handler',
+            environment: {
+                S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
+            },
+            timeout: cdk.Duration.seconds(10),
+        });
+
+        // Set CloudWatch log retention
+        new logs.LogRetention(this, 'RequestUploadLogRetention', {
+            logGroupName: requestUploadFunction.logGroup.logGroupName,
+            retention: logs.RetentionDays.ONE_MONTH,
+        });
+
+        // Grant permissions to put objects in the bucket
+        requestUploadFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['s3:PutObject'],
+            resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/temp-uploads/*`],
+        }));
+
+        // API Gateway endpoint for request-upload
+        const requestUploadResource = this.api.root.addResource('request-upload');
+        requestUploadResource.addMethod('POST', new apigateway.LambdaIntegration(requestUploadFunction, {
+            integrationResponses: [
+                { statusCode: '200' },
+                { statusCode: '400' },
+                { statusCode: '500' },
+            ],
+        }), {
+            methodResponses: [
+                { statusCode: '200' },
+                { statusCode: '400' },
+                { statusCode: '500' },
+            ],
+        });
+
         // ============================================================
         // Project Management Logic (Merged)
         // ============================================================

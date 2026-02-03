@@ -119,5 +119,37 @@ export class BucketStack extends cdk.Stack {
             description: "ARN of the S3 bucket for static websites",
             exportName: `${this.stackName}-BucketArn`,
         });
+
+        // Add Lifecycle Rule for temporary uploads
+        new custom.AwsCustomResource(this, "BucketLifecycleConfiguration", {
+            onUpdate: {
+                service: "S3",
+                action: "putBucketLifecycleConfiguration",
+                parameters: {
+                    Bucket: props.bucketName,
+                    LifecycleConfiguration: {
+                        Rules: [
+                            {
+                                ID: "TempUploadsExpiration",
+                                Status: "Enabled",
+                                Filter: {
+                                    Prefix: "temp-uploads/",
+                                },
+                                Expiration: {
+                                    Days: 1,
+                                },
+                            },
+                        ],
+                    },
+                },
+                physicalResourceId: custom.PhysicalResourceId.of(`bucket-lifecycle-${props.bucketName}`),
+            },
+            policy: custom.AwsCustomResourcePolicy.fromStatements([
+                new iam.PolicyStatement({
+                    actions: ["s3:PutLifecycleConfiguration"],
+                    resources: [bucket.bucketArn],
+                }),
+            ]),
+        });
     }
 }

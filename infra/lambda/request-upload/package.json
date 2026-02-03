@@ -1,0 +1,10 @@
+{
+  "name": "request-upload",
+  "version": "1.0.0",
+  "description": "Generates presigned URLs for temporary S3 uploads",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/s3-request-presigner": "^3.0.0"
+  }
+}
