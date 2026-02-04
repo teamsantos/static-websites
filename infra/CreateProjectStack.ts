@@ -364,9 +364,9 @@ export class CreateProjectStack extends cdk.Stack {
             retention: logs.RetentionDays.ONE_MONTH,
         });
 
-        // Grant permissions to put objects in the bucket
+        // Grant permissions to put objects in the bucket (include tagging used by SDK)
         requestUploadFunction.addToRolePolicy(new iam.PolicyStatement({
-            actions: ['s3:PutObject'],
+            actions: ['s3:PutObject', 's3:PutObjectTagging'],
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/temp-uploads/*`],
         }));
 
