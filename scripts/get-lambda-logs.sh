@@ -6,7 +6,11 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 # Resolve LAMBDA_BASE_DIR from the script directory (scripts/) -> ../infra/lambda
 LAMBDA_BASE_DIR="$(cd "$SCRIPT_DIR/.." &> /dev/null && pwd)/infra/lambda"
 
-echo "Lambda base directory: $LAMBDA_BASE_DIR"
+# Print the base directory when running normally (but avoid printing when
+# invoked for completion helpers like --complete-names or --enable-completion).
+if [ "$1" != "--complete-names" ] && [ "$1" != "--enable-completion" ]; then
+  echo "Lambda base directory: $LAMBDA_BASE_DIR"
+fi
 
 # Check if base dir exists
 if [ ! -d "$LAMBDA_BASE_DIR" ]; then
@@ -98,6 +102,77 @@ get_logs() {
       --output text
   fi
 }
+
+# --- Bash completion support ---
+# Print available lambda names (one per line). This is used by the
+# completion function and can be invoked directly by the completion
+# helper (see --complete-names below).
+list_lambda_names() {
+  # Use same logic as interactive listing: list directories under base
+  if [ ! -d "$LAMBDA_BASE_DIR" ]; then
+    return 1
+  fi
+
+  for dir in "$LAMBDA_BASE_DIR"/*/; do
+    [ -d "$dir" ] && basename "$dir"
+  done
+}
+
+# If the script is called with --complete-names, just print names and exit.
+if [ "$1" = "--complete-names" ]; then
+  list_lambda_names
+  exit 0
+fi
+
+# A function to register bash completion for common invocations of this script.
+# To enable completion in the current shell session run:
+#   source ./scripts/get-lambda-logs.sh --enable-completion
+enable_completion() {
+  # Define the completion function
+  _get_lambda_logs_completion() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    # If previous word is --latest, complete with lambda names
+    if [[ "$prev" == "--latest" ]]; then
+      # ask the script for available names. Use exported variable if available
+      local script_call
+      script_call="${GET_LAMBDA_LOGS_SCRIPT:-$BASH_SOURCE}"
+      mapfile -t opts < <("$script_call" --complete-names 2>/dev/null)
+      COMPREPLY=( $(compgen -W "${opts[*]}" -- "$cur") )
+      return 0
+    fi
+
+    # Otherwise complete options
+    opts="--latest --help --enable-completion --complete-names"
+    COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+    return 0
+  }
+
+  # Register completion for a few likely ways the script is invoked.
+  # Use the path of this file as sourced (BASH_SOURCE[0]).
+  local script_basename="$(basename "${BASH_SOURCE[0]}")"
+  local script_abspath="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)/$script_basename"
+  # Export a variable so the completion function can invoke the absolute path
+  GET_LAMBDA_LOGS_SCRIPT="$script_abspath"
+  export GET_LAMBDA_LOGS_SCRIPT
+  # Register for: basename, ./basename, absolute path
+  complete -F _get_lambda_logs_completion "$script_basename"
+  complete -F _get_lambda_logs_completion "./$script_basename"
+  complete -F _get_lambda_logs_completion "$script_abspath"
+
+  echo "Bash completion registered for: $script_basename  ./$(basename "$script_abspath")  $script_abspath"
+  echo "Tab-complete after typing '--latest' to see lambda names. To persist, add this file to your shell startup or copy the completion block to your completion dir."
+}
+
+# If asked, enable completion and exit (only works when sourced into current shell).
+if [ "$1" = "--enable-completion" ]; then
+  enable_completion
+  # When sourced, return instead of exiting the user's shell
+  return 0 2>/dev/null || exit 0
+fi
 
 LAMBDA_NAME=""
 AUTO_LATEST=false

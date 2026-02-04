@@ -26,7 +26,8 @@ export class ModalManager {
                     </div>
                     <div class="form-group">
                         <label for="project-name">Project Name:</label>
-                        <input type="text" id="project-name" placeholder="my-project" required>
+                        <input type="text" id="project-name" placeholder="my-project" required pattern="[A-Za-z0-9-]+" title="Only letters, numbers and hyphens allowed (no spaces).">
+                        <small id="project-name-error" class="error-message" style="color: #ef4444; display: none;">Project name contains invalid characters — they were removed.</small>
                         <small class="url-preview">Your project URL will be: <span id="url-preview">my-project.e-info.click</span></small>
                     </div>
                 </div>
@@ -58,11 +59,44 @@ export class ModalManager {
             projectNameInput.value = savedProjectName;
         }
 
-        // Update URL preview on input
+        // Update URL preview on input and sanitize value
         const urlPreview = modal.querySelector('#url-preview');
+        const projectNameError = modal.querySelector('#project-name-error');
+
+        // Helper: sanitize project name for use as a subdomain label
+        function sanitizeProjectName(raw) {
+            // Replace whitespace with hyphens, then remove any character that's not A-Z a-z 0-9 or hyphen
+            let s = raw.replace(/\s+/g, '-');
+            const before = s;
+            s = s.replace(/[^A-Za-z0-9-]/g, '');
+            // Trim leading/trailing hyphens
+            s = s.replace(/^[-]+|[-]+$/g, '');
+            return { sanitized: s, changed: s !== before };
+        }
+
         projectNameInput.addEventListener('input', () => {
-            const name = projectNameInput.value.trim() || 'my-project';
-            urlPreview.textContent = `${name}.e-info.click`;
+            const raw = projectNameInput.value;
+            const { sanitized, changed } = sanitizeProjectName(raw);
+
+            if (sanitized !== raw) {
+                // Update input value to the sanitized version to prevent invalid characters
+                const selectionStart = projectNameInput.selectionStart;
+                projectNameInput.value = sanitized;
+                // Try to restore cursor position (clamped)
+                const pos = Math.min(selectionStart || 0, sanitized.length);
+                projectNameInput.setSelectionRange(pos, pos);
+            }
+
+            // Show a brief error if changes were made
+            if (changed) {
+                projectNameError.style.display = 'block';
+                clearTimeout(projectNameError._hideTimeout);
+                projectNameError._hideTimeout = setTimeout(() => { projectNameError.style.display = 'none'; }, 2500);
+            }
+
+            const name = (projectNameInput.value.trim()) || 'my-project';
+            // Use encodeURIComponent for safety when showing the preview (but keep the sanitized name visible)
+            urlPreview.textContent = `${encodeURIComponent(name)}.e-info.click`;
         });
 
         // Update URL preview with saved value if available
