@@ -1,6 +1,5 @@
 import AWS from "aws-sdk";
 import Stripe from "stripe";
-import crypto from "crypto";
 import { createLogger, logMetric } from "@app/shared/logger";
 import { initSentry, captureException, addBreadcrumb } from "@app/shared/sentry";
 
@@ -9,11 +8,6 @@ const dynamodb = new AWS.DynamoDB.DocumentClient();
 const sqs = new AWS.SQS();
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE || "websites-metadata";
 const QUEUE_URL = process.env.SQS_QUEUE_URL;
-
-// Keep S3 for backwards compatibility if needed
-const s3 = new AWS.S3();
-const BUCKET_NAME = process.env.S3_BUCKET_NAME || "teamsantos-static-websites";
-const METADATA_KEY = "metadata.json";
 
 /**
  * Stripe Webhook Handler

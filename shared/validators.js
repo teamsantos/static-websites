@@ -124,28 +124,45 @@ export const validateImages = (images, maxImages = 5) => {
         return { valid: false, error: `Too many images. Maximum ${maxImages} allowed, got ${imageKeys.length}` };
     }
 
+    // Helper to detect acceptable filesystem/relative paths
+    const isPath = (val) => {
+        if (typeof val !== 'string' || val.length === 0) return false;
+        // absolute path (/images/foo.png)
+        if (val.startsWith('/')) return true;
+        // relative path (./, ../ or folder/file.jpg)
+        if (val.startsWith('./') || val.startsWith('../')) return true;
+        // Reject strings containing a colon to avoid schemes like "javascript:" or other protocols
+        if (val.includes(':')) return false;
+        // Allow common path characters
+        return /^[A-Za-z0-9_\-./]+$/.test(val);
+    };
+
     // Validate each image
     for (const [key, value] of Object.entries(images)) {
-        // Check if it's a URL (already uploaded) or base64 data
-        if (typeof value === 'string') {
-            if (value.startsWith('http://') || value.startsWith('https://')) {
-                // It's a URL, assume it's valid
-                continue;
-            } else if (value.startsWith('data:image/')) {
-                // It's base64, validate it
-                const result = validateImageData(value);
-                if (!result.valid) {
-                    return { valid: false, error: `Image '${key}': ${result.error}` };
-                }
-            } else if (value.startsWith('/')) {
-                // It's a path, assume it's valid
-                continue;
-            } else {
-                return { valid: false, error: `Image '${key}': Invalid format. Must be URL, path, or base64` };
-            }
-        } else {
+        if (typeof value !== 'string') {
             return { valid: false, error: `Image '${key}': Value must be a string` };
         }
+
+        // Full URL
+        if (value.startsWith('http://') || value.startsWith('https://')) {
+            continue;
+        }
+
+        // Base64 data URL
+        if (value.startsWith('data:image/')) {
+            const result = validateImageData(value);
+            if (!result.valid) {
+                return { valid: false, error: `Image '${key}': ${result.error}` };
+            }
+            continue;
+        }
+
+        // Accept absolute or relative paths
+        if (isPath(value)) {
+            continue;
+        }
+
+        return { valid: false, error: `Image '${key}': Invalid format. Must be base64, full URL, or relative/absolute path` };
     }
 
     return { valid: true, error: null };
