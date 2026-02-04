@@ -16,6 +16,7 @@ interface StripeCheckoutProps extends cdk.StackProps {
   s3Bucket?: string;
   stripeWebhookSecret?: string;
   metadataTable?: dynamodb.Table;
+  idempotencyTable?: dynamodb.Table;
   sqsQueueUrl?: string;
   sqsQueueArn?: string;
   emailTemplateStack?: EmailTemplateStack;
@@ -46,13 +47,14 @@ export class StripeCheckoutStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_18_X,
       code: lambda.Code.fromAsset("lambda/payment-session"),
       handler: "index.handler",
-       environment: {
-         STRIPE_SECRET_KEY: props.stripeSecretKey,
-         FRONTEND_URL: props.frontendUrl,
-         S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
-         DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
-         SEND_EMAIL_FUNCTION: props.emailTemplateStack?.sendEmailFunctionName || "send-email",
-       },
+        environment: {
+          STRIPE_SECRET_KEY: props.stripeSecretKey,
+          FRONTEND_URL: props.frontendUrl,
+          S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
+          DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
+          DYNAMODB_IDEMPOTENCY_TABLE: props.idempotencyTable?.tableName || "request-idempotency",
+          SEND_EMAIL_FUNCTION: props.emailTemplateStack?.sendEmailFunctionName || "send-email",
+        },
        timeout: cdk.Duration.seconds(30),
      });
     this.paymentSessionFunctionName = checkoutFunction.functionName;
@@ -134,6 +136,12 @@ checkoutFunction.addToRolePolicy(
     if (props.metadataTable) {
       props.metadataTable.grantReadWriteData(checkoutFunction);
       props.metadataTable.grantReadWriteData(webhookFunction);
+    }
+
+    // Grant idempotency table permissions if provided (used by request idempotency cache)
+    if (props.idempotencyTable) {
+      props.idempotencyTable.grantReadWriteData(checkoutFunction);
+      props.idempotencyTable.grantReadWriteData(webhookFunction);
     }
 
     // Grant SQS send permissions to webhook Lambda
@@ -226,4 +234,3 @@ checkoutFunction.addToRolePolicy(
     );
   }
 }
-
