@@ -156,7 +156,7 @@ export class CreateProjectStack extends cdk.Stack {
                 's3:CopyObject',
                 's3:PutObject',
                 's3:PutObjectAcl',
-                's3:DeleteObject' // optional if you remove the temp file
+                's3:DeleteObject'
             ],
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
         }));
