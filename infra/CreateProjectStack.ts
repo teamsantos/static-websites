@@ -153,9 +153,11 @@ export class CreateProjectStack extends cdk.Stack {
             actions: [
                 's3:GetObject',
                 's3:GetObjectAcl',
+                's3:GetObjectTagging',
                 's3:CopyObject',
                 's3:PutObject',
                 's3:PutObjectAcl',
+                's3:PutObjectTagging',
                 's3:DeleteObject'
             ],
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
