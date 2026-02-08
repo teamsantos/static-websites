@@ -61,7 +61,13 @@ async function processImages(images, projectName) {
             updatedImages[key] = value;
         } else if (typeof value === 'string' && value.startsWith('/projects/')) {
             // It's a path to a project file (possibly moved from temp)
-            updatedImages[key] = value;
+            // Remove /projects/<projectName> prefix if present to make path relative to project root
+            const prefix = `/projects/${projectName}`;
+            if (value.startsWith(prefix)) {
+                updatedImages[key] = value.substring(prefix.length);
+            } else {
+                updatedImages[key] = value;
+            }
         } else if (typeof value === 'string' && value.startsWith('data:image/')) {
             // It's base64 image data, optimize and upload to S3 (PARALLEL)
             const matches = value.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/);
