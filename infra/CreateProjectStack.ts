@@ -150,7 +150,14 @@ export class CreateProjectStack extends cdk.Stack {
         }));
 
         generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
-            actions: ['s3:GetObject', 's3:PutObject'],
+            actions: [
+                's3:GetObject',
+                's3:GetObjectAcl',
+                's3:CopyObject',
+                's3:PutObject',
+                's3:PutObjectAcl',
+                's3:DeleteObject' // optional if you remove the temp file
+            ],
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
         }));
 
@@ -233,24 +240,24 @@ export class CreateProjectStack extends cdk.Stack {
                 },
             ],
         }), {
-                methodResponses: [
-                    {
-                        statusCode: '200',
-                    },
-                    {
-                        statusCode: '400',
-                    },
-                    {
-                        statusCode: '403',
-                    },
-                    {
-                        statusCode: '409',
-                    },
-                    {
-                        statusCode: '500',
-                    },
-                ],
-            });
+            methodResponses: [
+                {
+                    statusCode: '200',
+                },
+                {
+                    statusCode: '400',
+                },
+                {
+                    statusCode: '403',
+                },
+                {
+                    statusCode: '409',
+                },
+                {
+                    statusCode: '500',
+                },
+            ],
+        });
 
         const generateWebsiteResource = this.api.root.addResource('generate-website');
         generateWebsiteResource.addMethod('POST', new apigateway.LambdaIntegration(generateWebsiteFunction, {
@@ -269,21 +276,21 @@ export class CreateProjectStack extends cdk.Stack {
                 },
             ],
         }), {
-                methodResponses: [
-                    {
-                        statusCode: '200',
-                    },
-                    {
-                        statusCode: '400',
-                    },
-                    {
-                        statusCode: '403',
-                    },
-                    {
-                        statusCode: '500',
-                    },
-                ],
-            });
+            methodResponses: [
+                {
+                    statusCode: '200',
+                },
+                {
+                    statusCode: '400',
+                },
+                {
+                    statusCode: '403',
+                },
+                {
+                    statusCode: '500',
+                },
+            ],
+        });
 
         // Contact Form Lambda - handles form submissions from generated websites
         let contactFormFunction = props.contactFormFunction;
@@ -338,13 +345,13 @@ export class CreateProjectStack extends cdk.Stack {
                 { statusCode: '500' },
             ],
         }), {
-                methodResponses: [
-                    { statusCode: '200' },
-                    { statusCode: '400' },
-                    { statusCode: '404' },
-                    { statusCode: '500' },
-                ],
-            });
+            methodResponses: [
+                { statusCode: '200' },
+                { statusCode: '400' },
+                { statusCode: '404' },
+                { statusCode: '500' },
+            ],
+        });
 
         // Request Upload Lambda - Generates presigned URLs for temporary uploads
         const requestUploadFunction = new lambda.Function(this, 'RequestUploadFunction', {
