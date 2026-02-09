@@ -100,7 +100,7 @@ const injectTemplates = (templates, selectText) => {
         scrolling="no"
         loading="lazy"
         sandbox="allow-scripts allow-same-origin allow-forms"
-        class="template-iframe">
+        class="template-screenshot">
     </iframe>`)
             }
 </div>
