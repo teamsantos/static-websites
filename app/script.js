@@ -36,9 +36,9 @@ const injectPlans = (plans) => {
 
 <div class="plan-action">
     ${isComingSoon
-                ? `<button class="btn btn-disabled coming-soon-btn" disabled>Coming Soon</button>`
-                : `<button class="btn btn-primary pay-btn" redirect-to="_templates">Choose Plan</button>`
-            }
+    ? `<button class="btn btn-disabled coming-soon-btn" disabled>Coming Soon</button>`
+    : `<button class="btn btn-primary pay-btn" redirect-to="_templates">Choose Plan</button>`
+    }
 </div>
 `;
         // Handle click events for coming soon
@@ -75,79 +75,54 @@ const injectTemplates = (templates, selectText) => {
     templates.forEach((template) => {
         const card = document.createElement("div");
         card.className = `template-card ${template.comingSoon ? 'coming-soon' : ''}`;
-        const useText = template.comingSoon ? 'Coming Soon' : selectText;
         const previewText = 'Preview';
-        const useButtonClass = `${template.comingSoon ? 'btn btn-secondary btn-full hidden' : 'btn btn-primary btn-full'} `;
-        const previewButtonClass = 'btn btn-secondary btn-full';
+        const previewButtonClass = template.comingSoon ? 'btn btn-secondary btn-full disabled' : 'btn btn-primary btn-full';
 
         card.innerHTML = `
 <div class="template-image">
     ${template.comingSoon
-                ? `<div class="frame-placeholder">
+    ? `<div class="frame-placeholder">
         <div class="placeholder-content">
             <span>Preview Coming Soon</span>
         </div>
         <div class="coming-soon-badge">Coming Soon</div>
     </div>`
-                : (template.screenshot ? `<img 
+    : `<img 
         src="${template.screenshot}"
         alt="${template.title} Preview"
         loading="lazy"
         class="template-screenshot"
-    />`: `<iframe src="https://${template.name}.${templatesURL}"
-        title="${template.title} Preview"
-        frameborder="0"
-        scrolling="no"
-        loading="lazy"
-        sandbox="allow-scripts allow-same-origin allow-forms"
-        class="template-screenshot">
-    </iframe>`)
-            }
+    />`
+    }
 </div>
 <div class="template-content">
     <div class="template-header">
         <h3>${template.title}</h3>
     </div>
     <p>${template.description}</p>
-
-    <button class="${useButtonClass} hidden" ${template.comingSoon ? 'disabled' : ''}>
-        ${useText}
-    </button>
 </div>
 <div class="template-content template-button">
-    <button class="${useButtonClass}" ${template.comingSoon ? 'disabled' : ''}>
-        ${useText}
+    <button class="${previewButtonClass}" ${template.comingSoon ? 'disabled' : ''}>
+        ${template.comingSoon ? 'Coming Soon' : previewText}
     </button>
-    ${!template.comingSoon ? `<button class="${previewButtonClass}">
-        ${previewText}
-    </button>` : ''}
 </div>
 `;
         // Handle click events
         if (!template.comingSoon) {
             card.style.cursor = "pointer";
 
-            // Handle "Use this website" button clicks
-            const useButtons = card.querySelectorAll('.btn-primary');
-            useButtons.forEach(btn => {
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    window.location.href = `${editorURL}${template.name}`;
-                };
-            });
-
             // Handle "Preview" button clicks
-            const previewButtons = card.querySelectorAll('.btn-secondary:not(.hidden)');
-            previewButtons.forEach(btn => {
-                btn.onclick = (e) => {
+            const previewButton = card.querySelector('.btn-primary');
+            if (previewButton) {
+                previewButton.onclick = (e) => {
                     e.stopPropagation();
-                    window.open(`https://${template.name}.${templatesURL}`, '_blank');
+                    showPreviewModal(template);
                 };
-            });
+            }
 
-            // Card click goes to editor
+            // Card click opens preview modal
             card.onclick = () => {
-                window.location.href = `${editorURL}${template.name}`;
+                showPreviewModal(template);
             };
         } else if (template.comingSoon) {
             card.style.cursor = "default";
@@ -161,6 +136,162 @@ const injectTemplates = (templates, selectText) => {
     container.appendChild(fragment);
 };
 
+// Preview Modal Functions
+const createPreviewModal = () => {
+    // Remove existing modal if any
+    const existingModal = document.querySelector('.preview-modal-overlay');
+    if (existingModal) existingModal.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'preview-modal-overlay';
+    overlay.innerHTML = `
+<div class="preview-modal">
+    <div class="preview-modal-header">
+        <div class="preview-modal-title">
+            <h3 class="preview-title-text">Template Preview</h3>
+            <span class="preview-modal-badge">Preview</span>
+        </div>
+        <div class="preview-modal-actions">
+            <div class="preview-device-selector">
+                <button class="preview-device-btn active" data-device="desktop" title="Desktop view">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                </button>
+                <button class="preview-device-btn" data-device="tablet" title="Tablet view">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                        <line x1="12" y1="18" x2="12.01" y2="18"/>
+                    </svg>
+                </button>
+                <button class="preview-device-btn" data-device="mobile" title="Mobile view">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                        <line x1="12" y1="18" x2="12.01" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <button class="preview-modal-close" title="Close preview">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div class="preview-modal-body">
+        <div class="preview-modal-loading">
+            <div class="preview-modal-spinner"></div>
+            <span>Loading preview...</span>
+        </div>
+        <div class="preview-iframe-container desktop">
+            <iframe class="preview-modal-iframe" title="Template Preview" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+        </div>
+    </div>
+    <div class="preview-modal-footer">
+        <div class="preview-modal-info">
+            <p class="preview-description-text">Preview this template before editing</p>
+        </div>
+        <div class="preview-modal-buttons">
+            <button class="btn btn-secondary preview-open-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                Open in New Tab
+            </button>
+            <button class="btn btn-primary preview-edit-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit Template
+            </button>
+        </div>
+    </div>
+</div>
+`;
+
+    document.body.appendChild(overlay);
+    return overlay;
+};
+
+const showPreviewModal = (template) => {
+    const overlay = createPreviewModal();
+    const iframe = overlay.querySelector('.preview-modal-iframe');
+    const loading = overlay.querySelector('.preview-modal-loading');
+    const closeBtn = overlay.querySelector('.preview-modal-close');
+    const openBtn = overlay.querySelector('.preview-open-btn');
+    const editBtn = overlay.querySelector('.preview-edit-btn');
+    const deviceBtns = overlay.querySelectorAll('.preview-device-btn');
+    const iframeContainer = overlay.querySelector('.preview-iframe-container');
+    const titleText = overlay.querySelector('.preview-title-text');
+    const descriptionText = overlay.querySelector('.preview-description-text');
+
+    const templateUrl = `https://${template.name}.${templatesURL}`;
+
+    // Update modal content
+    titleText.textContent = template.title;
+    descriptionText.textContent = template.description;
+
+    // Load iframe
+    iframe.src = templateUrl;
+    iframe.onload = () => {
+        loading.classList.add('hidden');
+    };
+
+    // Show modal with animation
+    requestAnimationFrame(() => {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+
+    // Close modal function
+    const closeModal = () => {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+        setTimeout(() => overlay.remove(), 300);
+    };
+
+    // Event listeners
+    closeBtn.onclick = closeModal;
+    overlay.onclick = (e) => {
+        if (e.target === overlay) closeModal();
+    };
+
+    // Escape key to close
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+
+    // Open in new tab
+    openBtn.onclick = () => {
+        window.open(templateUrl, '_blank');
+    };
+
+    // Edit template
+    editBtn.onclick = () => {
+        window.location.href = `${editorURL}${template.name}`;
+    };
+
+    // Device switching
+    deviceBtns.forEach(btn => {
+        btn.onclick = () => {
+            deviceBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const device = btn.dataset.device;
+            iframeContainer.className = `preview-iframe-container ${device}`;
+        };
+    });
+};
+
 const showComingSoonNotification = (templateName, plan = false) => {
     // Create a simple notification
     const notification = document.createElement('div');
@@ -169,9 +300,9 @@ const showComingSoonNotification = (templateName, plan = false) => {
 <div class="notification-content">
     <h4>Coming Soon!</h4>
     ${!plan
-            ? `<p>The ${templateName} template is currently in development. Check back soon!</p>`
-            : ''
-        }
+    ? `<p>The ${templateName} template is currently in development. Check back soon!</p>`
+    : ''
+    }
     <button class="btn btn-primary notification-close">Got it</button>
 </div>
 `;
