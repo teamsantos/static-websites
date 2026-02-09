@@ -168,15 +168,6 @@
        "subTitle": "Dental",
        "order": 2,
        "url": "./templates/bussinessCardTest/index.html"
-     },
-     {
-       "id": "modern-header",
-       "name": "Modern Header",
-       "description": "Modern header template",
-       "imageURL": "./templates/modern-header/images/placeholder.jpg",
-       "subTitle": "Header",
-       "order": 3,
-       "url": "./templates/modern-header/index.html"
      }
    ]
 }

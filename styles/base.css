@@ -69,6 +69,19 @@ body {
     box-shadow: 0 10px 24px -12px var(--color-ring);
 }
 
+.btn-secondary {
+    background: transparent;
+    color: var(--color-border);
+    border: 2px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--color-border);
+    box-shadow: 0 4px 12px -6px var(--color-ring);
+    transform: translateY(-2px);
+}
+
 /* Glassy outline button variant */
 .btn-glass {
     backdrop-filter: blur(8px) saturate(120%);

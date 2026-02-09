@@ -16,16 +16,11 @@ templates/
 │   └── langs/
 │       └── en.json           # English translations
 ├── bussinessCardTest/        # Test business card template
-│   ├── .commingsoon          # Coming soon marker
-│   ├── index.html
-│   ├── assets/images.json
-│   ├── images/
-│   └── langs/en.json
-└── modern-header/            # Modern header template
+    ├── .commingsoon          # Coming soon marker
     ├── index.html
     ├── assets/images.json
-    ├── langs/en.json
-    └── README.md
+    ├── images/
+    └── langs/en.json
 ```
 
 ## How It Works

@@ -106,8 +106,10 @@ const injectTemplates = (templates, selectText) => {
     templates.forEach((template) => {
         const card = document.createElement("div");
         card.className = `template-card ${template.comingSoon ? 'coming-soon' : ''}`;
-        const buttonText = template.comingSoon ? 'Coming Soon' : selectText;
-        const buttonClass = `${template.comingSoon ? 'btn btn-secondary btn-full hidden' : 'btn btn-primary btn-full'} `;
+        const useText = template.comingSoon ? 'Coming Soon' : selectText;
+        const previewText = 'Preview';
+        const useButtonClass = `${template.comingSoon ? 'btn btn-secondary btn-full hidden' : 'btn btn-primary btn-full'} `;
+        const previewButtonClass = 'btn btn-secondary btn-full';
 
         card.innerHTML = `
 <div class="template-image">
@@ -132,19 +134,42 @@ const injectTemplates = (templates, selectText) => {
     </div>
     <p>${template.description}</p>
 
-    <button class="${buttonClass} hidden" ${template.comingSoon ? 'disabled' : ''}>
-        ${buttonText}
+    <button class="${useButtonClass} hidden" ${template.comingSoon ? 'disabled' : ''}>
+        ${useText}
     </button>
 </div>
 <div class="template-content template-button">
-    <button class="${buttonClass}" ${template.comingSoon ? 'disabled' : ''}>
-        ${buttonText}
+    <button class="${useButtonClass}" ${template.comingSoon ? 'disabled' : ''}>
+        ${useText}
     </button>
+    ${!template.comingSoon ? `<button class="${previewButtonClass}">
+        ${previewText}
+    </button>` : ''}
 </div>
 `;
         // Handle click events
         if (!template.comingSoon) {
             card.style.cursor = "pointer";
+            
+            // Handle "Use this website" button clicks
+            const useButtons = card.querySelectorAll('.btn-primary');
+            useButtons.forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    window.location.href = `${editorURL}${template.name}`;
+                };
+            });
+            
+            // Handle "Preview" button clicks
+            const previewButtons = card.querySelectorAll('.btn-secondary:not(.hidden)');
+            previewButtons.forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    window.open(`https://${template.name}.${templatesURL}`, '_blank');
+                };
+            });
+            
+            // Card click goes to editor
             card.onclick = () => {
                 window.location.href = `${editorURL}${template.name}`;
             };
