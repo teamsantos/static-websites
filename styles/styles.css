@@ -331,6 +331,32 @@ p {
     border-color: var(--color-ring);
 }
 
+/* Template card specific hover effects - scale up with halo glow */
+.template-card {
+    position: relative;
+}
+
+.template-card::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    background: radial-gradient(circle at center, var(--color-primary) 0%, transparent 70%);
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 300ms ease;
+    border-radius: 1.5rem;
+    filter: blur(20px);
+    pointer-events: none;
+}
+
+.template-card:hover {
+    transform: scale(1.03);
+}
+
+.template-card:hover::before {
+    opacity: 0.25;
+}
+
 .feature-item-icon,
 .plan-item-icon {
     width: 3rem;
