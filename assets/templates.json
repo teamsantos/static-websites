@@ -7,17 +7,17 @@
     "screenshot": "https://businesscard.template.e-info.click/assets/images/screenshot.webp"
   },
   {
-    "name": "bussinessCardTest",
-    "comingSoon": true,
-    "title": "SmileBright Dental - Modern Dental Care",
-    "description": "Experience cutting-edge dental care with our expert team. Comprehensive services from routine checkups to advanced cosmetic dentistry.",
-    "screenshot": null
-  },
-  {
     "name": "coffee",
     "comingSoon": false,
     "title": "Brewstone Coffee - Artisan Coffee Roasters",
     "description": "Handcrafted coffee roasted with care. Discover the perfect cup at Brewstone Coffee with our curated menu and cozy atmosphere.",
     "screenshot": "https://coffee.template.e-info.click/assets/images/screenshot.webp"
+  },
+  {
+    "name": "portfolio",
+    "comingSoon": false,
+    "title": "Studio Name - Design for Good",
+    "description": "We are a design studio building authentic brands and websites that are unique, powerful, and easy to use.",
+    "screenshot": "https://portfolio.template.e-info.click/assets/images/screenshot.webp"
   }
 ]
