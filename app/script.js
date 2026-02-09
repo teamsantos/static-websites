@@ -6,36 +6,6 @@ const baseURL = "e-info.click";
 const editorURL = `https://editor.${baseURL}?template=`;
 const templatesURL = `template.${baseURL}`;
 
-async function createCheckout(product_id) {
-    try {
-        const response = await fetch("https://pay.e-info.click/checkout-session", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email: "test@example.com",
-                name: `Project-${Date.now()}`,
-                html: "<p>Filipe is gay</p>",
-                priceId: product_id// Stripe Price ID
-            })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            console.error("Checkout creation failed:", error);
-            window.templateEditorInstance.ui.showStatus("Failed to create checkout session.", "error");
-            return;
-        }
-
-        const data = await response.json();
-        window.location.href = data.sessionUrl; // Redirect to Stripe checkout
-    } catch (err) {
-        console.error("Error creating checkout:", err);
-        window.templateEditorInstance.ui.showStatus("Something went wrong.", "error");
-    }
-}
-
 const injectPlans = (plans) => {
     const container = document.getElementById("plans");
     const fragment = document.createDocumentFragment();
@@ -71,7 +41,6 @@ const injectPlans = (plans) => {
             }
 </div>
 `;
-
         // Handle click events for coming soon
         if (isComingSoon) {
             card.style.cursor = "default";
@@ -120,12 +89,19 @@ const injectTemplates = (templates, selectText) => {
         </div>
         <div class="coming-soon-badge">Coming Soon</div>
     </div>`
-                : `<img 
-        src="https://${template.name}.${templatesURL}/assets/images/screenshot.webp" 
+                : (template.screenshot ? `<img 
+        src="${template.screenshot}"
         alt="${template.title} Preview"
         loading="lazy"
         class="template-screenshot"
-    />`
+    />`: `<iframe src="https://${template.name}.${templatesURL}"
+        title="${template.title} Preview"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        sandbox="allow-scripts allow-same-origin allow-forms"
+        class="template-iframe">
+    </iframe>`)
             }
 </div>
 <div class="template-content">
@@ -150,7 +126,7 @@ const injectTemplates = (templates, selectText) => {
         // Handle click events
         if (!template.comingSoon) {
             card.style.cursor = "pointer";
-            
+
             // Handle "Use this website" button clicks
             const useButtons = card.querySelectorAll('.btn-primary');
             useButtons.forEach(btn => {
@@ -159,7 +135,7 @@ const injectTemplates = (templates, selectText) => {
                     window.location.href = `${editorURL}${template.name}`;
                 };
             });
-            
+
             // Handle "Preview" button clicks
             const previewButtons = card.querySelectorAll('.btn-secondary:not(.hidden)');
             previewButtons.forEach(btn => {
@@ -168,7 +144,7 @@ const injectTemplates = (templates, selectText) => {
                     window.open(`https://${template.name}.${templatesURL}`, '_blank');
                 };
             });
-            
+
             // Card click goes to editor
             card.onclick = () => {
                 window.location.href = `${editorURL}${template.name}`;
