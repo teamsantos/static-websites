@@ -273,10 +273,9 @@ export const handler = async (event, context) => {
             });
 
             // ✅ Send payment confirmation email (async, don't wait for it)
-            await sendPaymentConfirmationEmail(logger, email, projectName, priceId, operationKey).catch(err => {
-                logger.warn('Failed to send payment confirmation email', { error: err.message, email });
-                // Don't fail the request if email fails
-            });
+            // await sendPaymentConfirmationEmail(logger, email, projectName, priceId, operationKey).catch(err => {
+            //     logger.warn('Failed to send payment confirmation email', { error: err.message, email });
+            // });
 
             return {
                 sessionId: session.id,
