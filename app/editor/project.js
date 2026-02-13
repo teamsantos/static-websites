@@ -73,7 +73,7 @@ export class ProjectManager {
             // Replace Base64 images with S3 keys in the export data
             const imagesWithKeys = { ...exportData.images, ...s3Keys };
 
-            const response = await fetch("https://pay.e-info.click/checkout-session", {
+            const response = await fetch("https://api.e-info.click/checkout-session", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

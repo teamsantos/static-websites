@@ -12,18 +12,26 @@ import { EmailTemplateStack } from "./EmailTemplateStack";
 interface StripeCheckoutProps extends cdk.StackProps {
   domain?: string;
   stripeSecretKey: string;
-  frontendUrl: string;
   s3Bucket?: string;
   stripeWebhookSecret?: string;
   metadataTable?: dynamodb.Table;
-  idempotencyTable?: dynamodb.Table;
   sqsQueueUrl?: string;
   sqsQueueArn?: string;
   emailTemplateStack?: EmailTemplateStack;
+  // Note: NO webAclArn - this gateway is for external webhooks only
 }
 
+/**
+ * Stripe Webhook Stack
+ * 
+ * This stack contains ONLY the Stripe webhook endpoint which receives
+ * callbacks from Stripe's servers. It should NOT have WAF origin validation
+ * because Stripe's servers don't send Origin headers.
+ * 
+ * The frontend-facing /checkout-session endpoint has been moved to
+ * CreateProjectStack (api.e-info.click) to be protected by WAF.
+ */
 export class StripeCheckoutStack extends cdk.Stack {
-  public paymentSessionFunctionName: string;
   public stripeWebhookFunctionName: string;
 
   constructor(scope: cdk.App, id: string, props: StripeCheckoutProps) {
@@ -41,30 +49,7 @@ export class StripeCheckoutStack extends cdk.Stack {
       region: "us-east-1",
     });
 
-    // Lambda for Stripe Checkout
-    const checkoutFunction = new lambda.Function(this, "StripeCheckoutFunction", {
-      functionName: 'payment-session',
-      runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset("lambda/payment-session"),
-      handler: "index.handler",
-        environment: {
-          STRIPE_SECRET_KEY: props.stripeSecretKey,
-          FRONTEND_URL: props.frontendUrl,
-          S3_BUCKET_NAME: props.s3Bucket || "teamsantos-static-websites",
-          DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
-          DYNAMODB_IDEMPOTENCY_TABLE: props.idempotencyTable?.tableName || "request-idempotency",
-          SEND_EMAIL_FUNCTION: props.emailTemplateStack?.sendEmailFunctionName || "send-email",
-        },
-       timeout: cdk.Duration.seconds(30),
-     });
-    this.paymentSessionFunctionName = checkoutFunction.functionName;
-
-    // Grant permission to invoke send-email Lambda
-    if (props.emailTemplateStack) {
-      props.emailTemplateStack.grantInvoke(checkoutFunction);
-    }
-
-    // Lambda for Stripe Webhook
+    // Lambda for Stripe Webhook ONLY (checkout-session moved to CreateProjectStack)
     const webhookFunction = new lambda.Function(this, "StripeWebhookFunction", {
       functionName: 'stripe-webhook',
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -82,39 +67,13 @@ export class StripeCheckoutStack extends cdk.Stack {
     this.stripeWebhookFunctionName = webhookFunction.functionName;
 
     // Set CloudWatch log retention to 30 days
-    new logs.LogRetention(this, 'StripeCheckoutLogRetention', {
-      logGroupName: checkoutFunction.logGroup.logGroupName,
-      retention: logs.RetentionDays.ONE_MONTH,
-    });
-
     new logs.LogRetention(this, 'StripeWebhookLogRetention', {
       logGroupName: webhookFunction.logGroup.logGroupName,
       retention: logs.RetentionDays.ONE_MONTH,
     });
 
     if (props.s3Bucket) {
-      // Allow ListBucket on the bucket
-checkoutFunction.addToRolePolicy(
-           new iam.PolicyStatement({
-               actions: ["s3:ListBucket", "s3:GetObject"],
-               resources: [
-                   `arn:aws:s3:::${props.s3Bucket}`,       // List bucket
-                   `arn:aws:s3:::${props.s3Bucket}/*`      // Read all bucket objects
-               ],
-        })
-      );
-
-      // Allow GetObject and PutObject on metadata.json
-      checkoutFunction.addToRolePolicy(
-        new iam.PolicyStatement({
-          actions: ["s3:GetObject", "s3:PutObject"],
-          resources: [
-            `arn:aws:s3:::${props.s3Bucket}/metadata.json`,
-          ],
-        })
-      );
-
-      // Webhook needs same S3 permissions
+      // Webhook needs S3 permissions
       webhookFunction.addToRolePolicy(
         new iam.PolicyStatement({
           actions: ["s3:ListBucket"],
@@ -132,16 +91,9 @@ checkoutFunction.addToRolePolicy(
       );
     }
 
-    // Grant DynamoDB permissions for lambdas
+    // Grant DynamoDB permissions for webhook lambda
     if (props.metadataTable) {
-      props.metadataTable.grantReadWriteData(checkoutFunction);
       props.metadataTable.grantReadWriteData(webhookFunction);
-    }
-
-    // Grant idempotency table permissions if provided (used by request idempotency cache)
-    if (props.idempotencyTable) {
-      props.idempotencyTable.grantReadWriteData(checkoutFunction);
-      props.idempotencyTable.grantReadWriteData(webhookFunction);
     }
 
     // Grant SQS send permissions to webhook Lambda
@@ -154,9 +106,10 @@ checkoutFunction.addToRolePolicy(
       );
     }
 
-    // API Gateway setup
-    const api = new apigateway.RestApi(this, "StripeApi", {
-      restApiName: "stripe-checkout-api",
+    // API Gateway setup - ONLY for webhooks (NO WAF protection)
+    const api = new apigateway.RestApi(this, "StripeWebhookApi", {
+      restApiName: "stripe-webhook-api",
+      description: "Stripe webhook endpoint (external access, no WAF)",
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
@@ -191,29 +144,7 @@ checkoutFunction.addToRolePolicy(
       ),
     });
 
-    // /checkout-session endpoint
-    const checkoutResource = api.root.addResource("checkout-session");
-    checkoutResource.addMethod(
-      "POST",
-      new apigateway.LambdaIntegration(checkoutFunction, {
-        integrationResponses: [
-          { statusCode: "200" },
-          { statusCode: "400" },
-          { statusCode: "403" },
-          { statusCode: "500" },
-        ],
-      }),
-      {
-        methodResponses: [
-          { statusCode: "200" },
-          { statusCode: "400" },
-          { statusCode: "403" },
-          { statusCode: "500" },
-        ],
-      }
-    );
-
-    // /webhook endpoint for Stripe events
+    // /webhook endpoint for Stripe events ONLY
     const webhookResource = api.root.addResource("webhook");
     webhookResource.addMethod(
       "POST",

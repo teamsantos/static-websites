@@ -1,71 +1,78 @@
-import * as cdk from "aws-cdk-lib";
-import * as apigateway from "aws-cdk-lib/aws-apigateway";
-import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
-import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import * as iam from "aws-cdk-lib/aws-iam";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as logs from "aws-cdk-lib/aws-logs";
-import * as route53 from "aws-cdk-lib/aws-route53";
-import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
-import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
-import * as wafv2 from "aws-cdk-lib/aws-wafv2";
-import * as path from "path";
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CreateProjectStack = void 0;
+const cdk = __importStar(require("aws-cdk-lib"));
+const apigateway = __importStar(require("aws-cdk-lib/aws-apigateway"));
+const aws_certificatemanager_1 = require("aws-cdk-lib/aws-certificatemanager");
+const iam = __importStar(require("aws-cdk-lib/aws-iam"));
+const lambda = __importStar(require("aws-cdk-lib/aws-lambda"));
+const logs = __importStar(require("aws-cdk-lib/aws-logs"));
+const route53 = __importStar(require("aws-cdk-lib/aws-route53"));
+const route53Targets = __importStar(require("aws-cdk-lib/aws-route53-targets"));
+const secretsmanager = __importStar(require("aws-cdk-lib/aws-secretsmanager"));
+const wafv2 = __importStar(require("aws-cdk-lib/aws-wafv2"));
+const path = __importStar(require("path"));
 // Import the compiled JS constant to avoid ts-node attempting to require the
 // .ts file as CommonJS (which fails in ESM packages). Point to the .js file
 // so runtime loads the JS module.
-import { DEFAULT_SENDER_EMAIL } from "./constants";
-
-interface CreateProjectProps extends cdk.StackProps {
-    ses_region: string;
-    domain?: string;
-    certificateRegion?: string;
-    s3Bucket?: string;
-    metadataTable?: dynamodb.Table;
-    idempotencyTable?: dynamodb.Table;
-    confirmationCodesTable?: dynamodb.Table;
-    sendEmailFunction?: lambda.Function;
-    contactFormFunction?: lambda.Function;
-    distributionId?: string;
-    webAclArn?: string;
-    // Stripe integration props
-    stripeSecretKey?: string;
-    frontendUrl?: string;
-    emailTemplateStack?: lambda.Function;
-}
-
-export class CreateProjectStack extends cdk.Stack {
-    public generateWebsiteFunction: lambda.Function;
-    public generateWebsiteFunctionName: string;
-    public contactFormFunctionName: string = "";
-    public paymentSessionFunctionName: string = "";
-    public stripeWebhookFunctionName: string = "";
-    public githubWebhookFunctionName: string = "";
-    public healthCheckFunctionName: string = "";
-    public api: apigateway.RestApi;
-    public getProjectsFunctionName: string = "";
-    public deleteProjectFunctionName: string = "";
-    public sendConfirmationCodeFunctionName: string = "";
-    public validateConfirmationCodeFunctionName: string = "";
-
-    constructor(scope: cdk.App, id: string, props: CreateProjectProps) {
+const constants_1 = require("./constants");
+class CreateProjectStack extends cdk.Stack {
+    constructor(scope, id, props) {
         super(scope, id, props);
-
+        this.contactFormFunctionName = "";
+        this.paymentSessionFunctionName = "";
+        this.stripeWebhookFunctionName = "";
+        this.githubWebhookFunctionName = "";
+        this.healthCheckFunctionName = "";
+        this.getProjectsFunctionName = "";
+        this.deleteProjectFunctionName = "";
+        this.sendConfirmationCodeFunctionName = "";
+        this.validateConfirmationCodeFunctionName = "";
         const domain = props?.domain || 'e-info.click';
-
         const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
             domainName: domain,
         });
-
-        const certificate = new DnsValidatedCertificate(this, 'ApiCertificate', {
+        const certificate = new aws_certificatemanager_1.DnsValidatedCertificate(this, 'ApiCertificate', {
             domainName: `api.${domain}`,
             hostedZone: hostedZone,
             region: 'us-east-1',
         });
-
         // Reference the secrets
         const githubTokenSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubToken', 'github-token');
         const githubConfigSecret = secretsmanager.Secret.fromSecretNameV2(this, 'GitHubConfig', 'github-config');
-
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
             functionName: 'create-project',
             runtime: lambda.Runtime.NODEJS_18_X,
@@ -74,7 +81,7 @@ export class CreateProjectStack extends cdk.Stack {
             environment: {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                FROM_EMAIL: DEFAULT_SENDER_EMAIL,
+                FROM_EMAIL: constants_1.DEFAULT_SENDER_EMAIL,
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
@@ -82,35 +89,28 @@ export class CreateProjectStack extends cdk.Stack {
             },
             timeout: cdk.Duration.seconds(30),
         });
-
         // Set CloudWatch log retention to 30 days
         new logs.LogRetention(this, 'CreateProjectLogRetention', {
             logGroupName: createProjectFunction.logGroup.logGroupName,
             retention: logs.RetentionDays.ONE_MONTH,
         });
-
         // Grant permissions to read the secrets
         githubTokenSecret.grantRead(createProjectFunction);
         githubConfigSecret.grantRead(createProjectFunction);
-
         // Explicitly add Secrets Manager permissions (in case grantRead doesn't work properly)
         createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
             resources: [`${githubTokenSecret.secretArn}-*`, `${githubConfigSecret.secretArn}-*`],
         }));
-
         createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['ses:SendEmail'],
             resources: ['*'],
         }));
-
         createProjectFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['s3:PutObject', 's3:GetObject'],
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
         }));
-
         const hmacSecret = secretsmanager.Secret.fromSecretNameV2(this, 'HMACSecret', 'hmac-secret');
-
         const generateWebsiteFunction = new lambda.Function(this, 'GenerateWebsiteFunction', {
             functionName: 'generate-website',
             runtime: lambda.Runtime.NODEJS_18_X,
@@ -119,7 +119,7 @@ export class CreateProjectStack extends cdk.Stack {
             environment: {
                 GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                 GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                FROM_EMAIL: DEFAULT_SENDER_EMAIL,
+                FROM_EMAIL: constants_1.DEFAULT_SENDER_EMAIL,
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
@@ -129,32 +129,26 @@ export class CreateProjectStack extends cdk.Stack {
             },
             timeout: cdk.Duration.seconds(300), // 5 minutes - account for slow GitHub operations
         });
-
         // Export the function for use by QueueStack
         this.generateWebsiteFunction = generateWebsiteFunction;
         this.generateWebsiteFunctionName = generateWebsiteFunction.functionName;
-
         // Set CloudWatch log retention to 30 days
         new logs.LogRetention(this, 'GenerateWebsiteLogRetention', {
             logGroupName: generateWebsiteFunction.logGroup.logGroupName,
             retention: logs.RetentionDays.ONE_MONTH,
         });
-
         // Grant permissions to generate-website Lambda
         hmacSecret.grantRead(generateWebsiteFunction);
         githubTokenSecret.grantRead(generateWebsiteFunction);
         githubConfigSecret.grantRead(generateWebsiteFunction);
-
         generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
             resources: [`${githubTokenSecret.secretArn}-*`, `${githubConfigSecret.secretArn}-*`],
         }));
-
         generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['ses:SendEmail'],
             resources: ['*'],
         }));
-
         generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: [
                 's3:GetObject',
@@ -168,7 +162,6 @@ export class CreateProjectStack extends cdk.Stack {
             ],
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/*`],
         }));
-
         // Allow the function to describe the CloudFormation stack that exports the
         // CloudFront distribution ID. This is used by the runtime to look up the
         // distribution when creating invalidations.
@@ -176,7 +169,6 @@ export class CreateProjectStack extends cdk.Stack {
             actions: ['cloudformation:DescribeStacks'],
             resources: [`arn:aws:cloudformation:${props?.certificateRegion || 'us-east-1'}:${this.account}:stack/MultiTenantDistribution/*`],
         }));
-
         // Allow CloudFront invalidation operations for distributions in this account.
         // CloudFront ARNs include the account ID; restrict to the account where possible.
         generateWebsiteFunction.addToRolePolicy(new iam.PolicyStatement({
@@ -187,18 +179,15 @@ export class CreateProjectStack extends cdk.Stack {
             ],
             resources: [`arn:aws:cloudfront::${this.account}:distribution/*`],
         }));
-
         // Grant DynamoDB permissions for lambdas
         if (props.metadataTable) {
             props.metadataTable.grantReadWriteData(createProjectFunction);
             props.metadataTable.grantReadWriteData(generateWebsiteFunction);
         }
-
         // Grant idempotency table permissions
         if (props.idempotencyTable) {
             props.idempotencyTable.grantReadWriteData(createProjectFunction);
         }
-
         this.api = new apigateway.RestApi(this, 'CreateProjectApi', {
             restApiName: 'create-project-api',
             defaultCorsPreflightOptions: {
@@ -207,27 +196,23 @@ export class CreateProjectStack extends cdk.Stack {
                 allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'Origin'],
             },
         });
-
         // Custom domain for API
         const apiDomain = new apigateway.DomainName(this, 'ApiDomain', {
             domainName: `api.${domain}`,
             certificate: certificate,
             endpointType: apigateway.EndpointType.EDGE,
         });
-
         // Map domain to API
         new apigateway.BasePathMapping(this, 'ApiMapping', {
             domainName: apiDomain,
             restApi: this.api,
         });
-
         // Route53 A record for API domain
         new route53.ARecord(this, 'ApiAliasRecord', {
             zone: hostedZone,
             recordName: `api.${domain}`,
             target: route53.RecordTarget.fromAlias(new route53Targets.ApiGatewayDomain(apiDomain)),
         });
-
         const createProjectResource = this.api.root.addResource('create-project');
         createProjectResource.addMethod('POST', new apigateway.LambdaIntegration(createProjectFunction, {
             integrationResponses: [
@@ -266,7 +251,6 @@ export class CreateProjectStack extends cdk.Stack {
                 },
             ],
         });
-
         const generateWebsiteResource = this.api.root.addResource('generate-website');
         generateWebsiteResource.addMethod('POST', new apigateway.LambdaIntegration(generateWebsiteFunction, {
             integrationResponses: [
@@ -299,10 +283,8 @@ export class CreateProjectStack extends cdk.Stack {
                 },
             ],
         });
-
         // Contact Form Lambda - handles form submissions from generated websites
         let contactFormFunction = props.contactFormFunction;
-
         if (!contactFormFunction) {
             contactFormFunction = new lambda.Function(this, 'ContactFormFunction', {
                 functionName: 'contact-form',
@@ -312,37 +294,31 @@ export class CreateProjectStack extends cdk.Stack {
                 environment: {
                     GITHUB_TOKEN_SECRET_NAME: githubTokenSecret.secretName,
                     GITHUB_CONFIG_SECRET_NAME: githubConfigSecret.secretName,
-                    FROM_EMAIL: DEFAULT_SENDER_EMAIL,
+                    FROM_EMAIL: constants_1.DEFAULT_SENDER_EMAIL,
                     AWS_SES_REGION: props?.ses_region || "us-east-1",
                 },
                 timeout: cdk.Duration.seconds(15),
                 memorySize: 256,
                 description: 'Handles contact form submissions from generated websites',
             });
-
             // Set CloudWatch log retention to 30 days
             new logs.LogRetention(this, 'ContactFormLogRetention', {
                 logGroupName: contactFormFunction.logGroup.logGroupName,
                 retention: logs.RetentionDays.ONE_MONTH,
             });
-
             // Grant permissions to read the secrets
             githubTokenSecret.grantRead(contactFormFunction);
             githubConfigSecret.grantRead(contactFormFunction);
-
             contactFormFunction.addToRolePolicy(new iam.PolicyStatement({
                 actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
                 resources: [`${githubTokenSecret.secretArn}-*`, `${githubConfigSecret.secretArn}-*`],
             }));
-
             contactFormFunction.addToRolePolicy(new iam.PolicyStatement({
                 actions: ['ses:SendEmail'],
                 resources: ['*'],
             }));
         }
-
         this.contactFormFunctionName = contactFormFunction.functionName;
-
         // API Gateway endpoint for contact form
         const contactFormResource = this.api.root.addResource('contact');
         contactFormResource.addMethod('POST', new apigateway.LambdaIntegration(contactFormFunction, {
@@ -360,7 +336,6 @@ export class CreateProjectStack extends cdk.Stack {
                 { statusCode: '500' },
             ],
         });
-
         // Request Upload Lambda - Generates presigned URLs for temporary uploads
         const requestUploadFunction = new lambda.Function(this, 'RequestUploadFunction', {
             functionName: 'request-upload',
@@ -372,19 +347,16 @@ export class CreateProjectStack extends cdk.Stack {
             },
             timeout: cdk.Duration.seconds(10),
         });
-
         // Set CloudWatch log retention
         new logs.LogRetention(this, 'RequestUploadLogRetention', {
             logGroupName: requestUploadFunction.logGroup.logGroupName,
             retention: logs.RetentionDays.ONE_MONTH,
         });
-
         // Grant permissions to put objects in the bucket (include tagging used by SDK)
         requestUploadFunction.addToRolePolicy(new iam.PolicyStatement({
             actions: ['s3:PutObject', 's3:PutObjectTagging'],
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/temp-uploads/*`],
         }));
-
         // API Gateway endpoint for request-upload
         const requestUploadResource = this.api.root.addResource('request-upload');
         requestUploadResource.addMethod('POST', new apigateway.LambdaIntegration(requestUploadFunction, {
@@ -400,11 +372,9 @@ export class CreateProjectStack extends cdk.Stack {
                 { statusCode: '500' },
             ],
         });
-
         // ============================================================
         // Stripe Payment Session Lambda (Frontend-facing, protected by WAF)
         // ============================================================
-
         if (props.stripeSecretKey && props.emailTemplateStack) {
             const checkoutFunction = new lambda.Function(this, 'StripeCheckoutFunction', {
                 functionName: 'payment-session',
@@ -422,16 +392,13 @@ export class CreateProjectStack extends cdk.Stack {
                 timeout: cdk.Duration.seconds(30),
             });
             this.paymentSessionFunctionName = checkoutFunction.functionName;
-
             // Grant permission to invoke send-email Lambda
             props.emailTemplateStack.grantInvoke(checkoutFunction);
-
             // Set CloudWatch log retention
             new logs.LogRetention(this, 'StripeCheckoutLogRetention', {
                 logGroupName: checkoutFunction.logGroup.logGroupName,
                 retention: logs.RetentionDays.ONE_MONTH,
             });
-
             // Grant S3 permissions
             if (props.s3Bucket) {
                 checkoutFunction.addToRolePolicy(new iam.PolicyStatement({
@@ -441,7 +408,6 @@ export class CreateProjectStack extends cdk.Stack {
                         `arn:aws:s3:::${props.s3Bucket}/*`
                     ],
                 }));
-
                 checkoutFunction.addToRolePolicy(new iam.PolicyStatement({
                     actions: ["s3:GetObject", "s3:PutObject"],
                     resources: [
@@ -449,7 +415,6 @@ export class CreateProjectStack extends cdk.Stack {
                     ],
                 }));
             }
-
             // Grant DynamoDB permissions
             if (props.metadataTable) {
                 props.metadataTable.grantReadWriteData(checkoutFunction);
@@ -457,7 +422,6 @@ export class CreateProjectStack extends cdk.Stack {
             if (props.idempotencyTable) {
                 props.idempotencyTable.grantReadWriteData(checkoutFunction);
             }
-
             // API Gateway endpoint for checkout-session (protected by WAF)
             const checkoutResource = this.api.root.addResource('checkout-session');
             checkoutResource.addMethod('POST', new apigateway.LambdaIntegration(checkoutFunction, {
@@ -476,38 +440,31 @@ export class CreateProjectStack extends cdk.Stack {
                 ],
             });
         }
-
         // ============================================================
         // Project Management Logic (Merged)
         // ============================================================
-
         if (props.metadataTable && props.confirmationCodesTable && props.sendEmailFunction) {
-
             // Define separate log groups for each function
             const getProjectsLogGroup = new logs.LogGroup(this, "GetProjectsLogGroup", {
                 logGroupName: "/aws/lambda/get-projects",
                 retention: logs.RetentionDays.TWO_WEEKS,
                 removalPolicy: cdk.RemovalPolicy.DESTROY,
             });
-
             const deleteProjectLogGroup = new logs.LogGroup(this, "DeleteProjectLogGroup", {
                 logGroupName: "/aws/lambda/delete-project",
                 retention: logs.RetentionDays.TWO_WEEKS,
                 removalPolicy: cdk.RemovalPolicy.DESTROY,
             });
-
             const sendCodeLogGroup = new logs.LogGroup(this, "SendCodeLogGroup", {
                 logGroupName: "/aws/lambda/send-confirmation-code",
                 retention: logs.RetentionDays.TWO_WEEKS,
                 removalPolicy: cdk.RemovalPolicy.DESTROY,
             });
-
             const validateCodeLogGroup = new logs.LogGroup(this, "ValidateCodeLogGroup", {
                 logGroupName: "/aws/lambda/validate-confirmation-code",
                 retention: logs.RetentionDays.TWO_WEEKS,
                 removalPolicy: cdk.RemovalPolicy.DESTROY,
             });
-
             const getProjectsFunction = new lambda.Function(this, "GetProjectsFunction", {
                 functionName: 'get-projects',
                 runtime: lambda.Runtime.NODEJS_20_X,
@@ -523,7 +480,6 @@ export class CreateProjectStack extends cdk.Stack {
             });
             this.getProjectsFunctionName = getProjectsFunction.functionName;
             props.metadataTable.grantReadData(getProjectsFunction);
-
             const deleteProjectFunction = new lambda.Function(this, "DeleteProjectFunction", {
                 functionName: 'delete-project',
                 runtime: lambda.Runtime.NODEJS_20_X,
@@ -539,7 +495,6 @@ export class CreateProjectStack extends cdk.Stack {
             });
             this.deleteProjectFunctionName = deleteProjectFunction.functionName;
             props.metadataTable.grantReadWriteData(deleteProjectFunction);
-
             const sendConfirmationCodeFunction = new lambda.Function(this, "SendConfirmationCodeFunction", {
                 functionName: 'send-confirmation-code',
                 runtime: lambda.Runtime.NODEJS_20_X,
@@ -559,7 +514,6 @@ export class CreateProjectStack extends cdk.Stack {
             props.metadataTable.grantReadData(sendConfirmationCodeFunction);
             props.confirmationCodesTable.grantWriteData(sendConfirmationCodeFunction);
             props.sendEmailFunction.grantInvoke(sendConfirmationCodeFunction);
-
             const validateConfirmationCodeFunction = new lambda.Function(this, "ValidateConfirmationCodeFunction", {
                 functionName: 'validate-confirmation-code',
                 runtime: lambda.Runtime.NODEJS_20_X,
@@ -580,24 +534,18 @@ export class CreateProjectStack extends cdk.Stack {
             props.confirmationCodesTable.grantReadWriteData(validateConfirmationCodeFunction);
             props.metadataTable.grantReadWriteData(validateConfirmationCodeFunction);
             generateWebsiteFunction.grantInvoke(validateConfirmationCodeFunction);
-
             hmacSecret.grantRead(validateConfirmationCodeFunction);
-
             // API Resources
             const projectsResource = this.api.root.addResource("projects");
             projectsResource.addMethod("GET", new apigateway.LambdaIntegration(getProjectsFunction));
-
             const projectIdResource = projectsResource.addResource("{id}");
             projectIdResource.addMethod("DELETE", new apigateway.LambdaIntegration(deleteProjectFunction));
-
             const authResource = this.api.root.addResource("auth");
             const sendCodeResource = authResource.addResource("send-code");
             sendCodeResource.addMethod("POST", new apigateway.LambdaIntegration(sendConfirmationCodeFunction));
-
             const validateCodeResource = authResource.addResource("validate-code");
             validateCodeResource.addMethod("POST", new apigateway.LambdaIntegration(validateConfirmationCodeFunction));
         }
-
         new cdk.CfnOutput(this, 'ApiUrl', {
             value: this.api.url,
             description: 'API Gateway URL for creating projects (restricted to allowed origins)',
@@ -614,7 +562,6 @@ export class CreateProjectStack extends cdk.Stack {
             value: `https://api.${domain}/contact`,
             description: 'Custom domain URL for contact form submissions',
         });
-
         // Associate WAF WebACL with API Gateway if provided
         if (props.webAclArn) {
             new wafv2.CfnWebACLAssociation(this, 'ApiWafAssociation', {
@@ -622,6 +569,6 @@ export class CreateProjectStack extends cdk.Stack {
                 webAclArn: props.webAclArn,
             });
         }
-
     }
 }
+exports.CreateProjectStack = CreateProjectStack;

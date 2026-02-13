@@ -1,27 +1,60 @@
-import * as cdk from "aws-cdk-lib";
-import { BucketStack } from "./bucketStack";
-import { CloudWatchLogsStack } from "./CloudWatchLogsStack";
-import { CreateProjectStack } from "./CreateProjectStack";
-import { ProjectSite } from "./ProjectStack";
-import { StripeCheckoutStack } from "./PaymentSessionStack";
-import { MultiTenantDistributionStack } from "./MultiTenantDistributionStack";
-import { TemplateDistributionStack } from "./TemplateDistributionStack";
-import { DynamoDBMetadataStack } from "./DynamoDBMetadataStack";
-import { WAFStack } from "./WAFStack";
-import { BudgetAlertStack } from "./BudgetAlertStack";
-import { QueueStack } from "./QueueStack";
-import { StepFunctionsStack } from "./StepFunctionsStack";
-import { GitHubWebhookStack } from "./GitHubWebhookStack";
-import { HealthCheckStack } from "./HealthCheckStack";
-import { DashboardStack } from "./DashboardStack";
-import { AlertingStack } from "./AlertingStack";
-import { EmailTemplateStack } from "./EmailTemplateStack";
-import { ContactFormStack } from "./ContactFormStack";
-
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+const cdk = __importStar(require("aws-cdk-lib"));
+const bucketStack_1 = require("./bucketStack");
+const CloudWatchLogsStack_1 = require("./CloudWatchLogsStack");
+const CreateProjectStack_1 = require("./CreateProjectStack");
+const ProjectStack_1 = require("./ProjectStack");
+const PaymentSessionStack_1 = require("./PaymentSessionStack");
+const MultiTenantDistributionStack_1 = require("./MultiTenantDistributionStack");
+const TemplateDistributionStack_1 = require("./TemplateDistributionStack");
+const DynamoDBMetadataStack_1 = require("./DynamoDBMetadataStack");
+const WAFStack_1 = require("./WAFStack");
+const BudgetAlertStack_1 = require("./BudgetAlertStack");
+const QueueStack_1 = require("./QueueStack");
+const StepFunctionsStack_1 = require("./StepFunctionsStack");
+const GitHubWebhookStack_1 = require("./GitHubWebhookStack");
+const HealthCheckStack_1 = require("./HealthCheckStack");
+const DashboardStack_1 = require("./DashboardStack");
+const AlertingStack_1 = require("./AlertingStack");
+const EmailTemplateStack_1 = require("./EmailTemplateStack");
+const ContactFormStack_1 = require("./ContactFormStack");
 const app = new cdk.App();
 // Import compiled JS constant to avoid ts-node requiring .ts files as CJS
-import { DEFAULT_SENDER_EMAIL } from "./constants";
-
+const constants_1 = require("./constants");
 const config = {
     region: "eu-south-2",
     domain: "e-info.click",
@@ -29,59 +62,46 @@ const config = {
     certificateRegion: "us-east-1",
     wafEnabled: true,
 };
-
 const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('account');
-
 if (!account) {
     console.warn("Warning: No AWS account specified. Use CDK_DEFAULT_ACCOUNT env var or --profile");
 }
-
 // Create the shared multi-tenant CloudFront distribution for projects FIRST
 // This is required so we can get the OAC to pass to BucketStack
-const multiTenantDistribution = new MultiTenantDistributionStack(
-    app,
-    "MultiTenantDistribution",
-    {
-        domainName: config.domain,
-        hostedZoneDomainName: config.domain,
-        s3Bucket: config.s3Bucket,
-        region: config.region,
-        env: {
-            account: account,
-            region: config.certificateRegion,
-        },
-        tags: {
-            ManagedBy: "CDK",
-            Environment: "production",
-            Purpose: "MultiTenantDistribution",
-        },
-    }
-);
-
+const multiTenantDistribution = new MultiTenantDistributionStack_1.MultiTenantDistributionStack(app, "MultiTenantDistribution", {
+    domainName: config.domain,
+    hostedZoneDomainName: config.domain,
+    s3Bucket: config.s3Bucket,
+    region: config.region,
+    env: {
+        account: account,
+        region: config.certificateRegion,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "MultiTenantDistribution",
+    },
+});
 // Create the shared multi-tenant CloudFront distribution for templates
 // Routes *.template.e-info.click to /templates/<templateId>/index.html
-const templateDistribution = new TemplateDistributionStack(
-    app,
-    "TemplateDistribution",
-    {
-        domainName: config.domain,
-        hostedZoneDomainName: config.domain,
-        s3Bucket: config.s3Bucket,
-        region: config.region,
-        env: {
-            account: account,
-            region: config.certificateRegion,
-        },
-        tags: {
-            ManagedBy: "CDK",
-            Environment: "production",
-            Purpose: "TemplateDistribution",
-        },
-    }
-);
-
+const templateDistribution = new TemplateDistributionStack_1.TemplateDistributionStack(app, "TemplateDistribution", {
+    domainName: config.domain,
+    hostedZoneDomainName: config.domain,
+    s3Bucket: config.s3Bucket,
+    region: config.region,
+    env: {
+        account: account,
+        region: config.certificateRegion,
+    },
+    tags: {
+        ManagedBy: "CDK",
+        Environment: "production",
+        Purpose: "TemplateDistribution",
+    },
+});
 // Create DynamoDB metadata table for website operations
-const dynamoDBStack = new DynamoDBMetadataStack(app, "DynamoDBMetadata", {
+const dynamoDBStack = new DynamoDBMetadataStack_1.DynamoDBMetadataStack(app, "DynamoDBMetadata", {
     env: {
         account: account,
         region: config.region,
@@ -92,10 +112,9 @@ const dynamoDBStack = new DynamoDBMetadataStack(app, "DynamoDBMetadata", {
         Purpose: "MetadataStorage",
     },
 });
-
 // Create the shared S3 bucket AFTER MultiTenantDistribution
 // and pass the distribution so it can create the correct bucket policy
-new BucketStack(app, "StaticWebsitesBucket", {
+new bucketStack_1.BucketStack(app, "StaticWebsitesBucket", {
     bucketName: config.s3Bucket,
     distribution: multiTenantDistribution.distribution,
     oac: multiTenantDistribution.oac,
@@ -110,9 +129,8 @@ new BucketStack(app, "StaticWebsitesBucket", {
         Purpose: "StaticWebsiteHosting",
     },
 });
-
 // Create CloudWatch logs bucket with lifecycle policy for Glacier archival
-new CloudWatchLogsStack(app, "CloudWatchLogsBucket", {
+new CloudWatchLogsStack_1.CloudWatchLogsStack(app, "CloudWatchLogsBucket", {
     bucketName: `${config.s3Bucket}-logs`,
     env: {
         account: account,
@@ -124,14 +142,12 @@ new CloudWatchLogsStack(app, "CloudWatchLogsBucket", {
         Purpose: "CloudWatchLogsArchival",
     },
 });
-
-const contactFormStack = new ContactFormStack(app, "ContactFormStack", {
-    sesRegion: config.certificateRegion 
+const contactFormStack = new ContactFormStack_1.ContactFormStack(app, "ContactFormStack", {
+    sesRegion: config.certificateRegion
 });
-
 // Create Email Template System (Phase 4.6) - Must be created before Stripe stack
-const emailTemplateStack = new EmailTemplateStack(app, "EmailTemplateStack", {
-    senderEmail: process.env.SENDER_EMAIL || DEFAULT_SENDER_EMAIL,
+const emailTemplateStack = new EmailTemplateStack_1.EmailTemplateStack(app, "EmailTemplateStack", {
+    senderEmail: process.env.SENDER_EMAIL || constants_1.DEFAULT_SENDER_EMAIL,
     frontendUrl: process.env.FRONTEND_URL || "https://editor.e-info.click",
     sesRegion: config.certificateRegion,
     env: {
@@ -144,11 +160,10 @@ const emailTemplateStack = new EmailTemplateStack(app, "EmailTemplateStack", {
         Purpose: "EmailNotifications",
     },
 });
-
 // Create WAF for rate limiting FIRST (so we can attach it to APIs)
-let wafStack: WAFStack | undefined;
+let wafStack;
 if (config.wafEnabled) {
-    wafStack = new WAFStack(app, "WAFStack", {
+    wafStack = new WAFStack_1.WAFStack(app, "WAFStack", {
         env: {
             account: account,
             region: config.region, // REGIONAL scope for API Gateway
@@ -160,9 +175,8 @@ if (config.wafEnabled) {
         },
     });
 }
-
 // Create other infrastructure stacks
-const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
+const createProjectStack = new CreateProjectStack_1.CreateProjectStack(app, "CreateProjectStack", {
     ses_region: config.certificateRegion,
     domain: config.domain,
     certificateRegion: config.certificateRegion,
@@ -184,9 +198,8 @@ const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
         region: config.region,
     },
 });
-
 // Create SQS queue for asynchronous website generation
-const queueStack = new QueueStack(app, "QueueStack", {
+const queueStack = new QueueStack_1.QueueStack(app, "QueueStack", {
     generateWebsiteLambda: createProjectStack.generateWebsiteFunction,
     env: {
         account: account,
@@ -198,9 +211,8 @@ const queueStack = new QueueStack(app, "QueueStack", {
         Purpose: "AsyncWebsiteGeneration",
     },
 });
-
 // Create Step Functions state machine for workflow orchestration and status tracking
-new StepFunctionsStack(app, "StepFunctionsStack", {
+new StepFunctionsStack_1.StepFunctionsStack(app, "StepFunctionsStack", {
     generateWebsiteLambda: createProjectStack.generateWebsiteFunction,
     metadataTable: dynamoDBStack.table,
     env: {
@@ -213,10 +225,7 @@ new StepFunctionsStack(app, "StepFunctionsStack", {
         Purpose: "WorkflowOrchestration",
     },
 });
-
-
-
-const stripeCheckoutStack = new StripeCheckoutStack(app, "StripeCheckoutStack", {
+const stripeCheckoutStack = new PaymentSessionStack_1.StripeCheckoutStack(app, "StripeCheckoutStack", {
     domain: config.domain,
     stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
@@ -230,9 +239,8 @@ const stripeCheckoutStack = new StripeCheckoutStack(app, "StripeCheckoutStack", 
         region: config.region,
     },
 });
-
 // Create Budget Alerts for cost controls
-new BudgetAlertStack(app, "BudgetAlertStack", {
+new BudgetAlertStack_1.BudgetAlertStack(app, "BudgetAlertStack", {
     dailyBudgetUSD: 10,
     env: {
         account: account,
@@ -244,9 +252,8 @@ new BudgetAlertStack(app, "BudgetAlertStack", {
         Purpose: "CostControls",
     },
 });
-
 // Create GitHub webhook handler for deployment tracking
-const githubWebhookStack = new GitHubWebhookStack(app, "GitHubWebhookStack", {
+const githubWebhookStack = new GitHubWebhookStack_1.GitHubWebhookStack(app, "GitHubWebhookStack", {
     domain: config.domain,
     metadataTable: dynamoDBStack.table,
     githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || "",
@@ -260,9 +267,8 @@ const githubWebhookStack = new GitHubWebhookStack(app, "GitHubWebhookStack", {
         Purpose: "DeploymentTracking",
     },
 });
-
 // Create health check endpoint
-const healthCheckStack = new HealthCheckStack(app, "HealthCheckStack", {
+const healthCheckStack = new HealthCheckStack_1.HealthCheckStack(app, "HealthCheckStack", {
     queueUrl: queueStack.queue.queueUrl,
     env: {
         account: account,
@@ -274,9 +280,8 @@ const healthCheckStack = new HealthCheckStack(app, "HealthCheckStack", {
         Purpose: "HealthMonitoring",
     },
 });
-
 // Create CloudWatch monitoring dashboard
-new DashboardStack(app, "DashboardStack", {
+new DashboardStack_1.DashboardStack(app, "DashboardStack", {
     paymentSessionFunctionName: "payment-session",
     generateWebsiteFunctionName: "generate-website",
     stripeWebhookFunctionName: "stripe-webhook",
@@ -296,9 +301,8 @@ new DashboardStack(app, "DashboardStack", {
         Purpose: "Monitoring",
     },
 });
-
 // Create SNS alerts for critical issues
-new AlertingStack(app, "AlertingStack", {
+new AlertingStack_1.AlertingStack(app, "AlertingStack", {
     paymentSessionFunctionName: "payment-session",
     generateWebsiteFunctionName: "generate-website",
     stripeWebhookFunctionName: "stripe-webhook",
@@ -317,34 +321,26 @@ new AlertingStack(app, "AlertingStack", {
         Purpose: "Alerting",
     },
 });
-
-
-
-const projectsParam = app.node.tryGetContext("projects") as string | undefined;
-const templatesParam = app.node.tryGetContext("templates") as string | undefined;
-
+const projectsParam = app.node.tryGetContext("projects");
+const templatesParam = app.node.tryGetContext("templates");
 if (!projectsParam && !templatesParam) {
     console.error("No projects or templates provided.");
     console.log("Usage: cdk deploy --context projects=\"project1,project2\" --context templates=\"template1,template2\"");
     console.log("You can specify either projects, templates, or both.");
-} else {
+}
+else {
     let totalStacks = 0;
-
     // Handle projects
     if (projectsParam) {
         const projects = projectsParam.split(",").map((p) => p.trim().toLowerCase()).filter(Boolean);
-
         if (projects.length > 0) {
             console.log(`Deploying ${projects.length} project(s): ${projects.join(", ")}`);
-
             projects.forEach((project) => {
                 if (!/^[a-z0-9-]+$/.test(project)) {
                     console.warn(`Warning: Project name '${project}' may not be DNS-safe. Use lowercase letters, numbers, and hyphens only.`);
                 }
-
                 console.log(`Creating stack for project: ${project}.${config.domain}`);
-
-                new ProjectSite(app, `Site-${project}`, {
+                new ProjectStack_1.ProjectSite(app, `Site-${project}`, {
                     projectName: project,
                     domainName: `${project}.${config.domain}`,
                     hostedZoneDomainName: config.domain,
@@ -363,22 +359,18 @@ if (!projectsParam && !templatesParam) {
                     },
                 });
             });
-
             totalStacks += projects.length;
         }
     }
-
     // Handle templates - No individual stacks needed!
     // Templates are routed through the single TemplateDistribution stack
     // which handles *.template.e-info.click -> /templates/<templateId>/index.html
     if (templatesParam) {
         const templates = templatesParam.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
-
         if (templates.length > 0) {
             console.log(`Templates to deploy: ${templates.join(", ")}`);
             console.log(`Templates are served via the shared TemplateDistribution stack.`);
             console.log(`Access templates at: https://<templateId>.template.${config.domain}`);
-            
             templates.forEach((template) => {
                 if (!/^[a-z0-9-]+$/.test(template)) {
                     console.warn(`Warning: Template name '${template}' may not be DNS-safe. Use lowercase letters, numbers, and hyphens only.`);
@@ -387,12 +379,11 @@ if (!projectsParam && !templatesParam) {
             });
         }
     }
-
     if (totalStacks > 0) {
         console.log(`Created ${totalStacks} project stack(s) successfully`);
-    } else if (!templatesParam) {
+    }
+    else if (!templatesParam) {
         console.error("No valid projects or templates found after parsing.");
     }
 }
-
 app.synth();

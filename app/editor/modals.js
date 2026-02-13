@@ -2,6 +2,8 @@
 export class ModalManager {
     constructor(editor) {
         this.editor = editor;
+        this._lastCodeSendTime = 0;
+        this._codeSendCooldown = 10000; // 10 seconds cooldown
     }
 
     openModal() {
@@ -153,32 +155,14 @@ export class ModalManager {
             return;
         }
 
-        // Trigger email sending
-        this.editor.ui.showStatus('Sending verification code...', 'info');
-        fetch('https://api.e-info.click/auth/send-code', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ templateId: projectName })
-        })
-        .then(async res => {
-            if (!res.ok) {
-                // Try to parse error message, but handle non-JSON responses
-                try {
-                    const data = await res.json();
-                    throw new Error(data.error || `Server error: ${res.status}`);
-                } catch (e) {
-                    throw new Error(e.message || `Server error: ${res.status}`);
-                }
-            }
-            return res.json();
-        })
-        .then(data => {
-            this.editor.ui.showStatus('Verification code sent to email', 'success');
-        })
-        .catch(err => {
-            console.error('Error sending code:', err);
-            this.editor.ui.showStatus(err.message || 'Failed to send verification code', 'error');
-        });
+        // Check if we can send code (cooldown check)
+        const now = Date.now();
+        const canSendImmediately = now - this._lastCodeSendTime >= this._codeSendCooldown;
+
+        // Send code immediately on modal open (if not in cooldown)
+        if (canSendImmediately) {
+            this._sendVerificationCode(projectName);
+        }
 
         const modal = document.createElement('div');
         modal.className = 'modern-text-editor-overlay';
@@ -195,6 +179,9 @@ export class ModalManager {
                         <button class="btn btn-outline btn-glass" onclick="const modal = this.closest('.modern-text-editor-overlay'); modal.classList.add('removing'); setTimeout(() => { modal.remove(); }, 300);">
                             Cancel
                         </button>
+                        <button id="resend-code-btn" class="btn btn-secondary" ${canSendImmediately ? '' : 'disabled'}>
+                            ${canSendImmediately ? 'Resend Code' : 'Wait 10s...'}
+                        </button>
                         <button class="btn btn-primary" onclick="window.templateEditorInstance.saveWithCode()">
                             Save Changes
                         </button>
@@ -204,6 +191,28 @@ export class ModalManager {
             </div>
         `;
         document.body.appendChild(modal);
+
+        // Add resend button handler
+        const resendBtn = modal.querySelector('#resend-code-btn');
+        if (resendBtn) {
+            resendBtn.addEventListener('click', async () => {
+                resendBtn.disabled = true;
+                resendBtn.textContent = 'Sending...';
+                const success = await this._sendVerificationCode(projectName);
+                if (success) {
+                    this._startCooldown(resendBtn);
+                } else {
+                    // Re-enable button on failure so user can retry
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = 'Resend Code';
+                }
+            });
+
+            // Start cooldown if we just sent the code on modal open
+            if (canSendImmediately) {
+                this._startCooldown(resendBtn);
+            }
+        }
 
         // Add click handler to overlay for canceling
         modal.addEventListener('click', (e) => {
@@ -243,5 +252,75 @@ export class ModalManager {
                 }, 300);
             }
         });
+    }
+
+    /**
+     * Send verification code to user's email
+     * @param {string} projectName - The project name/templateId
+     * @returns {Promise<boolean>} - True if code was sent successfully
+     */
+    _sendVerificationCode(projectName) {
+        this.editor.ui.showStatus('Sending verification code...', 'info');
+
+        return fetch('https://api.e-info.click/auth/send-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ templateId: projectName })
+        })
+        .then(async res => {
+            if (!res.ok) {
+                try {
+                    const data = await res.json();
+                    throw new Error(data.error || `Server error: ${res.status}`);
+                } catch (e) {
+                    throw new Error(e.message || `Server error: ${res.status}`);
+                }
+            }
+            return res.json();
+        })
+        .then(data => {
+            this.editor.ui.showStatus('Verification code sent to email', 'success');
+            // Only set cooldown time after successful send
+            this._lastCodeSendTime = Date.now();
+            return true;
+        })
+        .catch(err => {
+            console.error('Error sending code:', err);
+            this.editor.ui.showStatus(err.message || 'Failed to send verification code', 'error');
+            return false;
+        });
+    }
+
+    /**
+     * Start cooldown timer for resend button
+     * @param {HTMLElement} button - The resend button element
+     */
+    _startCooldown(button) {
+        // Clear any existing cooldown timer
+        if (this._cooldownInterval) {
+            clearInterval(this._cooldownInterval);
+        }
+
+        button.disabled = true;
+        let remainingSeconds = 10;
+        button.textContent = `Wait ${remainingSeconds}s...`;
+
+        this._cooldownInterval = setInterval(() => {
+            remainingSeconds--;
+            // Check if button is still in DOM before updating
+            if (!button.isConnected) {
+                clearInterval(this._cooldownInterval);
+                this._cooldownInterval = null;
+                return;
+            }
+            if (remainingSeconds > 0) {
+                button.textContent = `Wait ${remainingSeconds}s...`;
+            } else {
+                clearInterval(this._cooldownInterval);
+                this._cooldownInterval = null;
+                button.disabled = false;
+                button.textContent = 'Resend Code';
+            }
+        }, 1000);
     }
 }
