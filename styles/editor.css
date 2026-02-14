@@ -2467,26 +2467,22 @@ body {
     height: 16px;
 }
 
-/* Overlay when in image edit mode - fixed to viewport for free-range editing */
+/* Overlay when in image edit mode - not used anymore, image is moved to body level */
 .image-edit-mode-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999998;
-    cursor: default;
+    display: none;
 }
 
-/* Wrapper uses fixed positioning for free-range editing (viewport-relative) */
+/* Wrapper for controls around the image in edit mode */
 .image-edit-mode-wrapper {
-    position: fixed !important;
-    z-index: 1000000 !important;
+    position: absolute !important;
+    /* z-index is set dynamically via JS to be one above the image */
     pointer-events: none !important;
 }
 
-/* Image in edit mode - fixed positioning for free-range editing (viewport-relative) */
+/* Image in edit mode - absolute positioning at body level */
 .image-edit-mode {
-    position: fixed !important;
-    z-index: 999999 !important;
+    position: absolute !important;
+    /* z-index is set dynamically via JS based on original image z-index */
     outline: 2px dashed #3b82f6;
     outline-offset: 4px;
     cursor: move;
@@ -2498,7 +2494,7 @@ body {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    z-index: 1000001 !important;
+    /* z-index is set dynamically via JS based on image z-index */
 }
 
 /* Toolbar positioned above the image wrapper */
@@ -2513,7 +2509,7 @@ body {
     padding: 8px 12px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 1000002 !important;
+    z-index: 1;
     white-space: nowrap;
     pointer-events: auto;
 }
@@ -2532,9 +2528,62 @@ body {
     font-weight: 500;
     font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
     white-space: nowrap;
-    z-index: 1000002 !important;
+    z-index: 1;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     pointer-events: auto;
+}
+
+/* z-index control in toolbar */
+.image-zindex-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.zindex-label {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-right: 4px;
+}
+
+.zindex-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: #f8fafc;
+    min-width: 20px;
+    text-align: center;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+}
+
+.zindex-btn {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+    line-height: 1;
+}
+
+.zindex-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.zindex-btn:active {
+    transform: scale(0.95);
 }
 
 /* Image dimensions info in modal */

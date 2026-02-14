@@ -514,7 +514,7 @@ export class EditingManager {
         this.editor.cancelCurrentEdit();
         this.editor.currentEditingElement = imageElement;
 
-        // Calculate viewport-relative position (fixed positioning)
+        // Calculate viewport-relative position
         const rect = imageElement.getBoundingClientRect();
         const viewportX = rect.left;
         const viewportY = rect.top;
@@ -530,6 +530,10 @@ export class EditingManager {
         const siblings = Array.from(originalParent.children);
         const elementIndex = siblings.indexOf(imageElement);
 
+        // Calculate effective z-index by traversing up the DOM tree
+        // This captures inherited z-index from parent stacking contexts
+        let effectiveZIndex = this.calculateEffectiveZIndex(imageElement);
+
         // Store edit mode state with viewport-relative position info
         this.imageEditMode = {
             element: imageElement,
@@ -542,43 +546,17 @@ export class EditingManager {
             viewportY: viewportY,
             originalParent: originalParent,
             elementIndex: elementIndex,
-            aspectRatio: naturalWidth / naturalHeight || elementWidth / elementHeight
+            aspectRatio: naturalWidth / naturalHeight || elementWidth / elementHeight,
+            effectiveZIndex: effectiveZIndex
         };
 
-        // Create a body-level overlay for free-range editing
-        const overlay = document.createElement('div');
-        overlay.className = 'image-edit-mode-overlay';
-        overlay.style.position = 'fixed';
-        overlay.style.inset = '0';
-        overlay.style.zIndex = '999998';
-        overlay.style.background = 'rgba(0, 0, 0, 0.5)';
-        overlay.style.cursor = 'default';
-        // Prevent overlay from capturing clicks during drag/resize by using mousedown/mouseup tracking
-        this.imageEditMode.overlayMouseDown = false;
-        overlay.addEventListener('mousedown', () => {
-            this.imageEditMode.overlayMouseDown = true;
-        });
-        overlay.addEventListener('mouseup', () => {
-            // Small delay to let handleMouseUp finish first
-            setTimeout(() => {
-                this.imageEditMode.overlayMouseDown = false;
-            }, 60);
-        });
-        
-        overlay.addEventListener('click', (e) => {
-            // Only exit if clicking on overlay itself AND not currently dragging/resizing
-            // AND the overlay itself was clicked (not a drag that ended on overlay)
-            if (e.target === overlay && 
-                !this.imageEditMode?.isResizing && 
-                !this.imageEditMode?.isMoving &&
-                !this.imageEditMode?.overlayMouseDown) {
-                this.exitImageEditMode(false);
-            }
-        });
-        document.body.appendChild(overlay);
-        this.imageEditMode.overlay = overlay;
+        // Store the current z-index for later
+        if (!this.editor.imageZIndexes) {
+            this.editor.imageZIndexes = {};
+        }
+        this.editor.imageZIndexes[imageId] = effectiveZIndex;
 
-        // Store original styles
+        // Store original styles before any modifications
         this.imageEditMode.originalStyles = {
             position: imageElement.style.position,
             left: imageElement.style.left,
@@ -587,35 +565,41 @@ export class EditingManager {
             height: imageElement.style.height,
             marginLeft: imageElement.style.marginLeft,
             marginTop: imageElement.style.marginTop,
-            zIndex: imageElement.style.zIndex
+            zIndex: imageElement.style.zIndex,
+            parentPosition: originalParent.style.position,
+            parentZIndex: originalParent.style.zIndex
         };
 
-        // Move image to overlay with fixed positioning for free-range editing
-        // First, remove from original parent
+        // Remove from original parent and move to body
         imageElement.remove();
 
-        // Set fixed positioning using CAPTURED dimensions (viewport-relative)
-        imageElement.style.position = 'fixed';
-        imageElement.style.left = `${viewportX}px`;
-        imageElement.style.top = `${viewportY}px`;
+        // Set absolute positioning at body level using CAPTURED viewport coordinates
+        // This keeps the image at exactly the same visual position
+        imageElement.style.position = 'absolute';
+        imageElement.style.left = `${viewportX + window.scrollX}px`;
+        imageElement.style.top = `${viewportY + window.scrollY}px`;
         imageElement.style.width = `${elementWidth}px`;
         imageElement.style.height = `${elementHeight}px`;
         imageElement.style.marginLeft = '0';
         imageElement.style.marginTop = '0';
-        imageElement.style.zIndex = '999999';
+        imageElement.style.zIndex = effectiveZIndex;
 
         // Add edit mode class
         imageElement.classList.add('image-edit-mode');
 
-        // Create wrapper for controls (toolbar, handles, size indicator)
+        // Append directly to body (outside all parent divs)
+        document.body.appendChild(imageElement);
+
+        // Create wrapper for controls (toolbar, handles, size indicator, z-index control)
+        // Wrapper is positioned at the same location as the image
         const wrapper = document.createElement('div');
         wrapper.className = 'image-edit-mode-wrapper';
-        wrapper.style.position = 'fixed';
-        wrapper.style.left = `${viewportX}px`;
-        wrapper.style.top = `${viewportY}px`;
+        wrapper.style.position = 'absolute';
+        wrapper.style.left = `${viewportX + window.scrollX}px`;
+        wrapper.style.top = `${viewportY + window.scrollY}px`;
         wrapper.style.width = `${elementWidth}px`;
         wrapper.style.height = `${elementHeight}px`;
-        wrapper.style.zIndex = '1000000';
+        wrapper.style.zIndex = effectiveZIndex + 1; // Just above the image
         wrapper.style.pointerEvents = 'none';
 
         // Create resize handles container
@@ -638,7 +622,7 @@ export class EditingManager {
             handlesContainer.appendChild(handle);
         });
 
-        // Create toolbar
+        // Create toolbar with z-index control
         const toolbar = document.createElement('div');
         toolbar.className = 'image-edit-toolbar';
         toolbar.innerHTML = `
@@ -649,6 +633,12 @@ export class EditingManager {
                 </svg>
                 Reset
             </button>
+            <div class="image-zindex-control">
+                <span class="zindex-label">z-index:</span>
+                <button class="zindex-btn" onclick="window.templateEditorInstance.editing.changeZIndex(-1)" title="Decrease z-index">−</button>
+                <span class="zindex-value" id="zindex-value">${effectiveZIndex}</span>
+                <button class="zindex-btn" onclick="window.templateEditorInstance.editing.changeZIndex(1)" title="Increase z-index">+</button>
+            </div>
             <button onclick="window.templateEditorInstance.editing.exitImageEditMode(false)">
                 Cancel
             </button>
@@ -671,9 +661,8 @@ export class EditingManager {
         wrapper.appendChild(toolbar);
         wrapper.appendChild(sizeIndicator);
         
-        // Add image and wrapper to overlay
-        overlay.appendChild(imageElement);
-        overlay.appendChild(wrapper);
+        // Add wrapper to body (same level as image)
+        document.body.appendChild(wrapper);
 
         this.imageEditMode.wrapper = wrapper;
         this.imageEditMode.handlesContainer = handlesContainer;
@@ -695,6 +684,47 @@ export class EditingManager {
         this.editor.ui.showStatus('Drag to move, use handles to resize', 'info');
     }
 
+    calculateEffectiveZIndex(element) {
+        // Calculate the effective z-index by looking at all ancestor stacking contexts
+        let zIndex = 0;
+        let current = element;
+        
+        while (current && current !== document.body) {
+            const style = window.getComputedStyle(current);
+            const currentZIndex = style.zIndex;
+            
+            // If this element creates a new stacking context and has a z-index, add it
+            if (currentZIndex !== 'auto') {
+                zIndex += parseInt(currentZIndex);
+            }
+            
+            // Check if parent creates a stacking context
+            const parent = current.parentElement;
+            if (parent) {
+                const parentStyle = window.getComputedStyle(parent);
+                // Parent creates stacking context if it has:
+                // - position with z-index (not static)
+                // - opacity < 1
+                // - transform, filter, clip-path, etc.
+                const createsStackingContext = 
+                    (parentStyle.position !== 'static' && parentStyle.zIndex !== 'auto') ||
+                    parseFloat(parentStyle.opacity) < 1 ||
+                    parentStyle.transform !== 'none' ||
+                    parentStyle.filter !== 'none' ||
+                    parentStyle.clipPath !== 'none';
+                
+                if (createsStackingContext && parentStyle.zIndex !== 'auto') {
+                    zIndex += parseInt(parentStyle.zIndex);
+                }
+            }
+            
+            current = parent;
+        }
+        
+        // Return at least 1
+        return Math.max(1, zIndex);
+    }
+
     startResize(e, position) {
         e.preventDefault();
         e.stopPropagation();
@@ -711,10 +741,6 @@ export class EditingManager {
         this.imageEditMode.startLeft = parseInt(element.style.left) || this.imageEditMode.viewportX;
         this.imageEditMode.startTop = parseInt(element.style.top) || this.imageEditMode.viewportY;
         
-        // Disable overlay pointer events during resize to prevent accidental clicks
-        if (this.imageEditMode.overlay) {
-            this.imageEditMode.overlay.style.pointerEvents = 'none';
-        }
     }
 
     startMove(e) {
@@ -733,11 +759,6 @@ export class EditingManager {
         this.imageEditMode.startY = touch.clientY;
         this.imageEditMode.startLeft = parseInt(this.imageEditMode.element.style.left) || this.imageEditMode.viewportX;
         this.imageEditMode.startTop = parseInt(this.imageEditMode.element.style.top) || this.imageEditMode.viewportY;
-        
-        // Disable overlay pointer events during move to prevent accidental clicks
-        if (this.imageEditMode.overlay) {
-            this.imageEditMode.overlay.style.pointerEvents = 'none';
-        }
     }
 
     handleMouseMove(e) {
@@ -843,13 +864,7 @@ export class EditingManager {
     handleMouseUp(e) {
         if (!this.imageEditMode) return;
 
-        // Re-enable overlay pointer events
-        if (this.imageEditMode.overlay) {
-            this.imageEditMode.overlay.style.pointerEvents = '';
-        }
-
-        // Clear flags after a small delay to prevent overlay click from triggering
-        // immediately after drag/resize ends (prevents accidental exit)
+        // Clear flags after a small delay
         setTimeout(() => {
             if (this.imageEditMode) {
                 this.imageEditMode.isResizing = false;
@@ -863,26 +878,61 @@ export class EditingManager {
 
         const element = this.imageEditMode.element;
         const wrapper = this.imageEditMode.wrapper;
-        
-        // Reset to initial dimensions and position
+
+        // Reset to initial dimensions
         element.style.width = `${this.imageEditMode.initialWidth}px`;
         element.style.height = `${this.imageEditMode.initialHeight}px`;
-        element.style.left = `${this.imageEditMode.initialLeft}px`;
-        element.style.top = `${this.imageEditMode.initialTop}px`;
+
+        // For absolute positioning, we need to account for scroll
+        // initialLeft/initialTop are viewport coordinates, convert to document coordinates
+        const resetLeft = this.imageEditMode.initialLeft + window.scrollX;
+        const resetTop = this.imageEditMode.initialTop + window.scrollY;
+
+        element.style.left = `${resetLeft}px`;
+        element.style.top = `${resetTop}px`;
 
         // Update wrapper to match
         wrapper.style.width = `${this.imageEditMode.initialWidth}px`;
         wrapper.style.height = `${this.imageEditMode.initialHeight}px`;
-        wrapper.style.left = `${this.imageEditMode.initialLeft}px`;
-        wrapper.style.top = `${this.imageEditMode.initialTop}px`;
+        wrapper.style.left = `${resetLeft}px`;
+        wrapper.style.top = `${resetTop}px`;
 
         // Update size indicator
         if (this.imageEditMode.sizeIndicator) {
-            this.imageEditMode.sizeIndicator.textContent = 
+            this.imageEditMode.sizeIndicator.textContent =
                 `${Math.round(this.imageEditMode.initialWidth)} × ${Math.round(this.imageEditMode.initialHeight)}`;
         }
 
         this.editor.ui.showStatus('Image size reset', 'info');
+    }
+
+    changeZIndex(delta) {
+        if (!this.imageEditMode) return;
+
+        const element = this.imageEditMode.element;
+        const wrapper = this.imageEditMode.wrapper;
+        const imageId = this.imageEditMode.imageId;
+
+        // Get current z-index
+        let currentZIndex = parseInt(element.style.zIndex) || 1;
+
+        // Calculate new z-index (minimum of 0)
+        const newZIndex = Math.max(0, currentZIndex + delta);
+
+        // Update element z-index
+        element.style.zIndex = newZIndex;
+
+        // Update wrapper to be one above
+        wrapper.style.zIndex = newZIndex + 1;
+
+        // Update stored value
+        this.editor.imageZIndexes[imageId] = newZIndex;
+
+        // Update the displayed value
+        const zIndexValueEl = document.getElementById('zindex-value');
+        if (zIndexValueEl) {
+            zIndexValueEl.textContent = newZIndex;
+        }
     }
 
     exitImageEditMode(save = true) {
@@ -902,7 +952,7 @@ export class EditingManager {
         // Remove edit mode class
         element.classList.remove('image-edit-mode');
 
-        // Get final dimensions and position before removing from overlay
+        // Get final dimensions and position before moving back
         const finalWidth = element.offsetWidth;
         const finalHeight = element.offsetHeight;
         const finalLeft = parseInt(element.style.left) || this.imageEditMode.viewportX;
@@ -921,6 +971,9 @@ export class EditingManager {
                 position: 'absolute'
             };
 
+            // Get the z-index from imageZIndexes (set by changeZIndex or from original)
+            const savedZIndex = this.editor.imageZIndexes?.[imageId];
+
             // Apply the final styles to the element
             element.style.width = `${finalWidth}px`;
             element.style.height = `${finalHeight}px`;
@@ -929,7 +982,12 @@ export class EditingManager {
             element.style.position = 'absolute';
             element.style.marginLeft = '0';
             element.style.marginTop = '0';
-            element.style.zIndex = '';
+            // Only apply z-index if it was explicitly changed, otherwise clear it
+            if (savedZIndex !== undefined) {
+                element.style.zIndex = savedZIndex;
+            } else {
+                element.style.zIndex = this.imageEditMode.originalStyles.zIndex || '';
+            }
 
             this.editor.ui.showStatus('Image size and position saved', 'success');
         } else {
@@ -950,11 +1008,17 @@ export class EditingManager {
             this.imageEditMode.wrapper.remove();
         }
 
+        // Remove overlay if it exists
+        if (this.imageEditMode.overlay) {
+            this.imageEditMode.overlay.remove();
+        }
+
         // Move element back to original parent at the correct position
+        // The element is currently a direct child of body
         if (originalParent) {
-            // Remove from overlay first
+            // Remove from body
             element.remove();
-            
+
             // Insert at the original index
             const siblings = Array.from(originalParent.children);
             if (elementIndex >= 0 && elementIndex < siblings.length) {
@@ -962,11 +1026,6 @@ export class EditingManager {
             } else {
                 originalParent.appendChild(element);
             }
-        }
-
-        // Remove overlay
-        if (this.imageEditMode.overlay) {
-            this.imageEditMode.overlay.remove();
         }
 
         // Clear edit mode state
