@@ -271,13 +271,23 @@ export class ElementManager {
         // Apply saved image sizes if they exist
         if (this.editor.imageSizes && this.editor.imageSizes[imageId]) {
             const savedSize = this.editor.imageSizes[imageId];
-            element.style.width = savedSize.width;
-            element.style.height = savedSize.height;
-            element.style.left = savedSize.left;
-            element.style.top = savedSize.top;
-            element.style.position = savedSize.position || 'absolute';
-            element.style.marginLeft = '0';
-            element.style.marginTop = '0';
+            
+            // Apply size and position to the CONTAINER
+            imageContainer.style.width = savedSize.width;
+            imageContainer.style.height = savedSize.height;
+            imageContainer.style.left = savedSize.left;
+            imageContainer.style.top = savedSize.top;
+            imageContainer.style.position = savedSize.position || 'absolute';
+            imageContainer.style.marginLeft = '0';
+            imageContainer.style.marginTop = '0';
+            
+            // Ensure the image fills the container
+            element.style.width = '100%';
+            element.style.height = '100%';
+            element.style.position = 'static';
+            element.style.left = 'auto';
+            element.style.top = 'auto';
+            element.style.margin = '0';
         }
 
         // Create the resize/move button positioned at top-left

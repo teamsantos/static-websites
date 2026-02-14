@@ -568,7 +568,13 @@ export class EditingManager {
             zIndex: imageElement.style.zIndex,
             opacity: imageElement.style.opacity,
             parentPosition: originalParent.style.position,
-            parentZIndex: originalParent.style.zIndex
+            parentZIndex: originalParent.style.zIndex,
+            parentLeft: originalParent.style.left,
+            parentTop: originalParent.style.top,
+            parentWidth: originalParent.style.width,
+            parentHeight: originalParent.style.height,
+            parentMarginLeft: originalParent.style.marginLeft,
+            parentMarginTop: originalParent.style.marginTop
         };
 
         // Remove from original parent and move to body
@@ -983,16 +989,36 @@ export class EditingManager {
             let parentRelativeLeft = finalLeft;
             let parentRelativeTop = finalTop;
             
+            // For image edit containers, we want to position the CONTAINER, not the image inside it
+            // This ensures the edit controls (which are siblings of the image) move with the image
+            const isImageContainer = originalParent && originalParent.classList.contains('image-edit-container');
+            
             if (originalParent) {
-                const parentRect = originalParent.getBoundingClientRect();
-                // If parent is not positioned, we need to make it positioned for absolute positioning to work
-                const parentStyle = window.getComputedStyle(originalParent);
-                if (parentStyle.position === 'static') {
-                    originalParent.style.position = 'relative';
+                if (isImageContainer) {
+                    // For the container approach, we need to position the container relative to ITS parent
+                    let containerParent = originalParent.offsetParent;
+                    if (!containerParent) containerParent = document.body;
+                    
+                    const containerParentRect = containerParent.getBoundingClientRect();
+                    parentRelativeLeft = finalLeft - containerParentRect.left;
+                    parentRelativeTop = finalTop - containerParentRect.top;
+                    
+                    // Add scroll offsets if the parent is a scroll container (not body/html which are handled by rect)
+                    if (containerParent !== document.body && containerParent !== document.documentElement) {
+                        parentRelativeLeft += containerParent.scrollLeft;
+                        parentRelativeTop += containerParent.scrollTop;
+                    }
+                } else {
+                    const parentRect = originalParent.getBoundingClientRect();
+                    // If parent is not positioned, we need to make it positioned for absolute positioning to work
+                    const parentStyle = window.getComputedStyle(originalParent);
+                    if (parentStyle.position === 'static') {
+                        originalParent.style.position = 'relative';
+                    }
+                    // Convert viewport coordinates to parent-relative coordinates
+                    parentRelativeLeft = finalLeft - parentRect.left;
+                    parentRelativeTop = finalTop - parentRect.top;
                 }
-                // Convert viewport coordinates to parent-relative coordinates
-                parentRelativeLeft = finalLeft - parentRect.left;
-                parentRelativeTop = finalTop - parentRect.top;
             }
 
             // Save the new dimensions and parent-relative position
@@ -1007,19 +1033,41 @@ export class EditingManager {
                 position: 'absolute'
             };
 
-            // Apply the final styles to the element (using parent-relative coordinates)
-            element.style.width = `${finalWidth}px`;
-            element.style.height = `${finalHeight}px`;
-            element.style.left = `${parentRelativeLeft}px`;
-            element.style.top = `${parentRelativeTop}px`;
-            element.style.position = 'absolute';
-            element.style.marginLeft = '0';
-            element.style.marginTop = '0';
-            // Only apply z-index if it was explicitly changed, otherwise clear it
-            if (savedZIndex !== undefined) {
-                element.style.zIndex = savedZIndex;
+            if (isImageContainer) {
+                // Apply styles to the CONTAINER
+                originalParent.style.width = `${finalWidth}px`;
+                originalParent.style.height = `${finalHeight}px`;
+                originalParent.style.left = `${parentRelativeLeft}px`;
+                originalParent.style.top = `${parentRelativeTop}px`;
+                originalParent.style.position = 'absolute';
+                originalParent.style.zIndex = savedZIndex !== undefined ? savedZIndex : (this.imageEditMode.originalStyles.zIndex || '');
+                originalParent.style.marginLeft = '0';
+                originalParent.style.marginTop = '0';
+                
+                // Image fills the container
+                element.style.width = '100%';
+                element.style.height = '100%';
+                element.style.position = 'static';
+                element.style.left = 'auto';
+                element.style.top = 'auto';
+                element.style.zIndex = '';
+                element.style.marginLeft = '0';
+                element.style.marginTop = '0';
             } else {
-                element.style.zIndex = this.imageEditMode.originalStyles.zIndex || '';
+                // Apply the final styles to the element (using parent-relative coordinates)
+                element.style.width = `${finalWidth}px`;
+                element.style.height = `${finalHeight}px`;
+                element.style.left = `${parentRelativeLeft}px`;
+                element.style.top = `${parentRelativeTop}px`;
+                element.style.position = 'absolute';
+                element.style.marginLeft = '0';
+                element.style.marginTop = '0';
+                // Only apply z-index if it was explicitly changed, otherwise clear it
+                if (savedZIndex !== undefined) {
+                    element.style.zIndex = savedZIndex;
+                } else {
+                    element.style.zIndex = this.imageEditMode.originalStyles.zIndex || '';
+                }
             }
 
             // Reset opacity
@@ -1038,6 +1086,18 @@ export class EditingManager {
             element.style.marginTop = originalStyles.marginTop;
             element.style.zIndex = originalStyles.zIndex;
             element.style.opacity = originalStyles.opacity || '';
+
+            // Restore container styles if needed
+            if (originalParent && originalParent.classList.contains('image-edit-container') && originalStyles.parentPosition) {
+                originalParent.style.position = originalStyles.parentPosition;
+                originalParent.style.zIndex = originalStyles.parentZIndex;
+                originalParent.style.left = originalStyles.parentLeft;
+                originalParent.style.top = originalStyles.parentTop;
+                originalParent.style.width = originalStyles.parentWidth;
+                originalParent.style.height = originalStyles.parentHeight;
+                originalParent.style.marginLeft = originalStyles.parentMarginLeft;
+                originalParent.style.marginTop = originalStyles.parentMarginTop;
+            }
         }
 
         // Remove wrapper
