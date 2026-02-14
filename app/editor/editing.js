@@ -525,7 +525,10 @@ export class EditingManager {
             aspectRatio: imageElement.naturalWidth / imageElement.naturalHeight || imageElement.offsetWidth / imageElement.offsetHeight
         };
 
-        // Create overlay
+        // Find the template content container
+        const templateContent = document.getElementById('template-content');
+        
+        // Create overlay inside template content to be in the same stacking context
         const overlay = document.createElement('div');
         overlay.className = 'image-edit-mode-overlay';
         overlay.addEventListener('click', (e) => {
@@ -533,7 +536,13 @@ export class EditingManager {
                 this.exitImageEditMode(false);
             }
         });
-        document.body.appendChild(overlay);
+        
+        // Append overlay to template-content so it's in the same stacking context
+        if (templateContent) {
+            templateContent.appendChild(overlay);
+        } else {
+            document.body.appendChild(overlay);
+        }
         this.imageEditMode.overlay = overlay;
 
         // Add edit mode class to image
@@ -592,7 +601,7 @@ export class EditingManager {
         wrapper.className = 'image-edit-mode-wrapper';
         wrapper.style.position = 'relative';
         wrapper.style.display = 'inline-block';
-        wrapper.style.zIndex = '1002';
+        wrapper.style.zIndex = '10000';
         
         imageElement.parentNode.insertBefore(wrapper, imageElement);
         wrapper.appendChild(imageElement);
