@@ -2476,16 +2476,16 @@ body {
     cursor: default;
 }
 
-/* Wrapper uses absolute positioning for free-range editing */
+/* Wrapper uses fixed positioning for free-range editing (viewport-relative) */
 .image-edit-mode-wrapper {
-    position: absolute !important;
+    position: fixed !important;
     z-index: 1000000 !important;
     pointer-events: none !important;
 }
 
-/* Image in edit mode - absolute positioning for free-range editing */
+/* Image in edit mode - fixed positioning for free-range editing (viewport-relative) */
 .image-edit-mode {
-    position: absolute !important;
+    position: fixed !important;
     z-index: 999999 !important;
     outline: 2px dashed #3b82f6;
     outline-offset: 4px;

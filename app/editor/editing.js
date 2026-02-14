@@ -514,12 +514,10 @@ export class EditingManager {
         this.editor.cancelCurrentEdit();
         this.editor.currentEditingElement = imageElement;
 
-        // Calculate absolute position relative to the page
+        // Calculate viewport-relative position (fixed positioning)
         const rect = imageElement.getBoundingClientRect();
-        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-        const absoluteX = rect.left + scrollX;
-        const absoluteY = rect.top + scrollY;
+        const viewportX = rect.left;
+        const viewportY = rect.top;
 
         // CAPTURE ALL DIMENSIONS BEFORE REMOVING FROM DOM
         const elementWidth = imageElement.offsetWidth;
@@ -532,16 +530,16 @@ export class EditingManager {
         const siblings = Array.from(originalParent.children);
         const elementIndex = siblings.indexOf(imageElement);
 
-        // Store edit mode state with absolute position info
+        // Store edit mode state with viewport-relative position info
         this.imageEditMode = {
             element: imageElement,
             imageId: imageId,
             initialWidth: elementWidth,
             initialHeight: elementHeight,
-            initialLeft: parseInt(imageElement.style.left) || absoluteX,
-            initialTop: parseInt(imageElement.style.top) || absoluteY,
-            absoluteX: absoluteX,
-            absoluteY: absoluteY,
+            initialLeft: viewportX,
+            initialTop: viewportY,
+            viewportX: viewportX,
+            viewportY: viewportY,
             originalParent: originalParent,
             elementIndex: elementIndex,
             aspectRatio: naturalWidth / naturalHeight || elementWidth / elementHeight
@@ -592,29 +590,29 @@ export class EditingManager {
             zIndex: imageElement.style.zIndex
         };
 
-        // Move image to overlay with absolute positioning for free-range editing
+        // Move image to overlay with fixed positioning for free-range editing
         // First, remove from original parent
         imageElement.remove();
-        
-        // Set absolute positioning using CAPTURED dimensions
-        imageElement.style.position = 'absolute';
-        imageElement.style.left = `${absoluteX}px`;
-        imageElement.style.top = `${absoluteY}px`;
+
+        // Set fixed positioning using CAPTURED dimensions (viewport-relative)
+        imageElement.style.position = 'fixed';
+        imageElement.style.left = `${viewportX}px`;
+        imageElement.style.top = `${viewportY}px`;
         imageElement.style.width = `${elementWidth}px`;
         imageElement.style.height = `${elementHeight}px`;
         imageElement.style.marginLeft = '0';
         imageElement.style.marginTop = '0';
         imageElement.style.zIndex = '999999';
-        
+
         // Add edit mode class
         imageElement.classList.add('image-edit-mode');
 
         // Create wrapper for controls (toolbar, handles, size indicator)
         const wrapper = document.createElement('div');
         wrapper.className = 'image-edit-mode-wrapper';
-        wrapper.style.position = 'absolute';
-        wrapper.style.left = `${absoluteX}px`;
-        wrapper.style.top = `${absoluteY}px`;
+        wrapper.style.position = 'fixed';
+        wrapper.style.left = `${viewportX}px`;
+        wrapper.style.top = `${viewportY}px`;
         wrapper.style.width = `${elementWidth}px`;
         wrapper.style.height = `${elementHeight}px`;
         wrapper.style.zIndex = '1000000';
@@ -676,7 +674,7 @@ export class EditingManager {
         // Add image and wrapper to overlay
         overlay.appendChild(imageElement);
         overlay.appendChild(wrapper);
-        
+
         this.imageEditMode.wrapper = wrapper;
         this.imageEditMode.handlesContainer = handlesContainer;
         this.imageEditMode.toolbar = toolbar;
@@ -710,8 +708,8 @@ export class EditingManager {
         this.imageEditMode.startY = touch.clientY;
         this.imageEditMode.startWidth = element.offsetWidth;
         this.imageEditMode.startHeight = element.offsetHeight;
-        this.imageEditMode.startLeft = parseInt(element.style.left) || this.imageEditMode.absoluteX;
-        this.imageEditMode.startTop = parseInt(element.style.top) || this.imageEditMode.absoluteY;
+        this.imageEditMode.startLeft = parseInt(element.style.left) || this.imageEditMode.viewportX;
+        this.imageEditMode.startTop = parseInt(element.style.top) || this.imageEditMode.viewportY;
         
         // Disable overlay pointer events during resize to prevent accidental clicks
         if (this.imageEditMode.overlay) {
@@ -733,8 +731,8 @@ export class EditingManager {
         this.imageEditMode.isMoving = true;
         this.imageEditMode.startX = touch.clientX;
         this.imageEditMode.startY = touch.clientY;
-        this.imageEditMode.startLeft = parseInt(this.imageEditMode.element.style.left) || this.imageEditMode.absoluteX;
-        this.imageEditMode.startTop = parseInt(this.imageEditMode.element.style.top) || this.imageEditMode.absoluteY;
+        this.imageEditMode.startLeft = parseInt(this.imageEditMode.element.style.left) || this.imageEditMode.viewportX;
+        this.imageEditMode.startTop = parseInt(this.imageEditMode.element.style.top) || this.imageEditMode.viewportY;
         
         // Disable overlay pointer events during move to prevent accidental clicks
         if (this.imageEditMode.overlay) {
@@ -907,8 +905,8 @@ export class EditingManager {
         // Get final dimensions and position before removing from overlay
         const finalWidth = element.offsetWidth;
         const finalHeight = element.offsetHeight;
-        const finalLeft = parseInt(element.style.left) || this.imageEditMode.absoluteX;
-        const finalTop = parseInt(element.style.top) || this.imageEditMode.absoluteY;
+        const finalLeft = parseInt(element.style.left) || this.imageEditMode.viewportX;
+        const finalTop = parseInt(element.style.top) || this.imageEditMode.viewportY;
 
         if (save) {
             // Save the new dimensions and absolute position
