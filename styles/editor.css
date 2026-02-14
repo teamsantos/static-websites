@@ -2320,7 +2320,7 @@ body {
     transform: scale(0.95);
 }
 
-/* Common resize handle styles */
+/* Common resize handle styles - positioned relative to wrapper edges */
 .image-resize-handle {
     position: absolute;
     width: 12px;
@@ -2467,40 +2467,41 @@ body {
     height: 16px;
 }
 
-/* Overlay when in image edit mode to prevent other interactions */
+/* Overlay when in image edit mode - fixed to viewport for free-range editing */
 .image-edit-mode-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.3);
-    z-index: 9998;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999998;
     cursor: default;
 }
 
-/* Wrapper should be above overlay */
+/* Wrapper uses absolute positioning for free-range editing */
 .image-edit-mode-wrapper {
-    position: relative !important;
-    z-index: 9999 !important;
+    position: absolute !important;
+    z-index: 1000000 !important;
+    pointer-events: none !important;
 }
 
-/* Image in edit mode should be above overlay */
+/* Image in edit mode - absolute positioning for free-range editing */
 .image-edit-mode {
-    position: relative;
-    z-index: 10000 !important;
+    position: absolute !important;
+    z-index: 999999 !important;
     outline: 2px dashed #3b82f6;
     outline-offset: 4px;
     cursor: move;
     user-select: none;
 }
 
-/* Resize handles container should be above overlay */
+/* Resize handles container - full size of wrapper for free-range editing */
 .image-resize-handles {
     position: absolute;
-    inset: -6px;
+    inset: 0;
     pointer-events: none;
-    z-index: 10001 !important;
+    z-index: 1000001 !important;
 }
 
-/* Toolbar should be above overlay */
+/* Toolbar positioned above the image wrapper */
 .image-edit-toolbar {
     position: absolute;
     top: -44px;
@@ -2512,11 +2513,12 @@ body {
     padding: 8px 12px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 10002 !important;
+    z-index: 1000002 !important;
     white-space: nowrap;
+    pointer-events: auto;
 }
 
-/* Size indicator should be above overlay */
+/* Size indicator positioned below the image wrapper */
 .image-size-indicator {
     position: absolute;
     bottom: -32px;
@@ -2530,8 +2532,9 @@ body {
     font-weight: 500;
     font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
     white-space: nowrap;
-    z-index: 10002 !important;
+    z-index: 1000002 !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    pointer-events: auto;
 }
 
 /* Image dimensions info in modal */

@@ -514,39 +514,111 @@ export class EditingManager {
         this.editor.cancelCurrentEdit();
         this.editor.currentEditingElement = imageElement;
 
-        // Store edit mode state
+        // Calculate absolute position relative to the page
+        const rect = imageElement.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        const absoluteX = rect.left + scrollX;
+        const absoluteY = rect.top + scrollY;
+
+        // CAPTURE ALL DIMENSIONS BEFORE REMOVING FROM DOM
+        const elementWidth = imageElement.offsetWidth;
+        const elementHeight = imageElement.offsetHeight;
+        const naturalWidth = imageElement.naturalWidth || elementWidth;
+        const naturalHeight = imageElement.naturalHeight || elementHeight;
+
+        // Get the element's index among siblings
+        const originalParent = imageElement.parentElement;
+        const siblings = Array.from(originalParent.children);
+        const elementIndex = siblings.indexOf(imageElement);
+
+        // Store edit mode state with absolute position info
         this.imageEditMode = {
             element: imageElement,
             imageId: imageId,
-            initialWidth: imageElement.offsetWidth,
-            initialHeight: imageElement.offsetHeight,
-            initialLeft: parseInt(imageElement.style.marginLeft) || 0,
-            initialTop: parseInt(imageElement.style.marginTop) || 0,
-            aspectRatio: imageElement.naturalWidth / imageElement.naturalHeight || imageElement.offsetWidth / imageElement.offsetHeight
+            initialWidth: elementWidth,
+            initialHeight: elementHeight,
+            initialLeft: parseInt(imageElement.style.left) || absoluteX,
+            initialTop: parseInt(imageElement.style.top) || absoluteY,
+            absoluteX: absoluteX,
+            absoluteY: absoluteY,
+            originalParent: originalParent,
+            elementIndex: elementIndex,
+            aspectRatio: naturalWidth / naturalHeight || elementWidth / elementHeight
         };
 
-        // Find the template content container
-        const templateContent = document.getElementById('template-content');
-        
-        // Create overlay inside template content to be in the same stacking context
+        // Create a body-level overlay for free-range editing
         const overlay = document.createElement('div');
         overlay.className = 'image-edit-mode-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.inset = '0';
+        overlay.style.zIndex = '999998';
+        overlay.style.background = 'rgba(0, 0, 0, 0.5)';
+        overlay.style.cursor = 'default';
+        // Prevent overlay from capturing clicks during drag/resize by using mousedown/mouseup tracking
+        this.imageEditMode.overlayMouseDown = false;
+        overlay.addEventListener('mousedown', () => {
+            this.imageEditMode.overlayMouseDown = true;
+        });
+        overlay.addEventListener('mouseup', () => {
+            // Small delay to let handleMouseUp finish first
+            setTimeout(() => {
+                this.imageEditMode.overlayMouseDown = false;
+            }, 60);
+        });
+        
         overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
+            // Only exit if clicking on overlay itself AND not currently dragging/resizing
+            // AND the overlay itself was clicked (not a drag that ended on overlay)
+            if (e.target === overlay && 
+                !this.imageEditMode?.isResizing && 
+                !this.imageEditMode?.isMoving &&
+                !this.imageEditMode?.overlayMouseDown) {
                 this.exitImageEditMode(false);
             }
         });
-        
-        // Append overlay to template-content so it's in the same stacking context
-        if (templateContent) {
-            templateContent.appendChild(overlay);
-        } else {
-            document.body.appendChild(overlay);
-        }
+        document.body.appendChild(overlay);
         this.imageEditMode.overlay = overlay;
 
-        // Add edit mode class to image
+        // Store original styles
+        this.imageEditMode.originalStyles = {
+            position: imageElement.style.position,
+            left: imageElement.style.left,
+            top: imageElement.style.top,
+            width: imageElement.style.width,
+            height: imageElement.style.height,
+            marginLeft: imageElement.style.marginLeft,
+            marginTop: imageElement.style.marginTop,
+            zIndex: imageElement.style.zIndex
+        };
+
+        // Move image to overlay with absolute positioning for free-range editing
+        // First, remove from original parent
+        imageElement.remove();
+        
+        // Set absolute positioning using CAPTURED dimensions
+        imageElement.style.position = 'absolute';
+        imageElement.style.left = `${absoluteX}px`;
+        imageElement.style.top = `${absoluteY}px`;
+        imageElement.style.width = `${elementWidth}px`;
+        imageElement.style.height = `${elementHeight}px`;
+        imageElement.style.marginLeft = '0';
+        imageElement.style.marginTop = '0';
+        imageElement.style.zIndex = '999999';
+        
+        // Add edit mode class
         imageElement.classList.add('image-edit-mode');
+
+        // Create wrapper for controls (toolbar, handles, size indicator)
+        const wrapper = document.createElement('div');
+        wrapper.className = 'image-edit-mode-wrapper';
+        wrapper.style.position = 'absolute';
+        wrapper.style.left = `${absoluteX}px`;
+        wrapper.style.top = `${absoluteY}px`;
+        wrapper.style.width = `${elementWidth}px`;
+        wrapper.style.height = `${elementHeight}px`;
+        wrapper.style.zIndex = '1000000';
+        wrapper.style.pointerEvents = 'none';
 
         // Create resize handles container
         const handlesContainer = document.createElement('div');
@@ -590,24 +662,20 @@ export class EditingManager {
             </button>
         `;
 
-        // Create size indicator
+        // Create size indicator using captured dimensions
         const sizeIndicator = document.createElement('div');
         sizeIndicator.className = 'image-size-indicator';
-        sizeIndicator.textContent = `${Math.round(imageElement.offsetWidth)} × ${Math.round(imageElement.offsetHeight)}`;
+        sizeIndicator.textContent = `${Math.round(elementWidth)} × ${Math.round(elementHeight)}`;
         this.imageEditMode.sizeIndicator = sizeIndicator;
 
-        // Wrap the image and add controls
-        const wrapper = document.createElement('div');
-        wrapper.className = 'image-edit-mode-wrapper';
-        wrapper.style.position = 'relative';
-        wrapper.style.display = 'inline-block';
-        wrapper.style.zIndex = '10000';
-        
-        imageElement.parentNode.insertBefore(wrapper, imageElement);
-        wrapper.appendChild(imageElement);
+        // Assemble the wrapper
         wrapper.appendChild(handlesContainer);
         wrapper.appendChild(toolbar);
         wrapper.appendChild(sizeIndicator);
+        
+        // Add image and wrapper to overlay
+        overlay.appendChild(imageElement);
+        overlay.appendChild(wrapper);
         
         this.imageEditMode.wrapper = wrapper;
         this.imageEditMode.handlesContainer = handlesContainer;
@@ -634,13 +702,21 @@ export class EditingManager {
         e.stopPropagation();
 
         const touch = e.touches ? e.touches[0] : e;
+        const element = this.imageEditMode.element;
         
         this.imageEditMode.isResizing = true;
         this.imageEditMode.resizePosition = position;
         this.imageEditMode.startX = touch.clientX;
         this.imageEditMode.startY = touch.clientY;
-        this.imageEditMode.startWidth = this.imageEditMode.element.offsetWidth;
-        this.imageEditMode.startHeight = this.imageEditMode.element.offsetHeight;
+        this.imageEditMode.startWidth = element.offsetWidth;
+        this.imageEditMode.startHeight = element.offsetHeight;
+        this.imageEditMode.startLeft = parseInt(element.style.left) || this.imageEditMode.absoluteX;
+        this.imageEditMode.startTop = parseInt(element.style.top) || this.imageEditMode.absoluteY;
+        
+        // Disable overlay pointer events during resize to prevent accidental clicks
+        if (this.imageEditMode.overlay) {
+            this.imageEditMode.overlay.style.pointerEvents = 'none';
+        }
     }
 
     startMove(e) {
@@ -657,8 +733,13 @@ export class EditingManager {
         this.imageEditMode.isMoving = true;
         this.imageEditMode.startX = touch.clientX;
         this.imageEditMode.startY = touch.clientY;
-        this.imageEditMode.startMarginLeft = parseInt(this.imageEditMode.element.style.marginLeft) || 0;
-        this.imageEditMode.startMarginTop = parseInt(this.imageEditMode.element.style.marginTop) || 0;
+        this.imageEditMode.startLeft = parseInt(this.imageEditMode.element.style.left) || this.imageEditMode.absoluteX;
+        this.imageEditMode.startTop = parseInt(this.imageEditMode.element.style.top) || this.imageEditMode.absoluteY;
+        
+        // Disable overlay pointer events during move to prevent accidental clicks
+        if (this.imageEditMode.overlay) {
+            this.imageEditMode.overlay.style.pointerEvents = 'none';
+        }
     }
 
     handleMouseMove(e) {
@@ -680,10 +761,13 @@ export class EditingManager {
         const deltaY = touch.clientY - this.imageEditMode.startY;
         const position = this.imageEditMode.resizePosition;
         const element = this.imageEditMode.element;
+        const wrapper = this.imageEditMode.wrapper;
         const aspectRatio = this.imageEditMode.aspectRatio;
 
         let newWidth = this.imageEditMode.startWidth;
         let newHeight = this.imageEditMode.startHeight;
+        let newLeft = parseInt(element.style.left);
+        let newTop = parseInt(element.style.top);
 
         // Calculate new dimensions based on which handle is being dragged
         const isCorner = position.includes('top-left') || position.includes('top-right') || 
@@ -693,12 +777,14 @@ export class EditingManager {
             newWidth = Math.max(50, this.imageEditMode.startWidth + deltaX);
         } else if (position.includes('left')) {
             newWidth = Math.max(50, this.imageEditMode.startWidth - deltaX);
+            newLeft = this.imageEditMode.startLeft + (this.imageEditMode.startWidth - newWidth);
         }
 
         if (position.includes('bottom')) {
             newHeight = Math.max(50, this.imageEditMode.startHeight + deltaY);
         } else if (position.includes('top')) {
             newHeight = Math.max(50, this.imageEditMode.startHeight - deltaY);
+            newTop = this.imageEditMode.startTop + (this.imageEditMode.startHeight - newHeight);
         }
 
         // Maintain aspect ratio for corner handles
@@ -712,11 +798,27 @@ export class EditingManager {
             } else {
                 newWidth = newHeight * aspectRatio;
             }
+
+            // Recalculate position for top/left corners when maintaining aspect ratio
+            if (position.includes('left')) {
+                newLeft = this.imageEditMode.startLeft + (this.imageEditMode.startWidth - newWidth);
+            }
+            if (position.includes('top')) {
+                newTop = this.imageEditMode.startTop + (this.imageEditMode.startHeight - newHeight);
+            }
         }
 
-        // Apply new dimensions
+        // Apply new dimensions and position
         element.style.width = `${Math.round(newWidth)}px`;
         element.style.height = `${Math.round(newHeight)}px`;
+        element.style.left = `${Math.round(newLeft)}px`;
+        element.style.top = `${Math.round(newTop)}px`;
+
+        // Update wrapper to match
+        wrapper.style.width = `${Math.round(newWidth)}px`;
+        wrapper.style.height = `${Math.round(newHeight)}px`;
+        wrapper.style.left = `${Math.round(newLeft)}px`;
+        wrapper.style.top = `${Math.round(newTop)}px`;
 
         // Update size indicator
         if (this.imageEditMode.sizeIndicator) {
@@ -728,31 +830,53 @@ export class EditingManager {
         const deltaX = touch.clientX - this.imageEditMode.startX;
         const deltaY = touch.clientY - this.imageEditMode.startY;
         const element = this.imageEditMode.element;
+        const wrapper = this.imageEditMode.wrapper;
 
-        const newMarginLeft = this.imageEditMode.startMarginLeft + deltaX;
-        const newMarginTop = this.imageEditMode.startMarginTop + deltaY;
+        const newLeft = this.imageEditMode.startLeft + deltaX;
+        const newTop = this.imageEditMode.startTop + deltaY;
 
-        element.style.marginLeft = `${newMarginLeft}px`;
-        element.style.marginTop = `${newMarginTop}px`;
+        // Update both image and wrapper positions
+        element.style.left = `${newLeft}px`;
+        element.style.top = `${newTop}px`;
+        wrapper.style.left = `${newLeft}px`;
+        wrapper.style.top = `${newTop}px`;
     }
 
     handleMouseUp(e) {
         if (!this.imageEditMode) return;
 
-        this.imageEditMode.isResizing = false;
-        this.imageEditMode.isMoving = false;
+        // Re-enable overlay pointer events
+        if (this.imageEditMode.overlay) {
+            this.imageEditMode.overlay.style.pointerEvents = '';
+        }
+
+        // Clear flags after a small delay to prevent overlay click from triggering
+        // immediately after drag/resize ends (prevents accidental exit)
+        setTimeout(() => {
+            if (this.imageEditMode) {
+                this.imageEditMode.isResizing = false;
+                this.imageEditMode.isMoving = false;
+            }
+        }, 50);
     }
 
     resetImageSize() {
         if (!this.imageEditMode) return;
 
         const element = this.imageEditMode.element;
+        const wrapper = this.imageEditMode.wrapper;
         
-        // Reset to initial dimensions
+        // Reset to initial dimensions and position
         element.style.width = `${this.imageEditMode.initialWidth}px`;
         element.style.height = `${this.imageEditMode.initialHeight}px`;
-        element.style.marginLeft = `${this.imageEditMode.initialLeft}px`;
-        element.style.marginTop = `${this.imageEditMode.initialTop}px`;
+        element.style.left = `${this.imageEditMode.initialLeft}px`;
+        element.style.top = `${this.imageEditMode.initialTop}px`;
+
+        // Update wrapper to match
+        wrapper.style.width = `${this.imageEditMode.initialWidth}px`;
+        wrapper.style.height = `${this.imageEditMode.initialHeight}px`;
+        wrapper.style.left = `${this.imageEditMode.initialLeft}px`;
+        wrapper.style.top = `${this.imageEditMode.initialTop}px`;
 
         // Update size indicator
         if (this.imageEditMode.sizeIndicator) {
@@ -768,6 +892,8 @@ export class EditingManager {
 
         const element = this.imageEditMode.element;
         const imageId = this.imageEditMode.imageId;
+        const originalParent = this.imageEditMode.originalParent;
+        const elementIndex = this.imageEditMode.elementIndex;
 
         // Remove event listeners
         document.removeEventListener('mousemove', this.imageEditMode.mouseMoveHandler);
@@ -775,34 +901,69 @@ export class EditingManager {
         document.removeEventListener('touchmove', this.imageEditMode.mouseMoveHandler);
         document.removeEventListener('touchend', this.imageEditMode.mouseUpHandler);
 
+        // Remove edit mode class
+        element.classList.remove('image-edit-mode');
+
+        // Get final dimensions and position before removing from overlay
+        const finalWidth = element.offsetWidth;
+        const finalHeight = element.offsetHeight;
+        const finalLeft = parseInt(element.style.left) || this.imageEditMode.absoluteX;
+        const finalTop = parseInt(element.style.top) || this.imageEditMode.absoluteY;
+
         if (save) {
-            // Save the new dimensions and position
+            // Save the new dimensions and absolute position
             if (!this.editor.imageSizes) {
                 this.editor.imageSizes = {};
             }
             this.editor.imageSizes[imageId] = {
-                width: element.style.width,
-                height: element.style.height,
-                marginLeft: element.style.marginLeft,
-                marginTop: element.style.marginTop
+                width: `${finalWidth}px`,
+                height: `${finalHeight}px`,
+                left: `${finalLeft}px`,
+                top: `${finalTop}px`,
+                position: 'absolute'
             };
+
+            // Apply the final styles to the element
+            element.style.width = `${finalWidth}px`;
+            element.style.height = `${finalHeight}px`;
+            element.style.left = `${finalLeft}px`;
+            element.style.top = `${finalTop}px`;
+            element.style.position = 'absolute';
+            element.style.marginLeft = '0';
+            element.style.marginTop = '0';
+            element.style.zIndex = '';
+
             this.editor.ui.showStatus('Image size and position saved', 'success');
         } else {
-            // Restore original dimensions
-            element.style.width = `${this.imageEditMode.initialWidth}px`;
-            element.style.height = `${this.imageEditMode.initialHeight}px`;
-            element.style.marginLeft = `${this.imageEditMode.initialLeft}px`;
-            element.style.marginTop = `${this.imageEditMode.initialTop}px`;
+            // Restore original styles
+            const originalStyles = this.imageEditMode.originalStyles;
+            element.style.position = originalStyles.position;
+            element.style.left = originalStyles.left;
+            element.style.top = originalStyles.top;
+            element.style.width = originalStyles.width;
+            element.style.height = originalStyles.height;
+            element.style.marginLeft = originalStyles.marginLeft;
+            element.style.marginTop = originalStyles.marginTop;
+            element.style.zIndex = originalStyles.zIndex;
         }
 
-        // Remove edit mode class
-        element.classList.remove('image-edit-mode');
-
-        // Unwrap the image
+        // Remove wrapper
         if (this.imageEditMode.wrapper) {
-            const wrapper = this.imageEditMode.wrapper;
-            wrapper.parentNode.insertBefore(element, wrapper);
-            wrapper.remove();
+            this.imageEditMode.wrapper.remove();
+        }
+
+        // Move element back to original parent at the correct position
+        if (originalParent) {
+            // Remove from overlay first
+            element.remove();
+            
+            // Insert at the original index
+            const siblings = Array.from(originalParent.children);
+            if (elementIndex >= 0 && elementIndex < siblings.length) {
+                originalParent.insertBefore(element, siblings[elementIndex]);
+            } else {
+                originalParent.appendChild(element);
+            }
         }
 
         // Remove overlay
