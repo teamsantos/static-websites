@@ -566,6 +566,7 @@ export class EditingManager {
             marginLeft: imageElement.style.marginLeft,
             marginTop: imageElement.style.marginTop,
             zIndex: imageElement.style.zIndex,
+            opacity: imageElement.style.opacity,
             parentPosition: originalParent.style.position,
             parentZIndex: originalParent.style.zIndex
         };
@@ -599,7 +600,7 @@ export class EditingManager {
         wrapper.style.top = `${viewportY + window.scrollY}px`;
         wrapper.style.width = `${elementWidth}px`;
         wrapper.style.height = `${elementHeight}px`;
-        wrapper.style.zIndex = effectiveZIndex + 1; // Just above the image
+        wrapper.style.zIndex = 2147483647; // Maximum z-index so controls are always accessible
         wrapper.style.pointerEvents = 'none';
 
         // Create resize handles container
@@ -916,14 +917,23 @@ export class EditingManager {
         // Get current z-index
         let currentZIndex = parseInt(element.style.zIndex) || 1;
 
-        // Calculate new z-index (minimum of 0)
-        const newZIndex = Math.max(0, currentZIndex + delta);
+        // Calculate new z-index - allow negative values to go below other elements
+        // Minimum is -100 to prevent accidentally hiding it too much
+        const newZIndex = Math.max(-100, currentZIndex + delta);
 
         // Update element z-index
         element.style.zIndex = newZIndex;
 
-        // Update wrapper to be one above
-        wrapper.style.zIndex = newZIndex + 1;
+        // Keep wrapper at a high z-index so controls are always accessible
+        // This ensures users can still interact with the image even when it's behind other elements
+        wrapper.style.zIndex = 2147483647; // Maximum z-index value
+
+        // Visual feedback: add opacity change when image is behind other elements
+        if (newZIndex < 0) {
+            element.style.opacity = '0.7';
+        } else {
+            element.style.opacity = '1';
+        }
 
         // Update stored value
         this.editor.imageZIndexes[imageId] = newZIndex;
@@ -932,6 +942,11 @@ export class EditingManager {
         const zIndexValueEl = document.getElementById('zindex-value');
         if (zIndexValueEl) {
             zIndexValueEl.textContent = newZIndex;
+        }
+
+        // Show status message to help user understand
+        if (newZIndex < 0) {
+            this.editor.ui.showStatus(`Image z-index: ${newZIndex} (behind other elements)`, 'info');
         }
     }
 
@@ -989,6 +1004,9 @@ export class EditingManager {
                 element.style.zIndex = this.imageEditMode.originalStyles.zIndex || '';
             }
 
+            // Reset opacity
+            element.style.opacity = '';
+
             this.editor.ui.showStatus('Image size and position saved', 'success');
         } else {
             // Restore original styles
@@ -1001,6 +1019,7 @@ export class EditingManager {
             element.style.marginLeft = originalStyles.marginLeft;
             element.style.marginTop = originalStyles.marginTop;
             element.style.zIndex = originalStyles.zIndex;
+            element.style.opacity = originalStyles.opacity || '';
         }
 
         // Remove wrapper

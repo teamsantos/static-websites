@@ -255,36 +255,54 @@ export class ElementManager {
     }
 
     /**
-     * Add an edit button overlay on an image element
-     * The button appears on hover and allows entering resize/move mode
+     * Add edit controls on an image element
+     * - Top-left: Resize/move button (Edit)
+     * - Middle overlay: Click to change image
      */
     addImageEditButton(element, imageId) {
         // Create a container for the image with relative positioning
         const imageContainer = document.createElement('div');
         imageContainer.className = 'image-edit-container';
-        
+
         // Insert container before element and move element inside
         element.parentNode.insertBefore(imageContainer, element);
         imageContainer.appendChild(element);
 
-        // Create the edit button
-        const editButton = document.createElement('button');
-        editButton.className = 'image-edit-overlay-btn';
-        editButton.title = 'Adjust size & position';
-        editButton.innerHTML = `
+        // Create the resize/move button positioned at top-left
+        const resizeButton = document.createElement('button');
+        resizeButton.className = 'image-resize-btn';
+        resizeButton.title = 'Resize & Move';
+        resizeButton.innerHTML = `
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
         `;
-        
-        editButton.addEventListener('click', (e) => {
+
+        resizeButton.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.editor.editing.enterImageEditMode(imageId, element);
         });
 
-        imageContainer.appendChild(editButton);
+        imageContainer.appendChild(resizeButton);
+
+        // Create the light overlay that appears on hover for changing image
+        const hoverOverlay = document.createElement('div');
+        hoverOverlay.className = 'image-hover-overlay';
+        hoverOverlay.innerHTML = '<span class="change-image-text">Click to change image</span>';
+
+        hoverOverlay.addEventListener('click', (e) => {
+            // Skip if in image edit mode (resize/move)
+            if (this.editor.editing.imageEditMode) {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            this.editor.editing.startImageEditing(element);
+        });
+
+        imageContainer.appendChild(hoverOverlay);
     }
 
      loadIconFiles(containerOrDoc) {

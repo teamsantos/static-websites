@@ -109,15 +109,20 @@ class TemplateEditor {
 
     // Editing methods delegated to EditingManager
     handleElementClick(event) {
+        // Skip if we're in image resize/move edit mode
+        if (this.editing.imageEditMode) {
+            return;
+        }
+
         // For shadow DOM, we need to use composedPath to find the actual target
         // event.composedPath() returns the path of elements the event traveled through
         const path = event.composedPath();
-        
+
         // Find if any element in the path is an editable element
-        const editableElement = path.find(el => 
+        const editableElement = path.find(el =>
             el.classList && el.classList.contains('editable-element')
         );
-        
+
         if (editableElement) {
             // Create a synthetic event-like object with the correct target
             const syntheticEvent = {

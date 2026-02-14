@@ -261,23 +261,14 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
 }
 
-.editable-element[data-image-src]:hover::after {
-    content: "Click to change image";
-    position: absolute;
-    top: -32px;
-    left: 0;
-    background: #1e293b;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
-    white-space: nowrap;
-    z-index: 1001;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    text-transform: none;
-    letter-spacing: normal;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, sans-serif;
+/* Remove default hover outline and tooltip for images since we have a nicer overlay */
+.editable-element[data-image-src]:hover {
+    box-shadow: none;
+}
+
+/* Remove the tooltip for images inside the edit container - overlay shows the text instead */
+.image-edit-container .editable-element[data-image-src]:hover::after {
+    display: none;
 }
 
 .editable-element[data-icon-id]:hover::after {
@@ -2272,25 +2263,25 @@ body {
    Image Edit Mode Styles
    ============================================ */
 
-/* Image edit container - wraps image and edit button */
+/* Image edit container - wraps image and edit controls */
 .image-edit-container {
     position: relative;
     display: inline-block;
 }
 
-/* Edit button overlay on image */
-.image-edit-overlay-btn {
+/* Resize/Move button - positioned at top-left */
+.image-resize-btn {
     position: absolute;
     top: 8px;
-    right: 8px;
-    width: 36px;
-    height: 36px;
+    left: 8px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(99, 102, 241, 0.9);
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     color: white;
     cursor: pointer;
     opacity: 0;
@@ -2298,26 +2289,58 @@ body {
     transition: all 0.2s ease;
     z-index: 10;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
 }
 
-.image-edit-overlay-btn svg {
-    width: 18px;
-    height: 18px;
+.image-resize-btn svg {
+    width: 16px;
+    height: 16px;
 }
 
-.image-edit-container:hover .image-edit-overlay-btn,
-.image-edit-overlay-btn:focus {
+.image-edit-container:hover .image-resize-btn,
+.image-resize-btn:focus {
     opacity: 1;
     transform: scale(1);
 }
 
-.image-edit-overlay-btn:hover {
+.image-resize-btn:hover {
     background: rgba(79, 70, 229, 1);
     transform: scale(1.1);
 }
 
-.image-edit-overlay-btn:active {
+.image-resize-btn:active {
     transform: scale(0.95);
+}
+
+/* Light hover overlay that covers the entire image for changing image */
+.image-hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(1px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 5;
+    cursor: pointer;
+}
+
+.image-edit-container:hover .image-hover-overlay {
+    opacity: 1;
+}
+
+/* Text shown in the middle of the overlay */
+.change-image-text {
+    background: rgba(30, 41, 59, 0.9);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Common resize handle styles - positioned relative to wrapper edges */
@@ -2475,7 +2498,7 @@ body {
 /* Wrapper for controls around the image in edit mode */
 .image-edit-mode-wrapper {
     position: absolute !important;
-    /* z-index is set dynamically via JS to be one above the image */
+    /* z-index is set to maximum value so controls are always accessible */
     pointer-events: none !important;
 }
 
@@ -2487,6 +2510,7 @@ body {
     outline-offset: 4px;
     cursor: move;
     user-select: none;
+    transition: opacity 0.2s ease;
 }
 
 /* Resize handles container - full size of wrapper for free-range editing */
