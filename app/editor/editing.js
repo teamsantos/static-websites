@@ -992,7 +992,8 @@ export class EditingManager {
         this.editor.imageZIndexes[imageId] = newZIndex;
 
         // Update the displayed value
-        const zIndexValueEl = document.getElementById('zindex-value');
+        // The toolbar is inside the wrapper which is in shadow DOM, so we search within the wrapper
+        const zIndexValueEl = wrapper.querySelector('#zindex-value');
         if (zIndexValueEl) {
             zIndexValueEl.textContent = newZIndex;
         }
@@ -1049,22 +1050,15 @@ export class EditingManager {
             // This ensures the edit controls (which are siblings of the image) move with the image
             const isImageContainer = originalParent && originalParent.classList.contains('image-edit-container');
             
-            if (originalParent) {
-                if (isImageContainer) {
-                    // For the container approach, we need to position the container relative to ITS parent
-                    let containerParent = originalParent.offsetParent;
-                    if (!containerParent) containerParent = document.body;
-                    
-                    const containerParentRect = containerParent.getBoundingClientRect();
-                    parentRelativeLeft = finalLeft - containerParentRect.left;
-                    parentRelativeTop = finalTop - containerParentRect.top;
-                    
-                    // Add scroll offsets if the parent is a scroll container (not body/html which are handled by rect)
-                    if (containerParent !== document.body && containerParent !== document.documentElement) {
-                        parentRelativeLeft += containerParent.scrollLeft;
-                        parentRelativeTop += containerParent.scrollTop;
-                    }
-                } else {
+            if (isImageContainer) {
+                // Move container to shadow wrapper to ensure global z-index works
+                const shadowWrapper = this.editor.shadowRoot.getElementById('template-shadow-wrapper');
+                shadowWrapper.appendChild(originalParent);
+
+                // Use the relative coordinates we captured (which are relative to shadow wrapper)
+                parentRelativeLeft = finalRelativeLeft;
+                parentRelativeTop = finalRelativeTop;
+            } else if (originalParent) {
                     const parentRect = originalParent.getBoundingClientRect();
                     // If parent is not positioned, we need to make it positioned for absolute positioning to work
                     const parentStyle = window.getComputedStyle(originalParent);
@@ -1074,7 +1068,6 @@ export class EditingManager {
                     // Convert viewport coordinates to parent-relative coordinates
                     parentRelativeLeft = finalLeft - parentRect.left;
                     parentRelativeTop = finalTop - parentRect.top;
-                }
             }
 
             // Save the new dimensions and parent-relative position

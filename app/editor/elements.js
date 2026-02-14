@@ -272,6 +272,14 @@ export class ElementManager {
         if (this.editor.imageSizes && this.editor.imageSizes[imageId]) {
             const savedSize = this.editor.imageSizes[imageId];
             
+            // Move to shadow wrapper for global positioning if we have saved state
+            if (this.editor.shadowRoot) {
+                const shadowWrapper = this.editor.shadowRoot.getElementById('template-shadow-wrapper');
+                if (shadowWrapper) {
+                    shadowWrapper.appendChild(imageContainer);
+                }
+            }
+            
             // Apply size and position to the CONTAINER
             imageContainer.style.width = savedSize.width;
             imageContainer.style.height = savedSize.height;
@@ -288,6 +296,16 @@ export class ElementManager {
             element.style.left = 'auto';
             element.style.top = 'auto';
             element.style.margin = '0';
+            
+            // Apply saved Z-Index to container if available
+            // (We might need to check if zIndex is stored in savedSize or separate)
+            // The editor.js stores zIndexes in this.editor.imageZIndexes separate from sizes?
+            // Let's check editing.js: it saves to this.editor.imageZIndexes[imageId].
+            // It applies it to the element during save.
+            
+            if (this.editor.imageZIndexes && this.editor.imageZIndexes[imageId] !== undefined) {
+                imageContainer.style.zIndex = this.editor.imageZIndexes[imageId];
+            }
         }
 
         // Create the resize/move button positioned at top-left
