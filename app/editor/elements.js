@@ -268,6 +268,18 @@ export class ElementManager {
         element.parentNode.insertBefore(imageContainer, element);
         imageContainer.appendChild(element);
 
+        // Apply saved image sizes if they exist
+        if (this.editor.imageSizes && this.editor.imageSizes[imageId]) {
+            const savedSize = this.editor.imageSizes[imageId];
+            element.style.width = savedSize.width;
+            element.style.height = savedSize.height;
+            element.style.left = savedSize.left;
+            element.style.top = savedSize.top;
+            element.style.position = savedSize.position || 'absolute';
+            element.style.marginLeft = '0';
+            element.style.marginTop = '0';
+        }
+
         // Create the resize/move button positioned at top-left
         const resizeButton = document.createElement('button');
         resizeButton.className = 'image-resize-btn';

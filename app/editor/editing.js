@@ -974,26 +974,44 @@ export class EditingManager {
         const finalTop = parseInt(element.style.top) || this.imageEditMode.viewportY;
 
         if (save) {
-            // Save the new dimensions and absolute position
+            // Get the z-index from imageZIndexes (set by changeZIndex or from original)
+            const savedZIndex = this.editor.imageZIndexes?.[imageId];
+
+            // Calculate parent-relative coordinates
+            // finalLeft/finalTop are viewport coordinates from when element was on body
+            // We need to convert them to be relative to the original parent
+            let parentRelativeLeft = finalLeft;
+            let parentRelativeTop = finalTop;
+            
+            if (originalParent) {
+                const parentRect = originalParent.getBoundingClientRect();
+                // If parent is not positioned, we need to make it positioned for absolute positioning to work
+                const parentStyle = window.getComputedStyle(originalParent);
+                if (parentStyle.position === 'static') {
+                    originalParent.style.position = 'relative';
+                }
+                // Convert viewport coordinates to parent-relative coordinates
+                parentRelativeLeft = finalLeft - parentRect.left;
+                parentRelativeTop = finalTop - parentRect.top;
+            }
+
+            // Save the new dimensions and parent-relative position
             if (!this.editor.imageSizes) {
                 this.editor.imageSizes = {};
             }
             this.editor.imageSizes[imageId] = {
                 width: `${finalWidth}px`,
                 height: `${finalHeight}px`,
-                left: `${finalLeft}px`,
-                top: `${finalTop}px`,
+                left: `${parentRelativeLeft}px`,
+                top: `${parentRelativeTop}px`,
                 position: 'absolute'
             };
 
-            // Get the z-index from imageZIndexes (set by changeZIndex or from original)
-            const savedZIndex = this.editor.imageZIndexes?.[imageId];
-
-            // Apply the final styles to the element
+            // Apply the final styles to the element (using parent-relative coordinates)
             element.style.width = `${finalWidth}px`;
             element.style.height = `${finalHeight}px`;
-            element.style.left = `${finalLeft}px`;
-            element.style.top = `${finalTop}px`;
+            element.style.left = `${parentRelativeLeft}px`;
+            element.style.top = `${parentRelativeTop}px`;
             element.style.position = 'absolute';
             element.style.marginLeft = '0';
             element.style.marginTop = '0';

@@ -131,7 +131,12 @@ export class UtilsManager {
 
     handleKeydown(event) {
         if (event.key === 'Escape') {
-            this.cancelCurrentEdit();
+            // If in image resize/move mode, reset the image instead of canceling edit
+            if (this.editor.editing.imageEditMode) {
+                this.editor.editing.resetImageSize();
+            } else {
+                this.cancelCurrentEdit();
+            }
         }
     }
 
