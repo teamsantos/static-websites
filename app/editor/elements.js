@@ -216,6 +216,10 @@ export class ElementManager {
  
                  element.parentNode.insertBefore(wrapper, element);
                  wrapper.appendChild(element);
+
+                 // Add the edit/resize button overlay on the image
+                 this.addImageEditButton(element, imageSrc);
+
                  const divider = this.createPlusDivider();
                  // Function to update divider visibility based on src attribute
                  const updateDividerVisibility = () => {
@@ -248,6 +252,39 @@ export class ElementManager {
                 this.editor.images[imageId] = element.getAttribute('src') || '';
             }
         });
+    }
+
+    /**
+     * Add an edit button overlay on an image element
+     * The button appears on hover and allows entering resize/move mode
+     */
+    addImageEditButton(element, imageId) {
+        // Create a container for the image with relative positioning
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'image-edit-container';
+        
+        // Insert container before element and move element inside
+        element.parentNode.insertBefore(imageContainer, element);
+        imageContainer.appendChild(element);
+
+        // Create the edit button
+        const editButton = document.createElement('button');
+        editButton.className = 'image-edit-overlay-btn';
+        editButton.title = 'Adjust size & position';
+        editButton.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+        `;
+        
+        editButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.editor.editing.enterImageEditMode(imageId, element);
+        });
+
+        imageContainer.appendChild(editButton);
     }
 
      loadIconFiles(containerOrDoc) {

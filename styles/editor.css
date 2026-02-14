@@ -2267,3 +2267,338 @@ body {
         gap: 8px;
     }
 }
+
+/* ============================================
+   Image Edit Mode Styles
+   ============================================ */
+
+/* Image edit container - wraps image and edit button */
+.image-edit-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* Edit button overlay on image */
+.image-edit-overlay-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.9);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s ease;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-edit-overlay-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.image-edit-container:hover .image-edit-overlay-btn,
+.image-edit-overlay-btn:focus {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.image-edit-overlay-btn:hover {
+    background: rgba(79, 70, 229, 1);
+    transform: scale(1.1);
+}
+
+.image-edit-overlay-btn:active {
+    transform: scale(0.95);
+}
+
+/* Image edit mode container wrapper */
+.image-edit-mode-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+/* Image in edit mode */
+.image-edit-mode {
+    position: relative;
+    outline: 2px dashed #3b82f6;
+    outline-offset: 4px;
+    cursor: move;
+    user-select: none;
+}
+
+/* Resize handles container */
+.image-resize-handles {
+    position: absolute;
+    inset: -6px;
+    pointer-events: none;
+    z-index: 1002;
+}
+
+/* Common resize handle styles */
+.image-resize-handle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #ffffff;
+    border: 2px solid #3b82f6;
+    border-radius: 2px;
+    pointer-events: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s ease, background-color 0.1s ease;
+}
+
+.image-resize-handle:hover {
+    background: #3b82f6;
+    transform: scale(1.2);
+}
+
+/* Corner handles */
+.image-resize-handle.top-left {
+    top: 0;
+    left: 0;
+    cursor: nwse-resize;
+}
+
+.image-resize-handle.top-right {
+    top: 0;
+    right: 0;
+    cursor: nesw-resize;
+}
+
+.image-resize-handle.bottom-left {
+    bottom: 0;
+    left: 0;
+    cursor: nesw-resize;
+}
+
+.image-resize-handle.bottom-right {
+    bottom: 0;
+    right: 0;
+    cursor: nwse-resize;
+}
+
+/* Edge handles */
+.image-resize-handle.top-center {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+}
+
+.image-resize-handle.bottom-center {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+}
+
+.image-resize-handle.middle-left {
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+}
+
+.image-resize-handle.middle-right {
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+}
+
+.image-resize-handle.top-center:hover,
+.image-resize-handle.bottom-center:hover {
+    transform: translateX(-50%) scale(1.2);
+}
+
+.image-resize-handle.middle-left:hover,
+.image-resize-handle.middle-right:hover {
+    transform: translateY(-50%) scale(1.2);
+}
+
+/* Image edit mode toolbar */
+.image-edit-toolbar {
+    position: absolute;
+    top: -44px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    background: #1e293b;
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1003;
+    white-space: nowrap;
+}
+
+.image-edit-toolbar button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #f8fafc;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.image-edit-toolbar button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.image-edit-toolbar button.primary {
+    background: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.image-edit-toolbar button.primary:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.image-edit-toolbar button svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Size indicator tooltip */
+.image-size-indicator {
+    position: absolute;
+    bottom: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #f8fafc;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    white-space: nowrap;
+    z-index: 1003;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Edit mode button in the image modal */
+.image-edit-mode-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.image-edit-mode-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.image-edit-mode-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Overlay when in image edit mode to prevent other interactions */
+.image-edit-mode-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    cursor: default;
+}
+
+/* Image dimensions info in modal */
+.image-dimensions-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.image-dimension-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.image-dimension-input-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.image-dimension-input {
+    width: 70px;
+    padding: 6px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    text-align: center;
+    color: #0f172a;
+}
+
+.image-dimension-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.image-dimension-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.15s ease;
+}
+
+.image-dimension-link:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.image-dimension-link.linked {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.image-dimension-link svg {
+    width: 14px;
+    height: 14px;
+}

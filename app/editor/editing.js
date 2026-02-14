@@ -499,6 +499,313 @@ export class EditingManager {
         this.selectedFile = null;
     }
 
+    // ============================================
+    // Image Edit Mode - Resize and Move
+    // ============================================
+
+    enterImageEditMode(imageId, imageElement) {
+        // imageElement is passed directly from the button on the image
+        if (!imageElement) {
+            this.editor.ui.showStatus('Image element not found', 'error');
+            return;
+        }
+
+        // Cancel any current editing
+        this.editor.cancelCurrentEdit();
+        this.editor.currentEditingElement = imageElement;
+
+        // Store edit mode state
+        this.imageEditMode = {
+            element: imageElement,
+            imageId: imageId,
+            initialWidth: imageElement.offsetWidth,
+            initialHeight: imageElement.offsetHeight,
+            initialLeft: parseInt(imageElement.style.marginLeft) || 0,
+            initialTop: parseInt(imageElement.style.marginTop) || 0,
+            aspectRatio: imageElement.naturalWidth / imageElement.naturalHeight || imageElement.offsetWidth / imageElement.offsetHeight
+        };
+
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'image-edit-mode-overlay';
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                this.exitImageEditMode(false);
+            }
+        });
+        document.body.appendChild(overlay);
+        this.imageEditMode.overlay = overlay;
+
+        // Add edit mode class to image
+        imageElement.classList.add('image-edit-mode');
+
+        // Create resize handles container
+        const handlesContainer = document.createElement('div');
+        handlesContainer.className = 'image-resize-handles';
+        
+        // Create resize handles (corners and edges)
+        const handles = [
+            'top-left', 'top-center', 'top-right',
+            'middle-left', 'middle-right',
+            'bottom-left', 'bottom-center', 'bottom-right'
+        ];
+        
+        handles.forEach(position => {
+            const handle = document.createElement('div');
+            handle.className = `image-resize-handle ${position}`;
+            handle.setAttribute('data-position', position);
+            handle.addEventListener('mousedown', (e) => this.startResize(e, position));
+            handle.addEventListener('touchstart', (e) => this.startResize(e, position), { passive: false });
+            handlesContainer.appendChild(handle);
+        });
+
+        // Create toolbar
+        const toolbar = document.createElement('div');
+        toolbar.className = 'image-edit-toolbar';
+        toolbar.innerHTML = `
+            <button onclick="window.templateEditorInstance.editing.resetImageSize()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                </svg>
+                Reset
+            </button>
+            <button onclick="window.templateEditorInstance.editing.exitImageEditMode(false)">
+                Cancel
+            </button>
+            <button class="primary" onclick="window.templateEditorInstance.editing.exitImageEditMode(true)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Done
+            </button>
+        `;
+
+        // Create size indicator
+        const sizeIndicator = document.createElement('div');
+        sizeIndicator.className = 'image-size-indicator';
+        sizeIndicator.textContent = `${Math.round(imageElement.offsetWidth)} × ${Math.round(imageElement.offsetHeight)}`;
+        this.imageEditMode.sizeIndicator = sizeIndicator;
+
+        // Wrap the image and add controls
+        const wrapper = document.createElement('div');
+        wrapper.className = 'image-edit-mode-wrapper';
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'inline-block';
+        wrapper.style.zIndex = '1002';
+        
+        imageElement.parentNode.insertBefore(wrapper, imageElement);
+        wrapper.appendChild(imageElement);
+        wrapper.appendChild(handlesContainer);
+        wrapper.appendChild(toolbar);
+        wrapper.appendChild(sizeIndicator);
+        
+        this.imageEditMode.wrapper = wrapper;
+        this.imageEditMode.handlesContainer = handlesContainer;
+        this.imageEditMode.toolbar = toolbar;
+
+        // Add move functionality to the image itself
+        imageElement.addEventListener('mousedown', this.startMove.bind(this));
+        imageElement.addEventListener('touchstart', this.startMove.bind(this), { passive: false });
+
+        // Store bound handlers for cleanup
+        this.imageEditMode.mouseMoveHandler = this.handleMouseMove.bind(this);
+        this.imageEditMode.mouseUpHandler = this.handleMouseUp.bind(this);
+        
+        document.addEventListener('mousemove', this.imageEditMode.mouseMoveHandler);
+        document.addEventListener('mouseup', this.imageEditMode.mouseUpHandler);
+        document.addEventListener('touchmove', this.imageEditMode.mouseMoveHandler, { passive: false });
+        document.addEventListener('touchend', this.imageEditMode.mouseUpHandler);
+
+        this.editor.ui.showStatus('Drag to move, use handles to resize', 'info');
+    }
+
+    startResize(e, position) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const touch = e.touches ? e.touches[0] : e;
+        
+        this.imageEditMode.isResizing = true;
+        this.imageEditMode.resizePosition = position;
+        this.imageEditMode.startX = touch.clientX;
+        this.imageEditMode.startY = touch.clientY;
+        this.imageEditMode.startWidth = this.imageEditMode.element.offsetWidth;
+        this.imageEditMode.startHeight = this.imageEditMode.element.offsetHeight;
+    }
+
+    startMove(e) {
+        // Only start move if not clicking on a resize handle
+        if (e.target.classList.contains('image-resize-handle')) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const touch = e.touches ? e.touches[0] : e;
+
+        this.imageEditMode.isMoving = true;
+        this.imageEditMode.startX = touch.clientX;
+        this.imageEditMode.startY = touch.clientY;
+        this.imageEditMode.startMarginLeft = parseInt(this.imageEditMode.element.style.marginLeft) || 0;
+        this.imageEditMode.startMarginTop = parseInt(this.imageEditMode.element.style.marginTop) || 0;
+    }
+
+    handleMouseMove(e) {
+        if (!this.imageEditMode) return;
+
+        const touch = e.touches ? e.touches[0] : e;
+        
+        if (this.imageEditMode.isResizing) {
+            e.preventDefault();
+            this.handleResize(touch);
+        } else if (this.imageEditMode.isMoving) {
+            e.preventDefault();
+            this.handleMove(touch);
+        }
+    }
+
+    handleResize(touch) {
+        const deltaX = touch.clientX - this.imageEditMode.startX;
+        const deltaY = touch.clientY - this.imageEditMode.startY;
+        const position = this.imageEditMode.resizePosition;
+        const element = this.imageEditMode.element;
+        const aspectRatio = this.imageEditMode.aspectRatio;
+
+        let newWidth = this.imageEditMode.startWidth;
+        let newHeight = this.imageEditMode.startHeight;
+
+        // Calculate new dimensions based on which handle is being dragged
+        const isCorner = position.includes('top-left') || position.includes('top-right') || 
+                         position.includes('bottom-left') || position.includes('bottom-right');
+
+        if (position.includes('right')) {
+            newWidth = Math.max(50, this.imageEditMode.startWidth + deltaX);
+        } else if (position.includes('left')) {
+            newWidth = Math.max(50, this.imageEditMode.startWidth - deltaX);
+        }
+
+        if (position.includes('bottom')) {
+            newHeight = Math.max(50, this.imageEditMode.startHeight + deltaY);
+        } else if (position.includes('top')) {
+            newHeight = Math.max(50, this.imageEditMode.startHeight - deltaY);
+        }
+
+        // Maintain aspect ratio for corner handles
+        if (isCorner) {
+            // Use the larger change to determine new size while maintaining aspect ratio
+            const widthRatio = newWidth / this.imageEditMode.startWidth;
+            const heightRatio = newHeight / this.imageEditMode.startHeight;
+            
+            if (Math.abs(widthRatio - 1) > Math.abs(heightRatio - 1)) {
+                newHeight = newWidth / aspectRatio;
+            } else {
+                newWidth = newHeight * aspectRatio;
+            }
+        }
+
+        // Apply new dimensions
+        element.style.width = `${Math.round(newWidth)}px`;
+        element.style.height = `${Math.round(newHeight)}px`;
+
+        // Update size indicator
+        if (this.imageEditMode.sizeIndicator) {
+            this.imageEditMode.sizeIndicator.textContent = `${Math.round(newWidth)} × ${Math.round(newHeight)}`;
+        }
+    }
+
+    handleMove(touch) {
+        const deltaX = touch.clientX - this.imageEditMode.startX;
+        const deltaY = touch.clientY - this.imageEditMode.startY;
+        const element = this.imageEditMode.element;
+
+        const newMarginLeft = this.imageEditMode.startMarginLeft + deltaX;
+        const newMarginTop = this.imageEditMode.startMarginTop + deltaY;
+
+        element.style.marginLeft = `${newMarginLeft}px`;
+        element.style.marginTop = `${newMarginTop}px`;
+    }
+
+    handleMouseUp(e) {
+        if (!this.imageEditMode) return;
+
+        this.imageEditMode.isResizing = false;
+        this.imageEditMode.isMoving = false;
+    }
+
+    resetImageSize() {
+        if (!this.imageEditMode) return;
+
+        const element = this.imageEditMode.element;
+        
+        // Reset to initial dimensions
+        element.style.width = `${this.imageEditMode.initialWidth}px`;
+        element.style.height = `${this.imageEditMode.initialHeight}px`;
+        element.style.marginLeft = `${this.imageEditMode.initialLeft}px`;
+        element.style.marginTop = `${this.imageEditMode.initialTop}px`;
+
+        // Update size indicator
+        if (this.imageEditMode.sizeIndicator) {
+            this.imageEditMode.sizeIndicator.textContent = 
+                `${Math.round(this.imageEditMode.initialWidth)} × ${Math.round(this.imageEditMode.initialHeight)}`;
+        }
+
+        this.editor.ui.showStatus('Image size reset', 'info');
+    }
+
+    exitImageEditMode(save = true) {
+        if (!this.imageEditMode) return;
+
+        const element = this.imageEditMode.element;
+        const imageId = this.imageEditMode.imageId;
+
+        // Remove event listeners
+        document.removeEventListener('mousemove', this.imageEditMode.mouseMoveHandler);
+        document.removeEventListener('mouseup', this.imageEditMode.mouseUpHandler);
+        document.removeEventListener('touchmove', this.imageEditMode.mouseMoveHandler);
+        document.removeEventListener('touchend', this.imageEditMode.mouseUpHandler);
+
+        if (save) {
+            // Save the new dimensions and position
+            if (!this.editor.imageSizes) {
+                this.editor.imageSizes = {};
+            }
+            this.editor.imageSizes[imageId] = {
+                width: element.style.width,
+                height: element.style.height,
+                marginLeft: element.style.marginLeft,
+                marginTop: element.style.marginTop
+            };
+            this.editor.ui.showStatus('Image size and position saved', 'success');
+        } else {
+            // Restore original dimensions
+            element.style.width = `${this.imageEditMode.initialWidth}px`;
+            element.style.height = `${this.imageEditMode.initialHeight}px`;
+            element.style.marginLeft = `${this.imageEditMode.initialLeft}px`;
+            element.style.marginTop = `${this.imageEditMode.initialTop}px`;
+        }
+
+        // Remove edit mode class
+        element.classList.remove('image-edit-mode');
+
+        // Unwrap the image
+        if (this.imageEditMode.wrapper) {
+            const wrapper = this.imageEditMode.wrapper;
+            wrapper.parentNode.insertBefore(element, wrapper);
+            wrapper.remove();
+        }
+
+        // Remove overlay
+        if (this.imageEditMode.overlay) {
+            this.imageEditMode.overlay.remove();
+        }
+
+        // Clear edit mode state
+        this.imageEditMode = null;
+        this.editor.cancelCurrentEdit();
+    }
+
     // Available Font Awesome icons for selection (commonly used icons)
     getAvailableIcons() {
         return [
