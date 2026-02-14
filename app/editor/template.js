@@ -389,6 +389,7 @@ export class TemplateManager {
         // Create wrapper and move content to shadow root
         const wrapper = document.createElement('div');
         wrapper.id = 'template-shadow-wrapper';
+        wrapper.style.position = 'relative'; // Ensure absolute positioning works relative to this wrapper
         wrapper.style.paddingTop = '56px';
         wrapper.style.minHeight = '100vh';
         
@@ -429,6 +430,7 @@ export class TemplateManager {
         // Create wrapper to hold template content with proper padding
         const wrapper = document.createElement('div');
         wrapper.id = 'template-shadow-wrapper';
+        wrapper.style.position = 'relative'; // Ensure absolute positioning works relative to this wrapper
         wrapper.style.paddingTop = '56px';
         wrapper.style.minHeight = '100vh';
 

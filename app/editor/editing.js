@@ -249,22 +249,22 @@ export class EditingManager {
                top = swatchRect.top - modalRect.top + swatchRect.height + gap;
            }
 
-           // Determine horizontal position: prefer right, fallback to left
-           let left;
-           if (spaceRight >= 0) {
-               // Position to the right of the swatch
-               left = swatchRect.left - modalRect.left + swatchRect.width + gap;
-           } else if (spaceLeft >= 0) {
-               // Position to the left of the swatch
-               left = swatchRect.left - modalRect.left - popoverWidth - gap;
-           } else {
-               // Not enough space either way, try to center within modal bounds
-               left = Math.max(gap, Math.min(swatchRect.left - modalRect.left - popoverWidth / 2, modalRect.width - popoverWidth - gap));
-           }
+            // Determine horizontal position: prefer right, fallback to left
+            let left;
+            if (spaceRight >= 0) {
+                // Position to the right of the swatch
+                left = swatchRect.left - modalRect.left + swatchRect.width + gap;
+            } else if (spaceLeft >= 0) {
+                // Position to the left of the swatch
+                left = swatchRect.left - modalRect.left - popoverWidth - gap;
+            } else {
+                // Not enough space either way, try to center within modal bounds
+                left = Math.max(gap, Math.min(swatchRect.left - modalRect.left - popoverWidth / 2, modalRect.width - popoverWidth - gap));
+            }
 
-           popover.style.left = left + 'px';
-           popover.style.top = top + 'px';
-       }
+            popover.style.left = left + 'px';
+            popover.style.top = top + 'px';
+        }
 
      saveTextEdit(editor, element) {
          const newText = editor.value.trim();
@@ -577,14 +577,36 @@ export class EditingManager {
             parentMarginTop: originalParent.style.marginTop
         };
 
-        // Remove from original parent and move to body
+        // Remove from original parent
         imageElement.remove();
 
-        // Set absolute positioning at body level using CAPTURED viewport coordinates
+        // Get the shadow wrapper to append the image to
+        const shadowWrapper = this.editor.shadowRoot.getElementById('template-shadow-wrapper');
+        
+        // Calculate position relative to shadow wrapper
+        // Since shadow wrapper has position: relative, coordinates should be relative to it
+        // We need to use scrollX/Y because viewportX/Y are relative to the viewport
+        // and shadowWrapper is positioned relative to the document (effectively).
+        // Wait, if shadowWrapper is position: relative, then absolute children are relative to IT.
+        // We need to find where shadowWrapper is on the page.
+        const wrapperRect = shadowWrapper.getBoundingClientRect();
+        
+        // The image's current viewport position is (viewportX, viewportY).
+        // The wrapper's current viewport position is (wrapperRect.left, wrapperRect.top).
+        // So the relative position is simply the difference.
+        // We do NOT add scrollX/Y here because both rects are viewport-relative.
+        // As scrolling happens, both rects change together, so the difference remains correct
+        // (assuming the image is supposed to stay fixed on the page as we scroll? No, it should scroll with content).
+        // If we append to wrapper, it will scroll with wrapper.
+        
+        const relativeLeft = viewportX - wrapperRect.left;
+        const relativeTop = viewportY - wrapperRect.top;
+
+        // Set absolute positioning using coordinates relative to shadow wrapper
         // This keeps the image at exactly the same visual position
         imageElement.style.position = 'absolute';
-        imageElement.style.left = `${viewportX + window.scrollX}px`;
-        imageElement.style.top = `${viewportY + window.scrollY}px`;
+        imageElement.style.left = `${relativeLeft}px`;
+        imageElement.style.top = `${relativeTop}px`;
         imageElement.style.width = `${elementWidth}px`;
         imageElement.style.height = `${elementHeight}px`;
         imageElement.style.marginLeft = '0';
@@ -594,16 +616,16 @@ export class EditingManager {
         // Add edit mode class
         imageElement.classList.add('image-edit-mode');
 
-        // Append directly to body (outside all parent divs)
-        document.body.appendChild(imageElement);
+        // Append to shadow wrapper instead of body to maintain stacking context
+        shadowWrapper.appendChild(imageElement);
 
         // Create wrapper for controls (toolbar, handles, size indicator, z-index control)
         // Wrapper is positioned at the same location as the image
         const wrapper = document.createElement('div');
         wrapper.className = 'image-edit-mode-wrapper';
         wrapper.style.position = 'absolute';
-        wrapper.style.left = `${viewportX + window.scrollX}px`;
-        wrapper.style.top = `${viewportY + window.scrollY}px`;
+        wrapper.style.left = `${relativeLeft}px`;
+        wrapper.style.top = `${relativeTop}px`;
         wrapper.style.width = `${elementWidth}px`;
         wrapper.style.height = `${elementHeight}px`;
         wrapper.style.zIndex = 2147483647; // Maximum z-index so controls are always accessible
@@ -668,8 +690,8 @@ export class EditingManager {
         wrapper.appendChild(toolbar);
         wrapper.appendChild(sizeIndicator);
         
-        // Add wrapper to body (same level as image)
-        document.body.appendChild(wrapper);
+        // Add wrapper to shadow wrapper (same level as image)
+        shadowWrapper.appendChild(wrapper);
 
         this.imageEditMode.wrapper = wrapper;
         this.imageEditMode.handlesContainer = handlesContainer;
@@ -745,8 +767,10 @@ export class EditingManager {
         this.imageEditMode.startY = touch.clientY;
         this.imageEditMode.startWidth = element.offsetWidth;
         this.imageEditMode.startHeight = element.offsetHeight;
-        this.imageEditMode.startLeft = parseInt(element.style.left) || this.imageEditMode.viewportX;
-        this.imageEditMode.startTop = parseInt(element.style.top) || this.imageEditMode.viewportY;
+        
+        // Use current style values which are relative to shadow wrapper
+        this.imageEditMode.startLeft = parseFloat(element.style.left);
+        this.imageEditMode.startTop = parseFloat(element.style.top);
         
     }
 
@@ -764,8 +788,9 @@ export class EditingManager {
         this.imageEditMode.isMoving = true;
         this.imageEditMode.startX = touch.clientX;
         this.imageEditMode.startY = touch.clientY;
-        this.imageEditMode.startLeft = parseInt(this.imageEditMode.element.style.left) || this.imageEditMode.viewportX;
-        this.imageEditMode.startTop = parseInt(this.imageEditMode.element.style.top) || this.imageEditMode.viewportY;
+        // Use current style values which are relative to shadow wrapper
+        this.imageEditMode.startLeft = parseFloat(this.imageEditMode.element.style.left);
+        this.imageEditMode.startTop = parseFloat(this.imageEditMode.element.style.top);
     }
 
     handleMouseMove(e) {
@@ -792,8 +817,27 @@ export class EditingManager {
 
         let newWidth = this.imageEditMode.startWidth;
         let newHeight = this.imageEditMode.startHeight;
-        let newLeft = parseInt(element.style.left);
-        let newTop = parseInt(element.style.top);
+        
+        // Use relative start positions
+        let newLeft = this.imageEditMode.startLeft;
+        let newTop = this.imageEditMode.startTop;
+        
+        // Note: For relative positioning inside shadow wrapper, we don't need viewportX/Y fallback 
+        // because startLeft/startTop are already relative to the wrapper due to how we set them in enterImageEditMode
+        // However, we still need to be careful about what startLeft/startTop contained
+        
+        if (isNaN(newLeft)) {
+             // Fallback if parsing failed - re-calculate relative to wrapper
+             const shadowWrapper = this.editor.shadowRoot.getElementById('template-shadow-wrapper');
+             const wrapperRect = shadowWrapper.getBoundingClientRect();
+             newLeft = this.imageEditMode.viewportX - wrapperRect.left;
+        }
+        
+        if (isNaN(newTop)) {
+             const shadowWrapper = this.editor.shadowRoot.getElementById('template-shadow-wrapper');
+             const wrapperRect = shadowWrapper.getBoundingClientRect();
+             newTop = this.imageEditMode.viewportY - wrapperRect.top;
+        }
 
         // Calculate new dimensions based on which handle is being dragged
         const isCorner = position.includes('top-left') || position.includes('top-right') || 
@@ -890,10 +934,13 @@ export class EditingManager {
         element.style.width = `${this.imageEditMode.initialWidth}px`;
         element.style.height = `${this.imageEditMode.initialHeight}px`;
 
-        // For absolute positioning, we need to account for scroll
-        // initialLeft/initialTop are viewport coordinates, convert to document coordinates
-        const resetLeft = this.imageEditMode.initialLeft + window.scrollX;
-        const resetTop = this.imageEditMode.initialTop + window.scrollY;
+        // Calculate initial relative position
+        const shadowWrapper = this.editor.shadowRoot.getElementById('template-shadow-wrapper');
+        const wrapperRect = shadowWrapper.getBoundingClientRect();
+        
+        // initialLeft/initialTop are viewport coordinates
+        const resetLeft = this.imageEditMode.initialLeft - wrapperRect.left;
+        const resetTop = this.imageEditMode.initialTop - wrapperRect.top;
 
         element.style.left = `${resetLeft}px`;
         element.style.top = `${resetTop}px`;
@@ -976,8 +1023,17 @@ export class EditingManager {
         // Get final dimensions and position before moving back
         const finalWidth = element.offsetWidth;
         const finalHeight = element.offsetHeight;
-        const finalLeft = parseInt(element.style.left) || this.imageEditMode.viewportX;
-        const finalTop = parseInt(element.style.top) || this.imageEditMode.viewportY;
+        
+        // These are now relative to the shadow wrapper
+        const finalRelativeLeft = parseFloat(element.style.left);
+        const finalRelativeTop = parseFloat(element.style.top);
+        
+        // Convert to viewport coordinates (for consistent saving logic below)
+        const shadowWrapper = this.editor.shadowRoot.getElementById('template-shadow-wrapper');
+        const wrapperRect = shadowWrapper.getBoundingClientRect();
+        
+        const finalLeft = finalRelativeLeft + wrapperRect.left;
+        const finalTop = finalRelativeTop + wrapperRect.top;
 
         if (save) {
             // Get the z-index from imageZIndexes (set by changeZIndex or from original)
@@ -1073,6 +1129,9 @@ export class EditingManager {
             // Reset opacity
             element.style.opacity = '';
 
+            // If we were using an image container, we don't need to manually restore the element's position attributes to 'static'
+            // because they are set in the block above.
+            
             this.editor.ui.showStatus('Image size and position saved', 'success');
         } else {
             // Restore original styles
@@ -1111,9 +1170,9 @@ export class EditingManager {
         }
 
         // Move element back to original parent at the correct position
-        // The element is currently a direct child of body
+        // The element is currently a child of shadow wrapper
         if (originalParent) {
-            // Remove from body
+            // Remove from shadow wrapper
             element.remove();
 
             // Insert at the original index
