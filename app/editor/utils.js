@@ -101,7 +101,7 @@ export class UtilsManager {
     }
 
     collectExportData() {
-        // Collect the current state for export: images, translations, textColors, icons, iconColors, iconStyles, sectionBackgrounds, and templateId
+        // Collect the current state for export: images, translations, textColors, icons, iconColors, iconStyles, sectionBackgrounds, imageSizes, imageZIndexes, and templateId
         return {
             images: this.editor.images,
             icons: this.editor.icons,
@@ -110,6 +110,8 @@ export class UtilsManager {
             langs: this.editor.translations[this.editor.currentLanguage] || {},
             textColors: this.editor.textColors,
             sectionBackgrounds: this.editor.sectionBackgrounds,
+            imageSizes: this.editor.imageSizes || {},
+            imageZIndexes: this.editor.imageZIndexes || {},
             templateId: this.editor.templateId
         };
     }

@@ -145,7 +145,7 @@ async function getTemplateFromS3(templateId) {
     }
 }
 
-async function generateHtmlFromTemplate(templateId, customImages, customLangs, customTextColors, customSectionBackgrounds, octokit, owner, repo) {
+async function generateHtmlFromTemplate(templateId, customImages, customLangs, customTextColors, customSectionBackgrounds, customImageSizes, customImageZIndexes, octokit, owner, repo) {
     const startTime = Date.now();
 
     try {
@@ -200,7 +200,7 @@ async function generateHtmlFromTemplate(templateId, customImages, customLangs, c
 
         // PERFORMANCE: Use regex-based injection (10x faster than JSDOM)
         logger.info(`[Performance] Starting HTML injection using regex-based method...`);
-        const finalHtml = injectContent(templateHtml, mergedLangs, mergedImages, customTextColors, customSectionBackgrounds);
+        const finalHtml = injectContent(templateHtml, mergedLangs, mergedImages, customTextColors, customSectionBackgrounds, customImageSizes, customImageZIndexes);
 
         const elapsed = Date.now() - startTime;
         logger.info(`[Performance] HTML generation completed in ${elapsed}ms`);
@@ -369,7 +369,7 @@ async function generateWebsiteCore(operationId) {
     }
 
     const metadata = metadataResponse.Item;
-    const { images, langs, templateId, email, projectName, textColors, sectionBackgrounds, signature, tempImageMoves } = metadata;
+    const { images, langs, templateId, email, projectName, textColors, sectionBackgrounds, imageSizes, imageZIndexes, signature, tempImageMoves } = metadata;
 
     // Validate metadata
     if (!images || !langs || !templateId || !email || !projectName) {
@@ -448,7 +448,7 @@ async function generateWebsiteCore(operationId) {
     }
 
     // Generate HTML from template and custom data
-    const html = await generateHtmlFromTemplate(templateId, processedImages, langs, textColors, sectionBackgrounds, octokit, owner, repo);
+    const html = await generateHtmlFromTemplate(templateId, processedImages, langs, textColors, sectionBackgrounds, imageSizes, imageZIndexes, octokit, owner, repo);
 
     if (isUpdate) {
         // For updates, just update the index.html file

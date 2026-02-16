@@ -22,9 +22,11 @@
  * @param {object} images - Image URLs {id: "url"}
  * @param {object} textColors - Text colors {id: "#color"}
  * @param {object} sectionBackgrounds - Section colors {id: "#color"}
+ * @param {object} imageSizes - Image position/size data {id: {width, height, left, top, position}}
+ * @param {object} imageZIndexes - Image z-index values {id: number}
  * @returns {string} - Modified HTML
  */
-export function injectContent(html, langs = {}, images = {}, textColors = {}, sectionBackgrounds = {}) {
+export function injectContent(html, langs = {}, images = {}, textColors = {}, sectionBackgrounds = {}, imageSizes = {}, imageZIndexes = {}) {
   let result = html;
 
   // 1. Inject text content (data-text-id)
@@ -123,12 +125,61 @@ export function injectContent(html, langs = {}, images = {}, textColors = {}, se
   }
 
   // 6. Inject image sources (data-image-src)
+  // For repositioned images: make original invisible but preserve space, then add positioned clone
+  const repositionedImages = []; // Store info about images that need positioned clones
+  
   for (const [imageKey, imageUrl] of Object.entries(images)) {
     const escapedId = imageKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    result = result.replace(
-      new RegExp(`data-image-src=["']${escapedId}["']`, 'g'),
-      `src="${imageUrl}"`
-    );
+    const hasCustomPosition = imageSizes && imageSizes[imageKey];
+    
+    if (hasCustomPosition) {
+      // Image has been repositioned - make original invisible but preserve its space
+      // We need to:
+      // 1. Add src attribute
+      // 2. Add style="visibility: hidden;" to preserve layout space
+      result = result.replace(
+        new RegExp(`<img([^>]*data-image-src=["']${escapedId}["'][^>]*)>`, 'gi'),
+        (match, attributes) => {
+          // Add src attribute (replace data-image-src with src)
+          let newAttrs = attributes.replace(
+            new RegExp(`data-image-src=["']${escapedId}["']`),
+            `src="${imageUrl}" data-image-src="${imageKey}"`
+          );
+          
+          // Add visibility: hidden to preserve space
+          if (newAttrs.includes('style=')) {
+            newAttrs = newAttrs.replace(
+              /style=["']([^"']*)["']/,
+              (styleMatch, existingStyle) => {
+                const trimmed = existingStyle.trim();
+                const separator = trimmed && !trimmed.endsWith(';') ? '; ' : ' ';
+                return `style="${existingStyle}${separator}visibility: hidden;"`;
+              }
+            );
+          } else {
+            newAttrs = `${newAttrs} style="visibility: hidden;"`;
+          }
+          
+          return `<img${newAttrs}>`;
+        }
+      );
+      
+      // Store info for creating the positioned clone
+      const sizeData = imageSizes[imageKey];
+      const zIndex = (imageZIndexes && imageZIndexes[imageKey]) || 1;
+      repositionedImages.push({
+        imageKey,
+        imageUrl,
+        ...sizeData,
+        zIndex
+      });
+    } else {
+      // Normal image - just inject src
+      result = result.replace(
+        new RegExp(`data-image-src=["']${escapedId}["']`, 'g'),
+        `src="${imageUrl}" data-image-src="${imageKey}"`
+      );
+    }
   }
 
   // 7. Inject background images (data-bg-image)
@@ -196,6 +247,38 @@ export function injectContent(html, langs = {}, images = {}, textColors = {}, se
   // Keep data-* attributes in the output so the editor and other tooling
   // can continue to rely on them. If you want to remove specific
   // attributes instead, replace the line above with a targeted regex.
+
+  // 10. Inject positioned image clones for repositioned images
+  // These are absolutely positioned images that replace the hidden originals
+  if (repositionedImages.length > 0) {
+    const positionedImagesHtml = repositionedImages.map(img => {
+      const styles = [
+        'position: absolute',
+        `width: ${img.width}`,
+        `height: ${img.height}`,
+        `left: ${img.left}`,
+        `top: ${img.top}`,
+        `z-index: ${img.zIndex}`,
+        'margin: 0'
+      ].join('; ');
+      
+      return `<img src="${img.imageUrl}" data-repositioned-image="${img.imageKey}" style="${styles}" alt="">`;
+    }).join('\n');
+    
+    // Wrap in a container that's positioned relative to the document
+    const containerHtml = `
+<!-- Repositioned Images Container -->
+<div id="repositioned-images-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 0; overflow: visible; pointer-events: none;">
+${positionedImagesHtml}
+</div>
+`;
+    
+    // Inject before closing </body> tag
+    result = result.replace(
+      /<\/body>/i,
+      `${containerHtml}</body>`
+    );
+  }
 
   return result;
 }
