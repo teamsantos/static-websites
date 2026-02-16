@@ -37,11 +37,13 @@ async function getTemplates() {
         if (dir.isDirectory()) {
             const langs = await getLangsFromTemplate(dir.name);
             const _comingSoon = await comingSoon(`${templatesDir}/${dir.name}/.commingsoon`);
+            const _liveFrame = await fileExists(`${templatesDir}/${dir.name}/.liveframe`);
             templates.push({
                 "name": dir.name,
                 "comingSoon": _comingSoon,
                 "title": langs["title"],
-                "description": langs["description"]
+                "description": langs["description"],
+                "screenshot": _liveFrame ? null : `https://${dir.name.toLowerCase()}.template.e-info.click/assets/images/screenshot.webp`
             });
         }
     }
