@@ -149,7 +149,7 @@ const injectTemplates = (templates, selectText) => {
     scaleIframePreviews();
 };
 
-// Scale iframe previews to fit their containers
+// Scale iframe previews to fill their containers completely
 const scaleIframePreviews = () => {
     const wrappers = document.querySelectorAll('[data-iframe-container]');
     wrappers.forEach(wrapper => {
@@ -160,9 +160,8 @@ const scaleIframePreviews = () => {
         const containerHeight = wrapper.offsetHeight;
         const scaleX = containerWidth / 1920;
         const scaleY = containerHeight / 1080;
-        const scale = Math.min(scaleX, scaleY);
         
-        iframe.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        iframe.style.transform = `translate(-50%, -50%) scale(${scaleX}, ${scaleY})`;
     });
 };
 
