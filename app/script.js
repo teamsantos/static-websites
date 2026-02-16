@@ -93,15 +93,15 @@ const injectTemplates = (templates, selectText) => {
         loading="lazy"
         class="template-screenshot"
     />`
-                    : `<div class="iframe-wrapper">
+                    : `<div class="iframe-wrapper" data-iframe-container>
         <iframe 
             src="https://${template.name}.template.e-info.click"
             title="${template.title} Preview"
             loading="lazy"
             class="template-screenshot"
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts allow-same-origin allow-pointer-lock"
+            data-iframe-preview
         ></iframe>
-        <div class="iframe-click-overlay"></div>
     </div>`
             }
 </div>
@@ -144,6 +144,26 @@ const injectTemplates = (templates, selectText) => {
         fragment.appendChild(card);
     });
     container.appendChild(fragment);
+    
+    // Scale iframe previews to fit their containers
+    scaleIframePreviews();
+};
+
+// Scale iframe previews to fit their containers
+const scaleIframePreviews = () => {
+    const wrappers = document.querySelectorAll('[data-iframe-container]');
+    wrappers.forEach(wrapper => {
+        const iframe = wrapper.querySelector('[data-iframe-preview]');
+        if (!iframe) return;
+        
+        const containerWidth = wrapper.offsetWidth;
+        const containerHeight = wrapper.offsetHeight;
+        const scaleX = containerWidth / 1920;
+        const scaleY = containerHeight / 1080;
+        const scale = Math.min(scaleX, scaleY);
+        
+        iframe.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    });
 };
 
 // Preview Modal Functions
@@ -454,6 +474,13 @@ async function loadTranslations() {
 document.addEventListener('DOMContentLoaded', async () => {
     await loadTranslations();
     setupScrollCueAutoHide();
+    
+    // Re-scale iframe previews on window resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(scaleIframePreviews, 100);
+    }, { passive: true });
 });
 
 function setupScrollCueAutoHide() {
