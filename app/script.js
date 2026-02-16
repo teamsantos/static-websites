@@ -93,13 +93,16 @@ const injectTemplates = (templates, selectText) => {
         loading="lazy"
         class="template-screenshot"
     />`
-                    : `<iframe 
-        src="https://${template.name}.template.e-info.click"
-        title="${template.title} Preview"
-        loading="lazy"
-        class="template-screenshot"
-        sandbox="allow-scripts allow-same-origin"
-    ></iframe>`
+                    : `<div class="iframe-wrapper">
+        <iframe 
+            src="https://${template.name}.template.e-info.click"
+            title="${template.title} Preview"
+            loading="lazy"
+            class="template-screenshot"
+            sandbox="allow-scripts allow-same-origin"
+        ></iframe>
+        <div class="iframe-click-overlay"></div>
+    </div>`
             }
 </div>
 <div class="template-content">

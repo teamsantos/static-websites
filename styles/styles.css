@@ -441,6 +441,28 @@ p {
     transition: transform 300ms ease;
 }
 
+.iframe-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.iframe-wrapper .template-screenshot {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.iframe-click-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    cursor: pointer;
+}
+
 .template-card:hover .template-screenshot {
     transform: scale(1.05);
 }
