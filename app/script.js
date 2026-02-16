@@ -36,9 +36,9 @@ const injectPlans = (plans) => {
 
 <div class="plan-action">
     ${isComingSoon
-    ? `<button class="btn btn-disabled coming-soon-btn" disabled>Coming Soon</button>`
-    : `<button class="btn btn-primary pay-btn" redirect-to="_templates">Choose Plan</button>`
-    }
+                ? `<button class="btn btn-disabled coming-soon-btn" disabled>Coming Soon</button>`
+                : `<button class="btn btn-primary pay-btn" redirect-to="_templates">Choose Plan</button>`
+            }
 </div>
 `;
         // Handle click events for coming soon
@@ -81,19 +81,19 @@ const injectTemplates = (templates, selectText) => {
         card.innerHTML = `
 <div class="template-image">
     ${template.comingSoon
-    ? `<div class="frame-placeholder">
+                ? `<div class="frame-placeholder">
         <div class="placeholder-content">
             <span>Preview Coming Soon</span>
         </div>
         <div class="coming-soon-badge">Coming Soon</div>
     </div>`
-    : `<img 
+                : `<img 
         src="${template.screenshot}"
         alt="${template.title} Preview"
         loading="lazy"
         class="template-screenshot"
     />`
-    }
+            }
 </div>
 <div class="template-content">
     <div class="template-header">
@@ -300,9 +300,9 @@ const showComingSoonNotification = (templateName, plan = false) => {
 <div class="notification-content">
     <h4>Coming Soon!</h4>
     ${!plan
-    ? `<p>The ${templateName} template is currently in development. Check back soon!</p>`
-    : ''
-    }
+            ? `<p>The ${templateName} template is currently in development. Check back soon!</p>`
+            : ''
+        }
     <button class="btn btn-primary notification-close">Got it</button>
 </div>
 `;
