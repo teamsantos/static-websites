@@ -77,7 +77,6 @@ const injectTemplates = (templates, selectText) => {
         card.className = `template-card ${template.comingSoon ? 'coming-soon' : ''}`;
         const previewText = 'Preview';
         const previewButtonClass = template.comingSoon ? 'btn btn-secondary btn-full disabled' : 'btn btn-primary btn-full';
-        console.log(JSON.stringify(template));
         card.innerHTML = `
 <div class="template-image">
     ${template.comingSoon
@@ -87,12 +86,20 @@ const injectTemplates = (templates, selectText) => {
         </div>
         <div class="coming-soon-badge">Coming Soon</div>
     </div>`
-                : `<img 
+                : template.screenshot
+                    ? `<img 
         src="${template.screenshot}"
         alt="${template.title} Preview"
         loading="lazy"
         class="template-screenshot"
     />`
+                    : `<iframe 
+        src="https://${template.name}.template.e-info.click"
+        title="${template.title} Preview"
+        loading="lazy"
+        class="template-screenshot"
+        sandbox="allow-scripts allow-same-origin"
+    ></iframe>`
             }
 </div>
 <div class="template-content">
