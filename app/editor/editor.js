@@ -10,6 +10,13 @@ import { SectionManager } from './sections.js';
 import { HeroImagesEditor } from './hero-images.js';
 import { UploadManager } from './upload.js';
 
+// Import CSS as modules - Vite will inline these into the bundle
+import baseStyles from '../../styles/base.css?inline';
+import editorStyles from '../../styles/editor.css?inline';
+
+// Export the imported CSS for use by other modules
+export { baseStyles, editorStyles };
+
 class TemplateEditor {
     constructor() {
         this.templateContent = null;

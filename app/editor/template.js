@@ -384,7 +384,7 @@ export class TemplateManager {
         shadowRoot.appendChild(combinedStyle);
 
         // Inject editor-specific styles
-        await this.injectEditorStylesIntoShadow(shadowRoot);
+        this.injectEditorStylesIntoShadow(shadowRoot);
 
         // Create wrapper and move content to shadow root
         const wrapper = document.createElement('div');
@@ -442,7 +442,7 @@ export class TemplateManager {
         shadowRoot.appendChild(wrapper);
 
         // Add editor-specific styles to shadow root for editable elements
-        await this.injectEditorStylesIntoShadow(shadowRoot);
+        this.injectEditorStylesIntoShadow(shadowRoot);
 
         // Now that the template is in the live DOM (shadow DOM) and CSS styles are applied,
         // load text/image files and process editable elements
@@ -541,25 +541,23 @@ export class TemplateManager {
 
     /**
      * Inject editor-specific styles into shadow root for editable element highlighting
-     * Loads styles from the external editor.css file to maintain a single source of truth
+     * Uses imported CSS modules that are bundled by Vite
      */
-    async injectEditorStylesIntoShadow(shadowRoot) {
-        // Detect if running locally (localhost or 127.0.0.1)
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        
-        // Build the path to editor.css
-        const cssPath = isLocal 
-            ? '/styles/editor.css'
-            : '../styles/editor.css';
+    injectEditorStylesIntoShadow(shadowRoot) {
+        // Import CSS from the editor module (bundled by Vite)
+        let cssContent = '';
         
         try {
-            const response = await fetch(cssPath);
-            if (!response.ok) {
-                throw new Error(`Failed to load editor.css: ${response.status}`);
+            // Access the imported CSS from the editor module
+            const { editorStyles } = this.editor.constructor;
+            if (editorStyles) {
+                cssContent = editorStyles;
             }
-            
-            let cssContent = await response.text();
-            
+        } catch (error) {
+            console.warn('Could not access imported CSS, using fallback:', error);
+        }
+        
+        if (cssContent) {
             // Transform selectors for shadow DOM compatibility
             // Replace #template-content selectors since we're inside the shadow root
             cssContent = cssContent.replace(/#template-content\s+/g, '');
@@ -567,9 +565,8 @@ export class TemplateManager {
             const editorStyles = document.createElement('style');
             editorStyles.textContent = cssContent;
             shadowRoot.appendChild(editorStyles);
-        } catch (error) {
-            console.warn('Could not load editor.css, using fallback inline styles:', error);
-            // Fallback to minimal inline styles if CSS file cannot be loaded
+        } else {
+            // Fallback to minimal inline styles if CSS cannot be loaded
             this.injectFallbackEditorStyles(shadowRoot);
         }
     }
