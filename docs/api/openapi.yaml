@@ -1,0 +1,944 @@
+openapi: 3.1.0
+info:
+  title: e-info.click Static Websites API
+  version: 1.0.0
+  summary: HTTP API for creating, editing, deploying, and managing static websites on e-info.click.
+  description: |
+    This spec documents the HTTP-exposed Lambda functions that power the e-info.click static
+    website generator. External clients can use it to:
+
+      - Request pre-signed temporary image uploads
+      - Start a Stripe checkout session for a new paid project
+      - Create or update a project directly (trusted origins only)
+      - List / delete projects by email
+      - Send / validate a 6-digit email confirmation code before pushing an update
+      - Submit a contact form against a deployed project
+      - Poll health status
+      - Receive GitHub and Stripe webhooks (infrastructure — not for client use)
+
+    **Base URLs**
+
+    Three custom-domain API Gateway stages are deployed in `eu-south-2`:
+
+    | Domain                       | Purpose                                              | WAF      |
+    | ---------------------------- | ---------------------------------------------------- | -------- |
+    | `https://api.e-info.click`   | Main product API (all user-facing endpoints)         | enabled  |
+    | `https://pay.e-info.click`   | Stripe → backend webhook only                        | disabled |
+    | `https://webhooks.e-info.click` | GitHub → backend webhook only                     | disabled |
+
+    The health check endpoint is attached to the auto-generated API Gateway URL, not a
+    custom domain — fetch its value from the `HealthCheckApi` CloudFormation output.
+
+    **Authentication**
+
+    There is no OAuth / JWT layer yet. Three lightweight auth schemes are used:
+
+      - **Email token** — the caller asserts their identity by passing their email in the
+        `email` query parameter, an `X-User-Email` header, or a body field. Used for
+        `GET /projects` and `DELETE /projects/{id}`. Only projects matching that email
+        are returned / mutated.
+      - **Origin allow-list** — write endpoints on `api.e-info.click` reject requests whose
+        `Origin` header is not in the server-side allow-list
+        (`editor.e-info.click`, `ssh.e-info.click`, `e-info.click`, `89.152.33.66`).
+      - **Webhook signatures** — `POST /webhook` verifies `Stripe-Signature`; `POST /github`
+        verifies `X-Hub-Signature-256`. Not intended to be called by client code.
+
+    **Error shape**
+
+    All handlers return `{ "error": "<message>" }` on failure (often with extra `debug` /
+    `details` fields). 4xx / 5xx status codes follow standard semantics; see each operation
+    for the specific conditions.
+  contact:
+    name: Filipe Santos
+    email: filipesantosdev@gmail.com
+  license:
+    name: ISC
+
+servers:
+  - url: https://api.e-info.click
+    description: Main product API (WAF-protected)
+  - url: https://pay.e-info.click
+    description: Stripe webhook ingress
+  - url: https://webhooks.e-info.click
+    description: GitHub webhook ingress
+
+tags:
+  - name: Projects
+    description: Create, list, and delete websites generated from templates.
+  - name: Uploads
+    description: Temporary image staging before a project is created.
+  - name: Payments
+    description: Stripe Checkout session creation.
+  - name: Auth
+    description: Email-based 6-digit confirmation codes used to authorize updates.
+  - name: Contact
+    description: Public contact form submissions against a deployed project.
+  - name: Webhooks
+    description: Third-party webhook ingress (Stripe, GitHub). Not for client use.
+  - name: Monitoring
+    description: Liveness and dependency health.
+
+paths:
+  /request-upload:
+    post:
+      tags: [Uploads]
+      operationId: requestUpload
+      security: []
+      summary: Stage images in S3 before creating a project
+      description: |
+        Accepts up to 10 base64-encoded images and uploads them to the shared S3 bucket
+        under `temp-uploads/`. Returned `key` values should be passed back to
+        `/checkout-session` (or `/create-project` for trusted origins) as the `images`
+        map values. Temp objects are tagged `lifecycle=temp` and expire after 1 day.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestUploadInput'
+      responses:
+        '200':
+          description: Upload succeeded (fully or partially — check `errors`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestUploadResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /checkout-session:
+    post:
+      tags: [Payments]
+      operationId: createCheckoutSession
+      summary: Create a Stripe Checkout session for a new project
+      description: |
+        The user-facing entry point for *paid* project creation. Validates that the project
+        name is not already in use, writes an `operation` record to DynamoDB with a 7-day
+        TTL, and returns a Stripe-hosted checkout URL. On successful payment the
+        Stripe webhook enqueues an SQS message that invokes `generate-website` with the
+        same `operationId`.
+
+        Image values may be direct URLs, `data:image/...` data URIs, or temp-upload keys
+        returned by `/request-upload`. The Lambda normalizes them to the canonical
+        `/projects/{name}/images/...` path stored in DynamoDB.
+
+        Idempotent for 24 hours on the tuple `(email, projectName, priceId, templateId)` —
+        repeat calls return the existing session.
+      security:
+        - OriginAllowlist: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutSessionInput'
+      responses:
+        '200':
+          description: Stripe session created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutSessionResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/OriginForbidden'
+        '409':
+          description: A project with that name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /create-project:
+    post:
+      tags: [Projects]
+      operationId: createProject
+      summary: Create or update a project directly (trusted origins only)
+      description: |
+        Skips Stripe and creates the project record + GitHub commit in one call. Used by
+        internal tools; typical public clients should use `/checkout-session` followed by
+        the webhook-driven flow. Returns the deployed URL.
+      security:
+        - OriginAllowlist: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectInput'
+      responses:
+        '200':
+          description: Project created or updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                properties:
+                  url:
+                    type: string
+                    example: mywebsite.e-info.click
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/OriginForbidden'
+        '409':
+          description: Conflict — project already exists and belongs to a different email.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /generate-website:
+    post:
+      tags: [Projects]
+      operationId: generateWebsite
+      summary: Re-run generation for an existing operation
+      description: |
+        Fetches the operation record from DynamoDB by `operationId`, renders the template,
+        commits to GitHub, uploads to S3, and invalidates CloudFront. This endpoint is
+        normally not called directly — the SQS queue (fed by the Stripe webhook) and
+        `/auth/validate-code` invoke this function asynchronously. It is exposed as HTTP
+        for manual re-runs by trusted origins.
+      security:
+        - OriginAllowlist: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [operationId]
+              properties:
+                operationId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Website regenerated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, websiteUrl]
+                properties:
+                  success: { type: boolean }
+                  websiteUrl: { type: string, format: uri }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/OriginForbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /projects:
+    get:
+      tags: [Projects]
+      operationId: listProjects
+      summary: List projects owned by the caller
+      description: |
+        Returns every project whose `email` matches the authenticated caller. Projects are
+        sorted by `createdAt` descending.
+      security:
+        - EmailTokenQuery: []
+        - EmailTokenHeader: []
+      parameters:
+        - $ref: '#/components/parameters/EmailQuery'
+        - $ref: '#/components/parameters/EmailHeader'
+      responses:
+        '200':
+          description: Project list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [projects, count]
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  count:
+                    type: integer
+                    minimum: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /projects/{id}:
+    delete:
+      tags: [Projects]
+      operationId: deleteProject
+      summary: Delete a project by operation id
+      description: |
+        Deletes the DynamoDB record for the given `operationId`. The caller's email must
+        match the `email` on the record. The S3 files and GitHub repo contents are *not*
+        deleted by this endpoint.
+      security:
+        - EmailTokenQuery: []
+        - EmailTokenHeader: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The `operationId` (UUID) of the project record.
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/EmailQuery'
+        - $ref: '#/components/parameters/EmailHeader'
+      responses:
+        '200':
+          description: Deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, operationId]
+                properties:
+                  message: { type: string }
+                  operationId: { type: string, format: uuid }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Authenticated email does not own this project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No project with that `operationId`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/send-code:
+    post:
+      tags: [Auth]
+      operationId: sendConfirmationCode
+      security: []
+      summary: Email a 6-digit confirmation code to the project owner
+      description: |
+        Looks up the owner email of the project named `templateId` in DynamoDB, generates a
+        6-digit code with a 5-minute TTL, stores it, and asynchronously invokes the
+        internal email Lambda. The response *does not* include the code; it is only sent
+        to the stored email address.
+
+        Note: the parameter is named `templateId` historically but its value is the
+        **project name** (subdomain).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [templateId]
+              properties:
+                templateId:
+                  type: string
+                  description: The project's subdomain name.
+      responses:
+        '200':
+          description: Code dispatched.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: Confirmation code sent }
+                  templateId: { type: string }
+                  email:
+                    type: string
+                    format: email
+                    description: |
+                      The email the code was sent to (returned partially for UX —
+                      consider masking client-side).
+                  expiresAt:
+                    type: integer
+                    description: Unix epoch (seconds) when the code becomes invalid.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: No project with that name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/validate-code:
+    post:
+      tags: [Auth]
+      operationId: validateConfirmationCode
+      security: []
+      summary: Redeem a confirmation code to trigger an update
+      description: |
+        Consumes the single active code for `templateId`. On success, creates a new
+        operation record (`type: update`) with the submitted content and asynchronously
+        invokes `generate-website` to re-deploy. The code is deleted on success; failed
+        attempts leave it intact until its TTL expires.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateCodeInput'
+      responses:
+        '200':
+          description: Code accepted; regeneration queued.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid: { type: boolean, example: true }
+        '400':
+          description: Missing / invalid / expired code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /contact:
+    post:
+      tags: [Contact]
+      operationId: sendContactMessage
+      security: []
+      summary: Send a contact-form email to a deployed project's owner
+      description: |
+        Looks up the project's GitHub repo for the `.email` file, validates and sanitizes
+        the input, and sends an HTML + plaintext email via SES. Rate-limited in-process to
+        5 requests per sender email per hour.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInput'
+      responses:
+        '200':
+          description: Message sent.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  message: { type: string }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Project not found or has no contact email configured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limited (5 requests per sender email per hour).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /webhook:
+    post:
+      tags: [Webhooks]
+      operationId: stripeWebhook
+      summary: Stripe webhook ingress
+      description: |
+        Handles `checkout.session.completed` (enqueues website generation) and
+        `charge.failed` (marks the operation as failed). Verifies `Stripe-Signature` with
+        the webhook secret. **Do not call this endpoint from client code.** Always
+        returns 200 after signature validation to prevent Stripe retries, even on
+        internal processing errors.
+      servers:
+        - url: https://pay.e-info.click
+          description: Stripe webhook ingress
+      security:
+        - StripeSignature: []
+      requestBody:
+        required: true
+        description: Raw Stripe Event payload. Signature is computed over the raw bytes.
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Stripe Event object (see https://stripe.com/docs/api/events/object).
+      responses:
+        '200':
+          description: Event received (and processed, or silently ignored).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  received: { type: boolean }
+        '400':
+          description: Missing or invalid `Stripe-Signature`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /github:
+    post:
+      tags: [Webhooks]
+      operationId: githubWebhook
+      summary: GitHub webhook ingress
+      description: |
+        Handles push events on the project repository. Verifies `X-Hub-Signature-256`, then
+        (for master branch pushes) extracts the project name from the commit message and
+        marks the corresponding DynamoDB record as `deployed`. **Do not call from client
+        code.**
+      servers:
+        - url: https://webhooks.e-info.click
+          description: GitHub webhook ingress
+      security:
+        - GitHubSignature: []
+      requestBody:
+        required: true
+        description: Raw GitHub push event payload.
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Event received.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  received: { type: boolean }
+        '400':
+          description: Missing signature header or malformed body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Signature verification failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /health:
+    get:
+      tags: [Monitoring]
+      operationId: healthCheck
+      security: []
+      summary: Health check with dependency probes
+      description: |
+        Runs a DynamoDB probe, inspects the SQS backlog, and reads the last 5 minutes of
+        Lambda error metrics from CloudWatch. The top-level `status` aggregates to
+        `healthy`, `degraded`, or `unhealthy`.
+
+        This endpoint is served from the auto-generated API Gateway execute-api URL,
+        *not* from `api.e-info.click`. Fetch the URL from the `HealthCheckApi` stack
+        output or the CloudFormation Dashboard.
+      servers:
+        - url: '{apiGatewayUrl}'
+          description: API Gateway auto-generated URL
+          variables:
+            apiGatewayUrl:
+              default: https://<id>.execute-api.eu-south-2.amazonaws.com/prod
+              description: Value of the `HealthCheckApi` stack output.
+      responses:
+        '200':
+          description: Health snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthReport'
+        '503':
+          description: One or more critical dependencies are down.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthReport'
+
+components:
+  parameters:
+    EmailQuery:
+      name: email
+      in: query
+      required: false
+      schema:
+        type: string
+        format: email
+      description: |
+        Caller identity. Supplied either here, as the `X-User-Email` header, or as a
+        body field. At least one location must be present.
+    EmailHeader:
+      name: X-User-Email
+      in: header
+      required: false
+      schema:
+        type: string
+        format: email
+      description: See `email` query parameter.
+
+  securitySchemes:
+    EmailTokenQuery:
+      type: apiKey
+      in: query
+      name: email
+      description: |
+        Lightweight caller identity — the email claim is not cryptographically verified.
+        Callers can alternatively pass the email via the `X-User-Email` header or inside
+        the JSON body (`{"email":"..."}`). Access control is enforced server-side by
+        comparing the claim against the `email` field on the DynamoDB record.
+    EmailTokenHeader:
+      type: apiKey
+      in: header
+      name: X-User-Email
+      description: See `EmailTokenQuery`.
+    OriginAllowlist:
+      type: apiKey
+      in: header
+      name: Origin
+      description: |
+        Requests to write endpoints on `api.e-info.click` must carry an `Origin` header
+        in the server-side allow-list
+        (`https://editor.e-info.click`, `https://ssh.e-info.click`,
+        `https://e-info.click`, `https://89.152.33.66`). Enforced by the Lambda handler,
+        not API Gateway — not a security control, only a CSRF-style gate.
+    StripeSignature:
+      type: apiKey
+      in: header
+      name: Stripe-Signature
+      description: Stripe-computed HMAC over the raw body. Not for client use.
+    GitHubSignature:
+      type: apiKey
+      in: header
+      name: X-Hub-Signature-256
+      description: GitHub-computed HMAC-SHA256 over the raw body. Not for client use.
+
+  responses:
+    BadRequest:
+      description: Invalid JSON, missing required field, or validation failure.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Email claim missing or malformed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    OriginForbidden:
+      description: Caller's `Origin` header is not in the server-side allow-list.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Unhandled server error. Sentry will have captured the stack trace.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable error message.
+        debug:
+          type: string
+          description: Extra debug info (non-production environments).
+        details:
+          description: Optional arbitrary structured details.
+
+    ImageMap:
+      type: object
+      description: |
+        Maps template image ids (the `data-image-src` / `data-bg-image` keys produced by
+        `helpers/htmlExtractor.js`) to image values. Each value can be:
+        - a fully-qualified URL (`https://...`)
+        - a `data:image/...` URI
+        - a temp key returned by `POST /request-upload` (e.g. `temp-uploads/uuid-foo.jpg`)
+        - a canonical project path (`/projects/<name>/images/<file>`)
+      additionalProperties:
+        type: string
+      example:
+        image_1: /projects/myshop/images/hero.jpg
+        image_2: https://picsum.photos/800/600
+
+    LangMap:
+      type: object
+      description: |
+        Maps `data-text-id` keys to user-visible text. Keys `title` and `description` are
+        reserved for the HTML `<title>` and the meta description.
+      additionalProperties:
+        type: string
+
+    ColorMap:
+      type: object
+      description: Maps style/section keys to CSS color strings.
+      additionalProperties:
+        type: string
+
+    IconMap:
+      type: object
+      description: Maps `data-icon-id` keys to Font Awesome icon class names (e.g. `fa-star`).
+      additionalProperties:
+        type: string
+
+    Project:
+      type: object
+      description: A project/website record as returned by `GET /projects`.
+      properties:
+        operationId:
+          type: string
+          format: uuid
+        projectName:
+          type: string
+          description: Subdomain under `e-info.click`.
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [pending, processing, paid, completed, failed]
+        createdAt:
+          type: string
+          format: date-time
+        templateId:
+          type: string
+        deploymentUrl:
+          type: string
+          format: uri
+        deploymentStatus:
+          type: string
+          enum: [pending, deployed, failed]
+
+    RequestUploadInput:
+      type: object
+      required: [projectName, images]
+      properties:
+        projectName:
+          type: string
+        images:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            type: object
+            required: [name, type, data]
+            properties:
+              name:
+                type: string
+                description: Original filename; used only for the S3 object name.
+              type:
+                type: string
+                description: MIME type. Must be one of image/jpeg, image/png, image/gif, image/webp, image/svg+xml.
+                enum:
+                  - image/jpeg
+                  - image/png
+                  - image/gif
+                  - image/webp
+                  - image/svg+xml
+              data:
+                type: string
+                description: Base64-encoded file body (no `data:` prefix).
+                contentEncoding: base64
+              imageId:
+                type: string
+                description: Optional client-provided identifier echoed back in the response.
+
+    RequestUploadResult:
+      type: object
+      properties:
+        uploads:
+          type: array
+          items:
+            type: object
+            properties:
+              imageId:
+                type: string
+                description: Echoed from the request, if provided.
+              originalName:
+                type: string
+              key:
+                type: string
+                description: S3 key under `temp-uploads/`. Pass this back as an `images` map value.
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              error: { type: string }
+
+    CheckoutSessionInput:
+      type: object
+      required: [email, projectName, priceId, templateId]
+      properties:
+        email:
+          type: string
+          format: email
+        projectName:
+          type: string
+          description: Becomes the subdomain `<projectName>.e-info.click`. DNS-safe characters only.
+          pattern: ^[a-z0-9-]+$
+        priceId:
+          type: string
+          description: Stripe Price ID (e.g. `price_1...`).
+        templateId:
+          type: string
+          description: Name of a template under `templates/`.
+        images:
+          $ref: '#/components/schemas/ImageMap'
+        langs:
+          $ref: '#/components/schemas/LangMap'
+        textColors:
+          $ref: '#/components/schemas/ColorMap'
+        sectionBackgrounds:
+          $ref: '#/components/schemas/ColorMap'
+        icons:
+          $ref: '#/components/schemas/IconMap'
+        iconColors:
+          $ref: '#/components/schemas/ColorMap'
+        iconStyles:
+          $ref: '#/components/schemas/ColorMap'
+
+    CheckoutSessionResult:
+      type: object
+      required: [sessionId, sessionUrl]
+      properties:
+        sessionId:
+          type: string
+          description: Stripe Checkout Session ID.
+        sessionUrl:
+          type: string
+          format: uri
+          description: Redirect the user here to complete payment.
+
+    CreateProjectInput:
+      type: object
+      required: [name, email, templateId, images, langs]
+      properties:
+        name:
+          type: string
+          description: Subdomain name.
+          pattern: ^[a-z0-9-]+$
+        email:
+          type: string
+          format: email
+        templateId:
+          type: string
+        images:
+          $ref: '#/components/schemas/ImageMap'
+        langs:
+          $ref: '#/components/schemas/LangMap'
+
+    ValidateCodeInput:
+      type: object
+      required: [templateId, code]
+      properties:
+        templateId:
+          type: string
+          description: Project name (historical naming).
+        code:
+          type: string
+          pattern: ^[0-9]{6}$
+        sourceTemplateId:
+          type: string
+          description: Optional — overrides the template recorded in DynamoDB for this update.
+        images:
+          $ref: '#/components/schemas/ImageMap'
+        langs:
+          $ref: '#/components/schemas/LangMap'
+        textColors:
+          $ref: '#/components/schemas/ColorMap'
+        sectionBackgrounds:
+          $ref: '#/components/schemas/ColorMap'
+        icons:
+          $ref: '#/components/schemas/IconMap'
+        iconColors:
+          $ref: '#/components/schemas/ColorMap'
+        iconStyles:
+          $ref: '#/components/schemas/ColorMap'
+
+    ContactInput:
+      type: object
+      required: [projectName, name, email, message]
+      properties:
+        projectName:
+          type: string
+        name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        message:
+          type: string
+          maxLength: 5000
+
+    HealthReport:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        checks:
+          type: object
+          properties:
+            dynamodb:
+              type: object
+              properties:
+                status: { type: string, enum: [healthy, unhealthy] }
+                latency: { type: string, example: 45ms }
+                table: { type: string }
+            sqs:
+              type: object
+              properties:
+                status: { type: string, enum: [healthy, not-configured] }
+                visibleMessages: { type: integer }
+                processingMessages: { type: integer }
+                totalBacklog: { type: integer }
+            lambdaErrors:
+              type: object
+              properties:
+                status: { type: string, enum: [healthy, unknown] }
+                errors5min: { type: integer }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              service: { type: string }
+              message: { type: string }
+              severity: { type: string, enum: [warning, critical] }
