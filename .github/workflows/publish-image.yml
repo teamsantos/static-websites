@@ -6,6 +6,12 @@ on:
       - 'Dockerfile'
       - '.github/workflows/publish-image.yml'
       - 'docker/**'
+
+env:
+  # Opt JS actions into the Node 24 runtime ahead of the June 2026 default
+  # switch. Required while pinned action versions still ship Node 20.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   publish:
     runs-on: ubuntu-latest
