@@ -410,7 +410,7 @@ export class CreateProjectStack extends cdk.Stack {
             ],
         });
 
-        // Upload Template Lambda - converts an uploaded HTML file into an editable user-injected template
+        // Upload Template Lambda — converts an uploaded HTML file into an editable user-injected template.
         const uploadTemplateFunction = new lambda.Function(this, 'UploadTemplateFunction', {
             functionName: 'upload-template',
             runtime: lambda.Runtime.NODEJS_20_X,
