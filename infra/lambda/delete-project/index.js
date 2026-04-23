@@ -1,5 +1,6 @@
 import AWS from "aws-sdk";
 import { validateEmailToken, corsHeaders, apiResponse } from "@app/shared/auth";
+import { extractApiKey, validateApiKey } from "@app/shared/apiKeyAuth";
 import { createLogger, logMetric } from "@app/shared/logger";
 import { initSentry, captureException, addBreadcrumb } from "@app/shared/sentry";
 
@@ -54,7 +55,20 @@ export const handler = async (event, context) => {
 
         logger.info('Delete project request', { operationId });
 
-        // Validate email token
+        // Optional API-key short-circuit: a valid key bypasses the per-project
+        // ownership check below (god-mode).
+        const apiKey = extractApiKey(event);
+        let apiKeyValid = false;
+        if (apiKey) {
+            const keyResult = await validateApiKey(apiKey, dynamodb, process.env.DYNAMODB_API_KEYS_TABLE);
+            if (!keyResult.valid) {
+                logger.warn('api key rejected', { reason: keyResult.error });
+                return apiResponse(401, { error: 'Invalid API key' }, origin);
+            }
+            apiKeyValid = true;
+        }
+
+        // Original email-token gate — unchanged when no API key is present.
         const authResult = validateEmailToken(event);
         if (!authResult.valid) {
             logger.warn('Authentication failed', { error: authResult.error, operationId });
@@ -64,10 +78,13 @@ export const handler = async (event, context) => {
                 level: 'warning',
                 data: { error: authResult.error }
             });
-            return apiResponse(401, { error: authResult.error }, origin);
+            // With a valid key, the email is optional; with no key it's still required.
+            if (!apiKeyValid) {
+                return apiResponse(401, { error: authResult.error }, origin);
+            }
         }
 
-        const userEmail = authResult.email;
+        const userEmail = authResult.valid ? authResult.email : null;
 
         // Fetch the project to verify ownership
         const projectResult = await logMetric(logger, 'get_project_for_deletion', async () => {
@@ -88,8 +105,8 @@ export const handler = async (event, context) => {
             return apiResponse(404, { error: "Project not found" }, origin);
         }
 
-        // Verify ownership: only the user who created the project can delete it
-        if (projectResult.Item.email !== userEmail) {
+        // Verify ownership for email-token callers only. A valid API key is god-mode.
+        if (!apiKeyValid && projectResult.Item.email !== userEmail) {
             logger.warn('Unauthorized deletion attempt', {
                 operationId,
                 requestEmail: userEmail,

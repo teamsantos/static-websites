@@ -31,15 +31,22 @@ info:
 
     **Authentication**
 
-    There is no OAuth / JWT layer yet. Three lightweight auth schemes are used:
+    There is no OAuth / JWT layer yet. Four lightweight auth schemes are used:
 
+      - **API key** (`x-api-key` header) — the recommended path for third-party callers.
+        A valid key bypasses the `Origin` allow-list and works from any origin. Keys are
+        generated via `npm run api-key:generate`, stored as SHA-256 hashes in DynamoDB,
+        and revoked by flipping the stored record's `status` to `revoked`. Covers
+        `POST /create-project`, `POST /generate-website`, `POST /checkout-session`,
+        `GET /projects`, `DELETE /projects/{id}`.
       - **Email token** — the caller asserts their identity by passing their email in the
         `email` query parameter, an `X-User-Email` header, or a body field. Used for
         `GET /projects` and `DELETE /projects/{id}`. Only projects matching that email
-        are returned / mutated.
-      - **Origin allow-list** — write endpoints on `api.e-info.click` reject requests whose
-        `Origin` header is not in the server-side allow-list
-        (`editor.e-info.click`, `ssh.e-info.click`, `e-info.click`, `89.152.33.66`).
+        are returned / mutated (unless an API key is also present, in which case the
+        ownership check is skipped and the email merely selects whose data to act on).
+      - **Origin allow-list** — write endpoints on `api.e-info.click` accept requests
+        from the first-party editor (`editor.e-info.click`, `ssh.e-info.click`,
+        `e-info.click`, `www.e-info.click`) without an API key.
       - **Webhook signatures** — `POST /webhook` verifies `Stripe-Signature`; `POST /github`
         verifies `X-Hub-Signature-256`. Not intended to be called by client code.
 
@@ -128,6 +135,7 @@ paths:
         repeat calls return the existing session.
       security:
         - OriginAllowlist: []
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
@@ -165,6 +173,7 @@ paths:
         the webhook-driven flow. Returns the deployed URL.
       security:
         - OriginAllowlist: []
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
@@ -209,6 +218,7 @@ paths:
         for manual re-runs by trusted origins.
       security:
         - OriginAllowlist: []
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
@@ -249,6 +259,7 @@ paths:
       security:
         - EmailTokenQuery: []
         - EmailTokenHeader: []
+        - ApiKeyAuth: []
       parameters:
         - $ref: '#/components/parameters/EmailQuery'
         - $ref: '#/components/parameters/EmailHeader'
@@ -285,6 +296,7 @@ paths:
       security:
         - EmailTokenQuery: []
         - EmailTokenHeader: []
+        - ApiKeyAuth: []
       parameters:
         - name: id
           in: path
@@ -623,8 +635,19 @@ components:
         Requests to write endpoints on `api.e-info.click` must carry an `Origin` header
         in the server-side allow-list
         (`https://editor.e-info.click`, `https://ssh.e-info.click`,
-        `https://e-info.click`, `https://89.152.33.66`). Enforced by the Lambda handler,
-        not API Gateway — not a security control, only a CSRF-style gate.
+        `https://e-info.click`, `https://www.e-info.click`). Enforced by both WAF and
+        the Lambda handler. CSRF-style gate — not a security control on its own.
+        An alternative to presenting a valid `ApiKeyAuth` header.
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: |
+        Opt-in API key that bypasses the `Origin` allow-list. Keys are generated with the
+        `npm run api-key:generate` CLI and stored as SHA-256 hashes in the `api-keys`
+        DynamoDB table. A valid key is god-mode across the keyed endpoints; the `email`
+        query/body parameter still selects which user's data to read or mutate.
+        Revocation: set the item's `status` to `revoked` in the DynamoDB console.
     StripeSignature:
       type: apiKey
       in: header

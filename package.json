@@ -10,7 +10,8 @@
     "build:templates": "node helpers/buildTemplate.js",
     "preview": "vite preview",
     "editor": "npm run build && npm run build:templates && concurrently \"npx http-server . -p 3000 -c-1\" \"wait-on http://localhost:3000 && open http://localhost:3000/dist/template-editor.html?template=portfolio\"",
-    "screenshots": "node scripts/generate-screenshots.js"
+    "screenshots": "node scripts/generate-screenshots.js",
+    "api-key:generate": "node scripts/generate-api-key.js"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
   },
   "homepage": "https://github.com/teamsantos/static-websites#readme",
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.670.0",
     "concurrently": "^9.2.1",
     "jsdom": "^26.1.0",
     "playwright": "^1.49.0",

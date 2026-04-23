@@ -57,13 +57,23 @@ npx @openapitools/openapi-generator-cli generate \
 
 | Domain                          | Who calls it                                 | Auth                                  |
 | ------------------------------- | -------------------------------------------- | ------------------------------------- |
-| `https://api.e-info.click`      | Your app                                     | Email token (`email` / `X-User-Email`) for read/delete; server-side `Origin` allow-list for writes |
+| `https://api.e-info.click`      | Your app                                     | `x-api-key` (recommended for third parties) OR `Origin` allow-list (first-party editor). `GET /projects` and `DELETE /projects/{id}` additionally accept the email token. |
 | `https://pay.e-info.click`      | Stripe only                                  | `Stripe-Signature`                    |
 | `https://webhooks.e-info.click` | GitHub only                                  | `X-Hub-Signature-256`                 |
 | Health check                    | Monitoring                                   | none — execute-api URL from stack output |
 
 The "email token" scheme is not cryptographically verified — it only scopes queries to the
 caller's own records. Don't rely on it for secret-bearing endpoints.
+
+### Generating an API key
+
+```bash
+npm run api-key:generate -- --name "acme integration" --ttl-days 365
+```
+
+Requires AWS credentials in the environment (same creds used for `cdk deploy`). The raw
+key is printed once. To revoke: open the `api-keys` DynamoDB table in the AWS Console,
+find the item by `keyId`, and set `status = "revoked"`.
 
 ## Keeping the spec in sync
 

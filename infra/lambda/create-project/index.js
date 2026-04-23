@@ -1,10 +1,12 @@
 import { Octokit } from "octokit";
 import AWS from "aws-sdk";
 import { JSDOM } from "jsdom";
+import { extractApiKey, validateApiKey } from "@app/shared/apiKeyAuth";
 
 const ses = new AWS.SES({ region: process.env.AWS_SES_REGION });
 const s3 = new AWS.S3();
 const secretsManager = new AWS.SecretsManager();
+const dynamodb = new AWS.DynamoDB.DocumentClient();
 
 // Cache secrets to avoid fetching on every invocation
 let cachedGithubToken = null;
@@ -241,6 +243,23 @@ export const handler = async (event) => {
         };
     }
 
+    // Optional API-key short-circuit: a valid key bypasses the origin allow-list below.
+    const apiKey = extractApiKey(event);
+    if (apiKey) {
+        const keyResult = await validateApiKey(apiKey, dynamodb, process.env.DYNAMODB_API_KEYS_TABLE);
+        if (!keyResult.valid) {
+            return {
+                statusCode: 401,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+                },
+                body: JSON.stringify({ message: 'Invalid API key' }),
+            };
+        }
+    }
+
     // Check origin for security - allow specific origins
     const origin = event.headers?.origin || event.headers?.Origin;
 
@@ -255,7 +274,8 @@ export const handler = async (event) => {
         origin === allowed || origin.startsWith(allowed)
     );
 
-    if (!isAllowedOrigin) {
+    // A valid API key bypasses the origin check entirely.
+    if (!apiKey && !isAllowedOrigin) {
         return {
             statusCode: 403,
             headers: {

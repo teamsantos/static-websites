@@ -5,6 +5,7 @@ import { generateIdempotencyKey, withIdempotency } from "@app/shared/idempotency
 import { createLogger, logMetric } from "@app/shared/logger";
 import { addBreadcrumb, captureException, initSentry } from "@app/shared/sentry";
 import { validatePaymentSessionRequest } from "@app/shared/validators";
+import { extractApiKey, validateApiKey } from "@app/shared/apiKeyAuth";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -134,6 +135,21 @@ export const handler = async (event, context) => {
     }
 
     const origin = event.headers?.origin || event.headers?.Origin;
+
+    // Optional API-key short-circuit: a valid key bypasses the origin allow-list below.
+    const apiKey = extractApiKey(event);
+    if (apiKey) {
+        const keyResult = await validateApiKey(apiKey, dynamodb, process.env.DYNAMODB_API_KEYS_TABLE);
+        if (!keyResult.valid) {
+            logger.warn('api key rejected', { reason: keyResult.error });
+            return {
+                statusCode: 401,
+                headers: corsHeaders("*"),
+                body: JSON.stringify({ message: "Invalid API key" }),
+            };
+        }
+    }
+
     const allowedOrigins = [
         "https://editor.e-info.click",
         "https://ssh.e-info.click",
@@ -146,7 +162,8 @@ export const handler = async (event, context) => {
         !origin ||
         allowedOrigins.some((allowed) => origin === allowed || origin.startsWith(allowed));
 
-    if (!isAllowedOrigin) {
+    // A valid API key bypasses the origin check entirely.
+    if (!apiKey && !isAllowedOrigin) {
         logger.warn('CORS origin rejected', { origin, allowedOrigins });
         return {
             statusCode: 403,

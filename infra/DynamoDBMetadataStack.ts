@@ -24,6 +24,7 @@ export class DynamoDBMetadataStack extends cdk.Stack {
   public table: dynamodb.Table;
   public idempotencyTable: dynamodb.Table;
   public confirmationCodesTable: dynamodb.Table;
+  public apiKeysTable: dynamodb.Table;
 
   constructor(scope: cdk.App, id: string, props?: DynamoDBMetadataStackProps) {
     super(scope, id, props);
@@ -128,6 +129,20 @@ export class DynamoDBMetadataStack extends cdk.Stack {
     // Export for use by other stacks
     this.idempotencyTable = idempotencyTable;
 
+    // API Keys table
+    // Lookup is by hash on the hot path; keyId is an attribute used only for admin ops.
+    this.apiKeysTable = new dynamodb.Table(this, "ApiKeys", {
+      tableName: "api-keys",
+      partitionKey: {
+        name: "keyHash",
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      pointInTimeRecovery: true,
+      timeToLiveAttribute: "expiresAt",
+    });
+
      // CloudWatch Alarms for monitoring
      const readThrottleAlarm = new cdk.aws_cloudwatch.Alarm(
        this,
@@ -170,6 +185,12 @@ export class DynamoDBMetadataStack extends cdk.Stack {
       value: confirmationCodesTable.tableName,
       description: "DynamoDB table name for confirmation codes",
       exportName: "ConfirmationCodesTableName",
+    });
+
+    new cdk.CfnOutput(this, "ApiKeysTableName", {
+      value: this.apiKeysTable.tableName,
+      description: "DynamoDB table name for API keys",
+      exportName: "ApiKeysTableName",
     });
   }
 

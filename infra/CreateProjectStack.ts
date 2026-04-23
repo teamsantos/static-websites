@@ -23,6 +23,7 @@ interface CreateProjectProps extends cdk.StackProps {
     metadataTable?: dynamodb.Table;
     idempotencyTable?: dynamodb.Table;
     confirmationCodesTable?: dynamodb.Table;
+    apiKeysTable?: dynamodb.Table;
     sendEmailFunction?: lambda.Function;
     contactFormFunction?: lambda.Function;
     distributionId?: string;
@@ -78,7 +79,8 @@ export class CreateProjectStack extends cdk.Stack {
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
-                DYNAMODB_IDEMPOTENCY_TABLE: props.idempotencyTable?.tableName || "request-idempotency"
+                DYNAMODB_IDEMPOTENCY_TABLE: props.idempotencyTable?.tableName || "request-idempotency",
+                DYNAMODB_API_KEYS_TABLE: props.apiKeysTable?.tableName || "api-keys"
             },
             timeout: cdk.Duration.seconds(30),
         });
@@ -123,6 +125,7 @@ export class CreateProjectStack extends cdk.Stack {
                 AWS_SES_REGION: props?.ses_region || "us-east-1",
                 S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
                 DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
+                DYNAMODB_API_KEYS_TABLE: props.apiKeysTable?.tableName || "api-keys",
                 HMAC_SECRET_NAME: hmacSecret.secretName,
                 CLOUDFORMATION_REGION: props?.certificateRegion || "us-east-1",
                 DISTRIBUTION_ID: props.distributionId || ""
@@ -197,6 +200,12 @@ export class CreateProjectStack extends cdk.Stack {
         // Grant idempotency table permissions
         if (props.idempotencyTable) {
             props.idempotencyTable.grantReadWriteData(createProjectFunction);
+        }
+
+        // Grant api-keys read permissions (used by authorizeRequest on keyed endpoints)
+        if (props.apiKeysTable) {
+            props.apiKeysTable.grantReadData(createProjectFunction);
+            props.apiKeysTable.grantReadData(generateWebsiteFunction);
         }
 
         this.api = new apigateway.RestApi(this, 'CreateProjectApi', {
@@ -417,6 +426,7 @@ export class CreateProjectStack extends cdk.Stack {
                     S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
                     DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
                     DYNAMODB_IDEMPOTENCY_TABLE: props.idempotencyTable?.tableName || "request-idempotency",
+                    DYNAMODB_API_KEYS_TABLE: props.apiKeysTable?.tableName || "api-keys",
                     SEND_EMAIL_FUNCTION: props.emailTemplateStack.functionName || "send-email",
                 },
                 timeout: cdk.Duration.seconds(30),
@@ -456,6 +466,9 @@ export class CreateProjectStack extends cdk.Stack {
             }
             if (props.idempotencyTable) {
                 props.idempotencyTable.grantReadWriteData(checkoutFunction);
+            }
+            if (props.apiKeysTable) {
+                props.apiKeysTable.grantReadData(checkoutFunction);
             }
 
             // API Gateway endpoint for checkout-session (protected by WAF)
@@ -517,12 +530,16 @@ export class CreateProjectStack extends cdk.Stack {
                 memorySize: 256,
                 environment: {
                     DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
+                    DYNAMODB_API_KEYS_TABLE: props.apiKeysTable?.tableName || "api-keys",
                     SENTRY_DSN: process.env.SENTRY_DSN || "",
                 },
                 logGroup: getProjectsLogGroup,
             });
             this.getProjectsFunctionName = getProjectsFunction.functionName;
             props.metadataTable.grantReadData(getProjectsFunction);
+            if (props.apiKeysTable) {
+                props.apiKeysTable.grantReadData(getProjectsFunction);
+            }
 
             const deleteProjectFunction = new lambda.Function(this, "DeleteProjectFunction", {
                 functionName: 'delete-project',
@@ -533,12 +550,16 @@ export class CreateProjectStack extends cdk.Stack {
                 memorySize: 256,
                 environment: {
                     DYNAMODB_METADATA_TABLE: props.metadataTable.tableName,
+                    DYNAMODB_API_KEYS_TABLE: props.apiKeysTable?.tableName || "api-keys",
                     SENTRY_DSN: process.env.SENTRY_DSN || "",
                 },
                 logGroup: deleteProjectLogGroup,
             });
             this.deleteProjectFunctionName = deleteProjectFunction.functionName;
             props.metadataTable.grantReadWriteData(deleteProjectFunction);
+            if (props.apiKeysTable) {
+                props.apiKeysTable.grantReadData(deleteProjectFunction);
+            }
 
             const sendConfirmationCodeFunction = new lambda.Function(this, "SendConfirmationCodeFunction", {
                 functionName: 'send-confirmation-code',

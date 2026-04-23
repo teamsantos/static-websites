@@ -170,6 +170,7 @@ const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
     metadataTable: dynamoDBStack.table,
     idempotencyTable: dynamoDBStack.idempotencyTable,
     confirmationCodesTable: dynamoDBStack.confirmationCodesTable,
+    apiKeysTable: dynamoDBStack.apiKeysTable,
     sendEmailFunction: emailTemplateStack.sendEmailFunction,
     contactFormFunction: contactFormStack.contactFormFunction,
     distributionId: multiTenantDistribution.distributionId,

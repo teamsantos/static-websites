@@ -1,5 +1,6 @@
 import { cacheLanguageFile, cacheTemplate, getCacheStats, getLanguageFile, getTemplate } from "@app/shared/cache";
 import AWS from "aws-sdk";
+import { extractApiKey, validateApiKey } from "@app/shared/apiKeyAuth";
 import crypto from "crypto";
 import { Octokit } from "octokit";
 // Use infra-compiled constant to allow regeneration from TS sources
@@ -657,6 +658,27 @@ async function handleAPIGatewayEvent(event) {
     // Check origin for security - allow specific origins
     const origin = event.headers?.origin || event.headers?.Origin;
 
+    // Optional API-key short-circuit: a valid key bypasses the origin allow-list below.
+    // Skipped for internal Lambda-to-Lambda invocations (no API Gateway wrapper):
+    // validate-confirmation-code invokes this function with a synthetic { body: "..." }
+    // payload that lacks requestContext.
+    const isHttpInvocation = Boolean(event.requestContext);
+    const apiKey = isHttpInvocation ? extractApiKey(event) : null;
+    if (apiKey) {
+        const keyResult = await validateApiKey(apiKey, dynamodb, process.env.DYNAMODB_API_KEYS_TABLE);
+        if (!keyResult.valid) {
+            return {
+                statusCode: 401,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+                },
+                body: JSON.stringify({ message: 'Invalid API key' }),
+            };
+        }
+    }
+
     const allowedOrigins = [
         'https://editor.e-info.click',
         'https://ssh.e-info.click',
@@ -669,7 +691,8 @@ async function handleAPIGatewayEvent(event) {
         origin === allowed || origin.startsWith(allowed) || origin.endsWith(allowed)
     );
 
-    if (!isAllowedOrigin) {
+    // A valid API key bypasses the origin check; internal invocations skip it too.
+    if (isHttpInvocation && !apiKey && !isAllowedOrigin) {
         return {
             statusCode: 403,
             headers: {

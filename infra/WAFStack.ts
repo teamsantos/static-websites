@@ -43,8 +43,9 @@ export class WAFStack extends cdk.Stack {
         metricName: "RateLimitACL",
       },
       rules: [
-        // Rule 1: Block requests without valid Origin header
-        // This prevents direct API access from curl/scripts without browser origin
+        // Rule 1: Block requests that have neither a whitelisted Origin header
+        // nor an x-api-key header. A valid api key (validated in-Lambda) bypasses
+        // the origin restriction; an allowed origin works without a key.
         {
           name: "OriginValidationRule",
           priority: 0,
@@ -52,28 +53,53 @@ export class WAFStack extends cdk.Stack {
             block: {},
           },
           statement: {
-            notStatement: {
-              statement: {
-                orStatement: {
-                  statements: allowedOrigins.map((origin) => ({
-                    byteMatchStatement: {
-                      fieldToMatch: {
-                        singleHeader: {
-                          name: "origin",
-                        },
+            andStatement: {
+              statements: [
+                // (a) Origin is NOT in the allow-list.
+                {
+                  notStatement: {
+                    statement: {
+                      orStatement: {
+                        statements: allowedOrigins.map((origin) => ({
+                          byteMatchStatement: {
+                            fieldToMatch: {
+                              singleHeader: {
+                                name: "origin",
+                              },
+                            },
+                            positionalConstraint: "EXACTLY",
+                            searchString: origin,
+                            textTransformations: [
+                              {
+                                priority: 0,
+                                type: "LOWERCASE",
+                              },
+                            ],
+                          },
+                        })),
                       },
-                      positionalConstraint: "EXACTLY",
-                      searchString: origin,
-                      textTransformations: [
-                        {
-                          priority: 0,
-                          type: "LOWERCASE",
-                        },
-                      ],
                     },
-                  })),
+                  },
                 },
-              },
+                // (b) x-api-key header is missing or empty.
+                {
+                  sizeConstraintStatement: {
+                    fieldToMatch: {
+                      singleHeader: {
+                        name: "x-api-key",
+                      },
+                    },
+                    comparisonOperator: "EQ",
+                    size: 0,
+                    textTransformations: [
+                      {
+                        priority: 0,
+                        type: "NONE",
+                      },
+                    ],
+                  },
+                },
+              ],
             },
           },
           visibilityConfig: {

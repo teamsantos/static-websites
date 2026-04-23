@@ -1,5 +1,6 @@
 import AWS from "aws-sdk";
 import { validateEmailToken, corsHeaders, apiResponse } from "@app/shared/auth";
+import { extractApiKey, validateApiKey } from "@app/shared/apiKeyAuth";
 import { createLogger, logMetric } from "@app/shared/logger";
 import { initSentry, captureException, addBreadcrumb } from "@app/shared/sentry";
 
@@ -51,7 +52,21 @@ export const handler = async (event, context) => {
     }
 
     try {
-        // Validate email token
+        // Optional API-key short-circuit: a valid key authorizes the call without the
+        // email-token check below. The `email` parameter is still required — it selects
+        // whose projects to return.
+        const apiKey = extractApiKey(event);
+        let apiKeyValid = false;
+        if (apiKey) {
+            const keyResult = await validateApiKey(apiKey, dynamodb, process.env.DYNAMODB_API_KEYS_TABLE);
+            if (!keyResult.valid) {
+                logger.warn('api key rejected', { reason: keyResult.error });
+                return apiResponse(401, { error: 'Invalid API key' }, origin);
+            }
+            apiKeyValid = true;
+        }
+
+        // Original email-token gate — unchanged when no API key is present.
         const authResult = validateEmailToken(event);
         if (!authResult.valid) {
             logger.warn('Authentication failed', { error: authResult.error });
@@ -61,11 +76,14 @@ export const handler = async (event, context) => {
                 level: 'warning',
                 data: { error: authResult.error }
             });
-            return apiResponse(401, { error: authResult.error }, origin);
+            // When authed by API key the email is still required (for filtering) but a
+            // missing email becomes 400, not 401 — the caller is authenticated, just
+            // didn't tell us whose data to return.
+            return apiResponse(apiKeyValid ? 400 : 401, { error: authResult.error }, origin);
         }
 
         const userEmail = authResult.email;
-        logger.info('Get projects request', { email: userEmail });
+        logger.info('Get projects request', { email: userEmail, authType: apiKeyValid ? 'apiKey' : 'emailToken' });
 
         // Query DynamoDB using GSI: email-createdAt-index
         const result = await logMetric(logger, 'query_user_projects', async () => {
