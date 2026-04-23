@@ -38,7 +38,7 @@ info:
         generated via `npm run api-key:generate`, stored as SHA-256 hashes in DynamoDB,
         and revoked by flipping the stored record's `status` to `revoked`. Covers
         `POST /create-project`, `POST /generate-website`, `POST /checkout-session`,
-        `GET /projects`, `DELETE /projects/{id}`.
+        `POST /upload-template`, `GET /projects`, `DELETE /projects/{id}`.
       - **Email token** — the caller asserts their identity by passing their email in the
         `email` query parameter, an `X-User-Email` header, or a body field. Used for
         `GET /projects` and `DELETE /projects/{id}`. Only projects matching that email
@@ -245,6 +245,116 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '403':
           $ref: '#/components/responses/OriginForbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /upload-template:
+    post:
+      tags: [Projects]
+      operationId: uploadTemplate
+      summary: Convert an uploaded HTML file into an editable user-injected template
+      description: |
+        Accepts a self-contained HTML document, runs the in-repo extraction pipeline
+        (`shared/htmlExtractor.js`), re-injects content, and publishes the result to
+        `s3://<bucket>/templates/<templateId>/index.html`. Image references must be
+        embedded as `data:image/...;base64,...` URIs or absolute `http(s)://` URLs —
+        data URIs are decoded, sha256-hashed, uploaded under
+        `templates/<templateId>/images/<hash>.<ext>`, and rewritten to relative paths.
+        Relative `src` references are rejected with `MISSING_ASSET`.
+
+        Templates published via this endpoint are flagged `userInjected: true` in the
+        DynamoDB metadata table and are filtered out of the public landing-page gallery.
+        The returned `editorUrl` opens the template in `editor.e-info.click` just like
+        any in-repo template.
+      security:
+        - ApiKeyAuth: []
+        - OriginAllowlist: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [html, templateName, email]
+              properties:
+                html:
+                  type: string
+                  description: Raw HTML source, UTF-8, ≤ 2 MB.
+                  maxLength: 2097152
+                templateName:
+                  type: string
+                  description: |
+                    Human-readable name; slugified to `[a-z0-9-]` and used as the
+                    subdomain. Max 40 chars. Rejected with 409 if the slug collides
+                    with an existing template.
+                  maxLength: 40
+                title:
+                  type: string
+                  description: Optional display title; defaults to `templateName`.
+                description:
+                  type: string
+                  description: Optional description shown to the owner.
+                email:
+                  type: string
+                  format: email
+                  description: Owner email — stored on the metadata record.
+      responses:
+        '200':
+          description: Template published.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [templateId, editorUrl, previewUrl]
+                properties:
+                  templateId:
+                    type: string
+                    example: my-landing-page
+                  editorUrl:
+                    type: string
+                    format: uri
+                    example: https://editor.e-info.click?template=my-landing-page
+                  previewUrl:
+                    type: string
+                    format: uri
+                    example: https://my-landing-page.template.e-info.click
+        '400':
+          description: |
+            Validation failed. `code: "MISSING_ASSET"` lists image references that
+            could not be resolved (relative paths with no embedded data URI).
+            `code: "INVALID_HTML"` indicates the extractor could not parse the input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: API key present but invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/responses/OriginForbidden'
+        '409':
+          description: |
+            Template name (after slugification) is already in use
+            (`code: "NAME_TAKEN"`) or is reserved (`code: "NAME_RESERVED"`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: HTML payload exceeds 2 MB.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Quota exceeded (`code: "QUOTA_EXCEEDED"`, max 10 templates per email).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           $ref: '#/components/responses/InternalError'
 

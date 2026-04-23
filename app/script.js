@@ -72,7 +72,10 @@ const injectBenifits = (benifits) => {
 const injectTemplates = (templates, selectText) => {
     const container = document.getElementById("templates");
     const fragment = document.createDocumentFragment();
-    templates.forEach((template) => {
+    // Defense-in-depth: `assets/templates.json` is baked from `templates/*/` at build
+    // time and shouldn't contain user-uploaded templates (those live in DynamoDB), but
+    // the filter guarantees user-injected entries never render on the public gallery.
+    templates.filter(t => !t.userInjected).forEach((template) => {
         const card = document.createElement("div");
         card.className = `template-card ${template.comingSoon ? 'coming-soon' : ''}`;
         const previewText = 'Preview';

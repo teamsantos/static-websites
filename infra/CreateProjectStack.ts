@@ -410,6 +410,73 @@ export class CreateProjectStack extends cdk.Stack {
             ],
         });
 
+        // Upload Template Lambda - converts an uploaded HTML file into an editable user-injected template
+        const uploadTemplateFunction = new lambda.Function(this, 'UploadTemplateFunction', {
+            functionName: 'upload-template',
+            runtime: lambda.Runtime.NODEJS_20_X,
+            code: lambda.Code.fromAsset('lambda/upload-template'),
+            handler: 'index.handler',
+            environment: {
+                S3_BUCKET_NAME: props?.s3Bucket || "teamsantos-static-websites",
+                DYNAMODB_METADATA_TABLE: props.metadataTable?.tableName || "websites-metadata",
+                DYNAMODB_API_KEYS_TABLE: props.apiKeysTable?.tableName || "api-keys",
+                TEMPLATE_DOMAIN: `template.${domain}`,
+                EDITOR_URL: `https://editor.${domain}`,
+            },
+            timeout: cdk.Duration.seconds(60),
+            memorySize: 1024,
+        });
+
+        // Set CloudWatch log retention
+        new logs.LogRetention(this, 'UploadTemplateLogRetention', {
+            logGroupName: uploadTemplateFunction.logGroup.logGroupName,
+            retention: logs.RetentionDays.ONE_MONTH,
+        });
+
+        // S3: write templates/<id>/index.html and templates/<id>/images/<sha>.<ext>; HeadObject for uniqueness check
+        uploadTemplateFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['s3:PutObject', 's3:PutObjectTagging'],
+            resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/templates/*`],
+        }));
+        uploadTemplateFunction.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['s3:GetObject'],
+            resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/templates/*`],
+        }));
+
+        if (props.metadataTable) {
+            // Read for the per-email quota Query; write for the metadata PutItem.
+            props.metadataTable.grantReadWriteData(uploadTemplateFunction);
+        }
+        if (props.apiKeysTable) {
+            props.apiKeysTable.grantReadData(uploadTemplateFunction);
+        }
+
+        // API Gateway endpoint for upload-template
+        const uploadTemplateResource = this.api.root.addResource('upload-template');
+        uploadTemplateResource.addMethod('POST', new apigateway.LambdaIntegration(uploadTemplateFunction, {
+            integrationResponses: [
+                { statusCode: '200' },
+                { statusCode: '400' },
+                { statusCode: '401' },
+                { statusCode: '403' },
+                { statusCode: '409' },
+                { statusCode: '413' },
+                { statusCode: '429' },
+                { statusCode: '500' },
+            ],
+        }), {
+            methodResponses: [
+                { statusCode: '200' },
+                { statusCode: '400' },
+                { statusCode: '401' },
+                { statusCode: '403' },
+                { statusCode: '409' },
+                { statusCode: '413' },
+                { statusCode: '429' },
+                { statusCode: '500' },
+            ],
+        });
+
         // ============================================================
         // Stripe Payment Session Lambda (Frontend-facing, protected by WAF)
         // ============================================================
@@ -634,6 +701,10 @@ export class CreateProjectStack extends cdk.Stack {
         new cdk.CfnOutput(this, 'ContactFormUrl', {
             value: `https://api.${domain}/contact`,
             description: 'Custom domain URL for contact form submissions',
+        });
+        new cdk.CfnOutput(this, 'UploadTemplateUrl', {
+            value: `https://api.${domain}/upload-template`,
+            description: 'Custom domain URL for uploading user-injected templates',
         });
 
         // Associate WAF WebACL with API Gateway if provided

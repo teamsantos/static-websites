@@ -6,5 +6,8 @@
   "main": "index.js",
   "exports": {
     "./*": "./*.js"
+  },
+  "dependencies": {
+    "jsdom": "^26.1.0"
   }
 }
