@@ -2,24 +2,25 @@
 /**
  * Generate an API key for api.e-info.click.
  *
+ * This script is offline-only: it prints the raw key, the SHA-256 hash, and a
+ * DynamoDB-ready JSON blob. Paste the JSON into the `api-keys` table yourself
+ * via the AWS Console (DynamoDB → Explore items → Create item → JSON view).
+ *
  * Usage:
  *   npm run api-key:generate -- --name "acme integration" --ttl-days 365
  *   node scripts/generate-api-key.js --name "acme" --ttl-days 30
  *
  * Flags:
- *   --name       Human-readable label stored on the record.        (default: "unnamed")
- *   --ttl-days   Days until the key expires (DynamoDB TTL).        (default: 365)
- *   --region     AWS region holding the api-keys table.            (default: eu-south-2)
- *   --table      Table name.                                        (default: api-keys)
+ *   --name       Human-readable label stored on the record.   (default: "unnamed")
+ *   --ttl-days   Days until the key expires (DynamoDB TTL).   (default: 365)
  *
- * Requires AWS credentials in the environment (same creds used for `cdk deploy`).
  * The raw key is printed once — there is no way to retrieve it later.
  *
- * To revoke: edit the item in the DynamoDB console and set `status = "revoked"`.
+ * To revoke: find the item in the `api-keys` table (lookup by `keyId`) and set
+ * `status = "revoked"`.
  */
 
 import crypto from 'crypto';
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 
 const parseArgs = () => {
     const out = {};
@@ -42,8 +43,6 @@ const parseArgs = () => {
 const args = parseArgs();
 const name = args.name || 'unnamed';
 const ttlDays = Number(args['ttl-days'] || 365);
-const region = args.region || process.env.AWS_REGION || 'eu-south-2';
-const tableName = args.table || 'api-keys';
 
 if (!Number.isFinite(ttlDays) || ttlDays <= 0) {
     console.error(`Invalid --ttl-days: ${args['ttl-days']}`);
@@ -56,33 +55,30 @@ const keyId = crypto.randomUUID();
 const createdAt = new Date().toISOString();
 const expiresAt = Math.floor(Date.now() / 1000) + ttlDays * 86400;
 
-const ddb = new DynamoDBClient({ region });
+const ddbItem = {
+    keyHash:   { S: keyHash },
+    keyId:     { S: keyId },
+    name:      { S: name },
+    status:    { S: 'active' },
+    createdAt: { S: createdAt },
+    expiresAt: { N: String(expiresAt) },
+};
 
-try {
-    await ddb.send(new PutItemCommand({
-        TableName: tableName,
-        Item: {
-            keyHash:   { S: keyHash },
-            keyId:     { S: keyId },
-            name:      { S: name },
-            status:    { S: 'active' },
-            createdAt: { S: createdAt },
-            expiresAt: { N: String(expiresAt) },
-        },
-        ConditionExpression: 'attribute_not_exists(keyHash)',
-    }));
-} catch (err) {
-    console.error('Failed to write key to DynamoDB:', err.message);
-    process.exit(1);
-}
-
-console.log('keyId:    ', keyId);
-console.log('name:     ', name);
-console.log('expires:  ', new Date(expiresAt * 1000).toISOString());
-console.log('table:    ', tableName, `(region ${region})`);
 console.log('');
 console.log('API KEY (store this now — it will not be shown again):');
 console.log('');
 console.log('  ' + rawKey);
 console.log('');
 console.log('Use it by sending header:  x-api-key: ' + rawKey);
+console.log('');
+console.log('─────────────────────────────────────────────────────────────');
+console.log('DynamoDB item — paste into table `api-keys` (region eu-south-2)');
+console.log('  AWS Console → DynamoDB → Explore items → Create item → JSON view');
+console.log('─────────────────────────────────────────────────────────────');
+console.log('');
+console.log(JSON.stringify(ddbItem, null, 2));
+console.log('');
+console.log('─────────────────────────────────────────────────────────────');
+console.log('keyId:   ', keyId);
+console.log('name:    ', name);
+console.log('expires: ', new Date(expiresAt * 1000).toISOString());
