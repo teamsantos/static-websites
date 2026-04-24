@@ -27,7 +27,7 @@ const config = {
     domain: "e-info.click",
     s3Bucket: "teamsantos-static-websites",
     certificateRegion: "us-east-1",
-    wafEnabled: true,
+    wafEnabled: false,
 };
 
 const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('account');

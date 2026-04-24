@@ -48,11 +48,17 @@ AWS CDK v2 in TypeScript. `infra/index.ts` is the composition root and wires ~20
 - ACM certificates live in `us-east-1` (`certificateRegion`); everything else is in `eu-south-2`. `crossRegionReferences: true` is set on stacks that span both.
 - `ProjectSite` stacks are created dynamically from the CDK context: `cdk deploy --context projects=foo,bar --context templates=baz`. Deploying the *shared* stacks alone needs neither — the warning at the bottom of `index.ts` is informational.
 - Deploy from `infra/`: `npm run deploy` (all shared stacks), `npm run deploy-project -- projects=name`, `npm run diff`, `npm run destroy-project -- projects=name`. Requires `CDK_DEFAULT_ACCOUNT` or `--profile` and (for real traffic) `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GITHUB_WEBHOOK_SECRET`, `SENDER_EMAIL`, `FRONTEND_URL`, `ADMIN_EMAIL`.
-- WAF is regional (attached to API Gateway). `StripeCheckoutStack` intentionally has **no** WAF so Stripe can call its webhook.
+- WAF is regional (attached to API Gateway) but **disabled by default** (`config.wafEnabled = false` in `infra/index.ts`) to avoid the ~$10/month fixed cost while pre-production. Re-enable by flipping the flag. `StripeCheckoutStack` intentionally has **no** WAF so Stripe can call its webhook.
 
 ## Lambda functions (infra/lambda/)
 
 Each subdirectory is its own npm package. They import common utilities from `shared/` via the local path alias `"@app/shared": "file:../../../shared"`. To install dependencies across all of them at once, run `scripts/prepare-lambda-functions.sh`. When you add a new shared utility, make sure each Lambda that needs it has the `@app/shared` dependency declared.
+
+`upload-template` accepts a self-contained HTML file, runs the same extraction pipeline as in-repo templates (now factored into `shared/htmlExtractor.js` — `extractFromDom` / `injectIntoSkeleton`), and publishes the result to `s3://<bucket>/templates/<id>/`. The DOM is sanitized before extraction (drops `<script>`, `<iframe>`, `<object>`, `<embed>`, `<base>`, meta-refresh, `on*=` handlers, `javascript:`/`vbscript:`/`data:text/html` URLs) on a single JSDOM parse. Embedded `data:image/...` URIs are sha256-hashed and uploaded under `templates/<id>/images/<hash>.<ext>`; SVG is intentionally excluded from the allowed image MIME list. Records the upload as `type: "user-template"` with `userInjected: true` in the metadata table — the landing-page gallery filters these out as defense-in-depth (they never enter `assets/templates.json` anyway). Constraints worth knowing: 2 MB HTML cap, 10 templates per email, and `RESERVED_SLUGS` in `index.js` must be kept in lockstep with the `templates/` directory or a CI deploy will silently overwrite a user-injected template.
+
+### API key auth (`shared/apiKeyAuth.js`)
+
+Opt-in `x-api-key` header scheme alongside the existing `Origin` allow-list and email-token checks. A valid key bypasses the origin gate on writes and the per-project ownership check on `GET /projects` / `DELETE /projects/{id}`; the `email` parameter still selects whose data to act on. Wired into `create-project`, `generate-website`, `payment-session`, `get-projects`, `delete-project`, and `upload-template`. Internal Lambda-to-Lambda invokes of `generate-website` skip the check. Keys are stored as SHA-256 hashes in the `api-keys` DynamoDB table (TTL via `expiresAt`, revoke by setting `status` to `revoked`); generate with `npm run api-key:generate`. The WAF `OriginValidationRule` only blocks when both the `Origin` is missing from the allow-list **and** `x-api-key` is absent — keep that in mind when editing WAF rules.
 
 ## Deployment flow
 
