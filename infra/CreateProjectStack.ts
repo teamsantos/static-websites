@@ -27,6 +27,7 @@ interface CreateProjectProps extends cdk.StackProps {
     sendEmailFunction?: lambda.Function;
     contactFormFunction?: lambda.Function;
     distributionId?: string;
+    templateDistributionId?: string;
     webAclArn?: string;
     // Stripe integration props
     stripeSecretKey?: string;
@@ -422,6 +423,7 @@ export class CreateProjectStack extends cdk.Stack {
                 DYNAMODB_API_KEYS_TABLE: props.apiKeysTable?.tableName || "api-keys",
                 TEMPLATE_DOMAIN: `template.${domain}`,
                 EDITOR_URL: `https://editor.${domain}`,
+                TEMPLATE_DISTRIBUTION_ID: props?.templateDistributionId || "",
             },
             timeout: cdk.Duration.seconds(60),
             memorySize: 1024,
@@ -443,6 +445,17 @@ export class CreateProjectStack extends cdk.Stack {
             resources: [`arn:aws:s3:::${props?.s3Bucket || "teamsantos-static-websites"}/templates/*`],
         }));
 
+        // CloudFront: invalidate the preview path on PUT /upload-template/{templateName}
+        // so overwritten HTML is served within the invalidation window instead of
+        // waiting out the cache TTL. CreateInvalidation does not support resource-
+        // level ARNs for non-distribution resources — scope is the distribution.
+        if (props?.templateDistributionId) {
+            uploadTemplateFunction.addToRolePolicy(new iam.PolicyStatement({
+                actions: ['cloudfront:CreateInvalidation'],
+                resources: [`arn:aws:cloudfront::${this.account}:distribution/${props.templateDistributionId}`],
+            }));
+        }
+
         if (props.metadataTable) {
             // Read for the per-email quota Query; write for the metadata PutItem.
             props.metadataTable.grantReadWriteData(uploadTemplateFunction);
@@ -453,28 +466,40 @@ export class CreateProjectStack extends cdk.Stack {
 
         // API Gateway endpoint for upload-template
         const uploadTemplateResource = this.api.root.addResource('upload-template');
-        uploadTemplateResource.addMethod('POST', new apigateway.LambdaIntegration(uploadTemplateFunction, {
+        const uploadTemplateIntegration = new apigateway.LambdaIntegration(uploadTemplateFunction, {
             integrationResponses: [
                 { statusCode: '200' },
                 { statusCode: '400' },
                 { statusCode: '401' },
                 { statusCode: '403' },
+                { statusCode: '404' },
                 { statusCode: '409' },
                 { statusCode: '413' },
                 { statusCode: '429' },
                 { statusCode: '500' },
             ],
-        }), {
-            methodResponses: [
-                { statusCode: '200' },
-                { statusCode: '400' },
-                { statusCode: '401' },
-                { statusCode: '403' },
-                { statusCode: '409' },
-                { statusCode: '413' },
-                { statusCode: '429' },
-                { statusCode: '500' },
-            ],
+        });
+        const uploadTemplateMethodResponses = [
+            { statusCode: '200' },
+            { statusCode: '400' },
+            { statusCode: '401' },
+            { statusCode: '403' },
+            { statusCode: '404' },
+            { statusCode: '409' },
+            { statusCode: '413' },
+            { statusCode: '429' },
+            { statusCode: '500' },
+        ];
+        uploadTemplateResource.addMethod('POST', uploadTemplateIntegration, {
+            methodResponses: uploadTemplateMethodResponses,
+        });
+
+        // PUT /upload-template/{templateName} — in-place update of an existing
+        // user-uploaded template. Same Lambda; method dispatched inside handler.
+        const uploadTemplateByName = uploadTemplateResource.addResource('{templateName}');
+        uploadTemplateByName.addMethod('PUT', uploadTemplateIntegration, {
+            requestParameters: { 'method.request.path.templateName': true },
+            methodResponses: uploadTemplateMethodResponses,
         });
 
         // ============================================================

@@ -4,8 +4,12 @@
   "description": "Converts an uploaded HTML file into an editable user-injected template.",
   "main": "index.js",
   "type": "module",
+  "scripts": {
+    "test": "node --test index.test.js"
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.670.0",
+    "@aws-sdk/client-cloudfront": "^3.670.0",
     "@aws-sdk/client-dynamodb": "^3.670.0",
     "@aws-sdk/lib-dynamodb": "^3.670.0",
     "jsdom": "^26.1.0",

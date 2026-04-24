@@ -38,7 +38,8 @@ info:
         generated via `npm run api-key:generate`, stored as SHA-256 hashes in DynamoDB,
         and revoked by flipping the stored record's `status` to `revoked`. Covers
         `POST /create-project`, `POST /generate-website`, `POST /checkout-session`,
-        `POST /upload-template`, `GET /projects`, `DELETE /projects/{id}`.
+        `POST /upload-template`, `PUT /upload-template/{templateName}`,
+        `GET /projects`, `DELETE /projects/{id}`.
       - **Email token** — the caller asserts their identity by passing their email in the
         `email` query parameter, an `X-User-Email` header, or a body field. Used for
         `GET /projects` and `DELETE /projects/{id}`. Only projects matching that email
@@ -350,7 +351,128 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '429':
-          description: Quota exceeded (`code: "QUOTA_EXCEEDED"`, max 10 templates per email).
+          description: 'Quota exceeded (`code: "QUOTA_EXCEEDED"`, max 10 templates per email).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /upload-template/{templateName}:
+    put:
+      tags: [Projects]
+      operationId: updateUploadedTemplate
+      summary: Overwrite an existing user-uploaded template in place
+      description: |
+        In-place update of a template previously created via `POST /upload-template`.
+        The `templateName` path parameter is the slug returned as `templateId` by the
+        original upload. The slug, `previewUrl`, and `editorUrl` are preserved across
+        updates so existing links keep working.
+
+        Auth and validation are identical to `POST /upload-template`. The request body
+        drops the `templateName` field (the path carries it) but otherwise follows the
+        same shape — `html`, `email`, optional `title` and `description`. The caller's
+        `email` must match the stored owner email on the record, otherwise the request
+        fails with 403.
+
+        Unlike POST, this endpoint **does not** increment the per-email template quota
+        and **does** issue a CloudFront invalidation for `/templates/{templateName}/*`
+        so the new HTML propagates within the usual invalidation window.
+      security:
+        - ApiKeyAuth: []
+        - OriginAllowlist: []
+      parameters:
+        - name: templateName
+          in: path
+          required: true
+          description: |
+            The slug of the template to update (the `templateId` returned by the
+            original `POST /upload-template`). Max 40 chars. Slugified server-side;
+            non-`[a-z0-9-]` characters are normalized before lookup.
+          schema:
+            type: string
+            maxLength: 40
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [html, email]
+              properties:
+                html:
+                  type: string
+                  description: Raw HTML source, UTF-8, ≤ 2 MB.
+                  maxLength: 2097152
+                email:
+                  type: string
+                  format: email
+                  description: |
+                    Owner email. Must equal the email stored on the existing template
+                    record; a mismatch returns 403.
+                title:
+                  type: string
+                  description: |
+                    Optional. If omitted, the stored title is preserved.
+                description:
+                  type: string
+                  description: |
+                    Optional. If omitted, the stored description is preserved.
+      responses:
+        '200':
+          description: |
+            Template overwritten. `templateId`, `editorUrl`, and `previewUrl` are the
+            same values returned by the original `POST /upload-template` — URLs are
+            stable across updates.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [templateId, editorUrl, previewUrl]
+                properties:
+                  templateId:
+                    type: string
+                    example: my-landing-page
+                  editorUrl:
+                    type: string
+                    format: uri
+                    example: https://editor.e-info.click?template=my-landing-page
+                  previewUrl:
+                    type: string
+                    format: uri
+                    example: https://my-landing-page.template.e-info.click
+        '400':
+          description: |
+            Validation failed. `code: "MISSING_ASSET"` lists image references that
+            could not be resolved. `code: "INVALID_HTML"` indicates the extractor
+            could not parse the input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: API key present but invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: |
+            Origin not on the allow-list **or** the `email` in the body does not match
+            the owner email stored on the template record (`code: "OWNER_MISMATCH"`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 'No template with that `templateName` (`code: "NOT_FOUND"`).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: HTML payload exceeds 2 MB.
           content:
             application/json:
               schema:

@@ -1,4 +1,5 @@
 import { S3Client, PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
+import { CloudFrontClient, CreateInvalidationCommand } from "@aws-sdk/client-cloudfront";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { createHash } from "crypto";
@@ -9,12 +10,14 @@ import { extractApiKey, validateApiKey } from "@app/shared/apiKeyAuth";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: process.env.AWS_REGION }));
+const cloudfront = new CloudFrontClient({ region: process.env.AWS_REGION });
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 const METADATA_TABLE = process.env.DYNAMODB_METADATA_TABLE;
 const API_KEYS_TABLE = process.env.DYNAMODB_API_KEYS_TABLE;
 const TEMPLATE_DOMAIN = process.env.TEMPLATE_DOMAIN || "template.e-info.click";
 const EDITOR_URL = process.env.EDITOR_URL || "https://editor.e-info.click";
+const TEMPLATE_DISTRIBUTION_ID = process.env.TEMPLATE_DISTRIBUTION_ID || "";
 
 const MAX_HTML_BYTES = 2 * 1024 * 1024;
 const MAX_TEMPLATE_NAME_LEN = 40;
@@ -68,7 +71,7 @@ const URL_ATTRIBUTES = new Set([
 const corsHeaders = (origin) => ({
     "Access-Control-Allow-Origin": origin || "*",
     "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin",
-    "Access-Control-Allow-Methods": "POST,OPTIONS",
+    "Access-Control-Allow-Methods": "POST,PUT,OPTIONS",
 });
 
 const respond = (statusCode, body, origin) => ({
@@ -229,13 +232,7 @@ const apiKeyDdbShim = {
     get: (params) => ({ promise: () => ddb.send(new GetCommand(params)) }),
 };
 
-export const handler = async (event) => {
-    const origin = event.headers?.origin || event.headers?.Origin || "*";
-
-    if (event.httpMethod === "OPTIONS") {
-        return { statusCode: 200, headers: corsHeaders(origin), body: "" };
-    }
-
+const authenticate = async (event, origin) => {
     const isHttpInvocation = Boolean(event.requestContext);
     const apiKey = isHttpInvocation ? extractApiKey(event) : null;
     if (apiKey) {
@@ -249,7 +246,9 @@ export const handler = async (event) => {
         if (!keyResult.valid) {
             return respond(401, { error: "Invalid API key" }, origin);
         }
-    } else if (isHttpInvocation) {
+        return null;
+    }
+    if (isHttpInvocation) {
         const isAllowed = ALLOWED_ORIGINS.some(
             (allowed) => origin === allowed || origin.startsWith(allowed)
         );
@@ -257,7 +256,93 @@ export const handler = async (event) => {
             return respond(403, { error: "Forbidden" }, origin);
         }
     }
+    return null;
+};
 
+// Run the uploaded HTML through sanitization, extraction, and image resolution.
+// Returns `{ processedHtml }` on success or `{ error }` for caller to relay.
+const processHtmlAssets = async (html, templateId, origin) => {
+    let dom;
+    try {
+        dom = sanitizeDom(new JSDOM(html));
+    } catch (err) {
+        console.error("Parse/sanitize failed:", err);
+        return { error: respond(400, { error: "Invalid HTML", code: "INVALID_HTML", detail: err.message }, origin) };
+    }
+
+    let extraction;
+    try {
+        extraction = extractFromDom(dom);
+    } catch (err) {
+        console.error("Extraction failed:", err);
+        return { error: respond(400, { error: "Invalid HTML", code: "INVALID_HTML", detail: err.message }, origin) };
+    }
+
+    const { skeletonHtml, langs, images, icons } = extraction;
+
+    let resolved, missing;
+    try {
+        ({ resolved, missing } = await resolveImages(images, templateId));
+    } catch (err) {
+        console.error("Image upload failed:", err);
+        return { error: respond(500, { error: "Failed to upload images" }, origin) };
+    }
+
+    if (missing.length > 0) {
+        return {
+            error: respond(400, {
+                error: "Referenced images could not be resolved. Embed them as data URIs or use absolute URLs.",
+                code: "MISSING_ASSET",
+                missing,
+            }, origin),
+        };
+    }
+
+    return { processedHtml: injectIntoSkeleton(skeletonHtml, langs, resolved, icons) };
+};
+
+// Fire-and-log a CloudFront invalidation for a template's published path. An
+// invalidation failure does not rollback the update — the new HTML is already
+// in S3 and will propagate as CloudFront's TTL expires. We still log so the
+// operator can spot a broken IAM policy.
+const invalidateTemplate = async (templateId) => {
+    if (!TEMPLATE_DISTRIBUTION_ID) {
+        console.warn("TEMPLATE_DISTRIBUTION_ID not set; skipping CloudFront invalidation");
+        return;
+    }
+    try {
+        await cloudfront.send(new CreateInvalidationCommand({
+            DistributionId: TEMPLATE_DISTRIBUTION_ID,
+            InvalidationBatch: {
+                CallerReference: `upload-template-${templateId}-${Date.now()}`,
+                Paths: { Quantity: 1, Items: [`/templates/${templateId}/*`] },
+            },
+        }));
+    } catch (err) {
+        console.error("CloudFront invalidation failed:", err);
+    }
+};
+
+const validateSharedFields = ({ html, title, description, email, origin }) => {
+    if (typeof html !== "string" || html.length === 0) {
+        return respond(400, { error: "Missing or invalid 'html'" }, origin);
+    }
+    if (Buffer.byteLength(html, "utf8") > MAX_HTML_BYTES) {
+        return respond(413, { error: "HTML payload exceeds 2MB" }, origin);
+    }
+    if (title != null && (typeof title !== "string" || title.length > MAX_TITLE_LEN)) {
+        return respond(400, { error: `'title' must be a string up to ${MAX_TITLE_LEN} chars` }, origin);
+    }
+    if (description != null && (typeof description !== "string" || description.length > MAX_DESCRIPTION_LEN)) {
+        return respond(400, { error: `'description' must be a string up to ${MAX_DESCRIPTION_LEN} chars` }, origin);
+    }
+    if (typeof email !== "string" || !email.includes("@")) {
+        return respond(400, { error: "Missing or invalid 'email'" }, origin);
+    }
+    return null;
+};
+
+const handlePost = async (event, origin) => {
     if (!event.body) {
         return respond(400, { error: "Missing request body" }, origin);
     }
@@ -271,26 +356,14 @@ export const handler = async (event) => {
 
     const { html, templateName, title, description, email } = parsed;
 
-    if (typeof html !== "string" || html.length === 0) {
-        return respond(400, { error: "Missing or invalid 'html'" }, origin);
-    }
-    if (Buffer.byteLength(html, "utf8") > MAX_HTML_BYTES) {
-        return respond(413, { error: "HTML payload exceeds 2MB" }, origin);
-    }
+    const sharedErr = validateSharedFields({ html, title, description, email, origin });
+    if (sharedErr) return sharedErr;
+
     if (typeof templateName !== "string" || templateName.trim().length === 0) {
         return respond(400, { error: "Missing 'templateName'" }, origin);
     }
     if (templateName.length > MAX_TEMPLATE_NAME_LEN) {
         return respond(400, { error: `'templateName' exceeds ${MAX_TEMPLATE_NAME_LEN} chars` }, origin);
-    }
-    if (title != null && (typeof title !== "string" || title.length > MAX_TITLE_LEN)) {
-        return respond(400, { error: `'title' must be a string up to ${MAX_TITLE_LEN} chars` }, origin);
-    }
-    if (description != null && (typeof description !== "string" || description.length > MAX_DESCRIPTION_LEN)) {
-        return respond(400, { error: `'description' must be a string up to ${MAX_DESCRIPTION_LEN} chars` }, origin);
-    }
-    if (typeof email !== "string" || !email.includes("@")) {
-        return respond(400, { error: "Missing or invalid 'email'" }, origin);
     }
 
     const templateId = slugify(templateName);
@@ -345,42 +418,8 @@ export const handler = async (event) => {
         }
     }
 
-    // Parse once, sanitize + extract on the same DOM instance.
-    let dom;
-    try {
-        dom = sanitizeDom(new JSDOM(html));
-    } catch (err) {
-        console.error("Parse/sanitize failed:", err);
-        return respond(400, { error: "Invalid HTML", code: "INVALID_HTML", detail: err.message }, origin);
-    }
-
-    let extraction;
-    try {
-        extraction = extractFromDom(dom);
-    } catch (err) {
-        console.error("Extraction failed:", err);
-        return respond(400, { error: "Invalid HTML", code: "INVALID_HTML", detail: err.message }, origin);
-    }
-
-    const { skeletonHtml, langs, images, icons } = extraction;
-
-    let resolved, missing;
-    try {
-        ({ resolved, missing } = await resolveImages(images, templateId));
-    } catch (err) {
-        console.error("Image upload failed:", err);
-        return respond(500, { error: "Failed to upload images" }, origin);
-    }
-
-    if (missing.length > 0) {
-        return respond(400, {
-            error: "Referenced images could not be resolved. Embed them as data URIs or use absolute URLs.",
-            code: "MISSING_ASSET",
-            missing,
-        }, origin);
-    }
-
-    const processedHtml = injectIntoSkeleton(skeletonHtml, langs, resolved, icons);
+    const processed = await processHtmlAssets(html, templateId, origin);
+    if (processed.error) return processed.error;
 
     // Write metadata FIRST. If the S3 write below fails the template is never
     // visible (no `index.html` at the slug → subsequent same-email retries
@@ -411,7 +450,7 @@ export const handler = async (event) => {
         await s3.send(new PutObjectCommand({
             Bucket: BUCKET_NAME,
             Key: `templates/${templateId}/index.html`,
-            Body: processedHtml,
+            Body: processed.processedHtml,
             ContentType: "text/html; charset=utf-8",
             CacheControl: "no-cache",
         }));
@@ -425,4 +464,116 @@ export const handler = async (event) => {
         editorUrl: `${EDITOR_URL}?template=${templateId}`,
         previewUrl: `https://${templateId}.${TEMPLATE_DOMAIN}`,
     }, origin);
+};
+
+// PUT /upload-template/{templateName}
+//
+// In-place update. Preserves slug, preview URL, editor URL, templateId, and
+// createdAt. Does NOT consume quota (an update is not a new creation). Issues
+// a CloudFront invalidation for `/templates/<id>/*` so the new HTML is served
+// within the usual invalidation window instead of waiting on the cache TTL.
+const handlePut = async (event, origin) => {
+    const pathTemplateName = event.pathParameters?.templateName;
+    if (typeof pathTemplateName !== "string" || pathTemplateName.trim().length === 0) {
+        return respond(400, { error: "Missing 'templateName' path parameter" }, origin);
+    }
+    if (pathTemplateName.length > MAX_TEMPLATE_NAME_LEN) {
+        return respond(400, { error: `'templateName' exceeds ${MAX_TEMPLATE_NAME_LEN} chars` }, origin);
+    }
+
+    const templateId = slugify(pathTemplateName);
+    if (!templateId) {
+        return respond(400, { error: "'templateName' produced an empty slug after sanitization" }, origin);
+    }
+
+    if (!event.body) {
+        return respond(400, { error: "Missing request body" }, origin);
+    }
+
+    let parsed;
+    try {
+        parsed = JSON.parse(event.body);
+    } catch {
+        return respond(400, { error: "Invalid JSON in request body" }, origin);
+    }
+
+    const { html, title, description, email } = parsed;
+
+    const sharedErr = validateSharedFields({ html, title, description, email, origin });
+    if (sharedErr) return sharedErr;
+
+    let existing;
+    try {
+        existing = await getTemplateMetadata(templateId);
+    } catch (err) {
+        console.error("GetItem failed:", err);
+        return respond(500, { error: "Failed to look up template metadata" }, origin);
+    }
+
+    if (!existing) {
+        return respond(404, { error: "Template not found", code: "NOT_FOUND", templateId }, origin);
+    }
+    if (existing.email !== email) {
+        return respond(403, { error: "Email does not own this template", code: "OWNER_MISMATCH", templateId }, origin);
+    }
+
+    const processed = await processHtmlAssets(html, templateId, origin);
+    if (processed.error) return processed.error;
+
+    try {
+        await ddb.send(new PutCommand({
+            TableName: METADATA_TABLE,
+            Item: {
+                operationId: `tpl_${templateId}`,
+                type: "user-template",
+                templateId,
+                userInjected: true,
+                email,
+                title: title || existing.title || pathTemplateName,
+                description: description != null ? description : (existing.description || ""),
+                createdAt: existing.createdAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            },
+        }));
+    } catch (err) {
+        console.error("DDB PutItem failed:", err);
+        return respond(500, { error: "Failed to record template metadata" }, origin);
+    }
+
+    try {
+        await s3.send(new PutObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: `templates/${templateId}/index.html`,
+            Body: processed.processedHtml,
+            ContentType: "text/html; charset=utf-8",
+            CacheControl: "no-cache",
+        }));
+    } catch (err) {
+        console.error("PutObject index.html failed:", err);
+        return respond(500, { error: "Failed to publish template" }, origin);
+    }
+
+    await invalidateTemplate(templateId);
+
+    return respond(200, {
+        templateId,
+        editorUrl: `${EDITOR_URL}?template=${templateId}`,
+        previewUrl: `https://${templateId}.${TEMPLATE_DOMAIN}`,
+    }, origin);
+};
+
+export const handler = async (event) => {
+    const origin = event.headers?.origin || event.headers?.Origin || "*";
+
+    if (event.httpMethod === "OPTIONS") {
+        return { statusCode: 200, headers: corsHeaders(origin), body: "" };
+    }
+
+    const authErr = await authenticate(event, origin);
+    if (authErr) return authErr;
+
+    const method = event.httpMethod || "POST";
+    if (method === "PUT") return handlePut(event, origin);
+    if (method === "POST") return handlePost(event, origin);
+    return respond(405, { error: `Method ${method} not allowed` }, origin);
 };

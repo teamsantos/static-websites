@@ -174,6 +174,7 @@ const createProjectStack = new CreateProjectStack(app, "CreateProjectStack", {
     sendEmailFunction: emailTemplateStack.sendEmailFunction,
     contactFormFunction: contactFormStack.contactFormFunction,
     distributionId: multiTenantDistribution.distributionId,
+    templateDistributionId: templateDistribution.distributionId,
     webAclArn: wafStack?.webAcl?.attrArn,
     // Stripe integration (now protected by WAF on api.e-info.click)
     stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
