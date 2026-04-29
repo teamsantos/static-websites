@@ -52,7 +52,7 @@ export class StripeCheckoutStack extends cdk.Stack {
     // Lambda for Stripe Webhook ONLY (checkout-session moved to CreateProjectStack)
     const webhookFunction = new lambda.Function(this, "StripeWebhookFunction", {
       functionName: 'stripe-webhook',
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       code: lambda.Code.fromAsset("lambda/stripe-webhook"),
       handler: "index.handler",
        environment: {

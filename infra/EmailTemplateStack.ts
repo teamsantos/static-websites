@@ -56,7 +56,7 @@ export class EmailTemplateStack extends cdk.Stack {
     // ============================================================
     this.sendEmailFunction = new lambda.Function(this, "SendEmailFunction", {
       functionName: "send-email",
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: "index.handler",
       code: lambda.Code.fromAsset(path.join(__dirname, "lambda/send-email")),
       timeout: cdk.Duration.seconds(30),

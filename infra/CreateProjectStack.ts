@@ -70,7 +70,7 @@ export class CreateProjectStack extends cdk.Stack {
 
         const createProjectFunction = new lambda.Function(this, 'CreateProjectFunction', {
             functionName: 'create-project',
-            runtime: lambda.Runtime.NODEJS_18_X,
+            runtime: lambda.Runtime.NODEJS_22_X,
             code: lambda.Code.fromAsset('lambda/create-project'),
             handler: 'index.handler',
             environment: {
@@ -116,7 +116,7 @@ export class CreateProjectStack extends cdk.Stack {
 
         const generateWebsiteFunction = new lambda.Function(this, 'GenerateWebsiteFunction', {
             functionName: 'generate-website',
-            runtime: lambda.Runtime.NODEJS_18_X,
+            runtime: lambda.Runtime.NODEJS_22_X,
             code: lambda.Code.fromAsset('lambda/generate-website'),
             handler: 'index.handler',
             environment: {
@@ -316,7 +316,7 @@ export class CreateProjectStack extends cdk.Stack {
         if (!contactFormFunction) {
             contactFormFunction = new lambda.Function(this, 'ContactFormFunction', {
                 functionName: 'contact-form',
-                runtime: lambda.Runtime.NODEJS_18_X,
+                runtime: lambda.Runtime.NODEJS_22_X,
                 code: lambda.Code.fromAsset('lambda/contact-form'),
                 handler: 'index.handler',
                 environment: {
@@ -374,7 +374,7 @@ export class CreateProjectStack extends cdk.Stack {
         // Request Upload Lambda - Generates presigned URLs for temporary uploads
         const requestUploadFunction = new lambda.Function(this, 'RequestUploadFunction', {
             functionName: 'request-upload',
-            runtime: lambda.Runtime.NODEJS_18_X,
+            runtime: lambda.Runtime.NODEJS_22_X,
             code: lambda.Code.fromAsset('lambda/request-upload'),
             handler: 'index.handler',
             environment: {
@@ -414,7 +414,7 @@ export class CreateProjectStack extends cdk.Stack {
         // Upload Template Lambda — converts an uploaded HTML file into an editable user-injected template.
         const uploadTemplateFunction = new lambda.Function(this, 'UploadTemplateFunction', {
             functionName: 'upload-template',
-            runtime: lambda.Runtime.NODEJS_20_X,
+            runtime: lambda.Runtime.NODEJS_22_X,
             code: lambda.Code.fromAsset('lambda/upload-template'),
             handler: 'index.handler',
             environment: {
@@ -509,7 +509,7 @@ export class CreateProjectStack extends cdk.Stack {
         if (props.stripeSecretKey && props.emailTemplateStack) {
             const checkoutFunction = new lambda.Function(this, 'StripeCheckoutFunction', {
                 functionName: 'payment-session',
-                runtime: lambda.Runtime.NODEJS_18_X,
+                runtime: lambda.Runtime.NODEJS_22_X,
                 code: lambda.Code.fromAsset('lambda/payment-session'),
                 handler: 'index.handler',
                 environment: {
@@ -615,7 +615,7 @@ export class CreateProjectStack extends cdk.Stack {
 
             const getProjectsFunction = new lambda.Function(this, "GetProjectsFunction", {
                 functionName: 'get-projects',
-                runtime: lambda.Runtime.NODEJS_20_X,
+                runtime: lambda.Runtime.NODEJS_22_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/get-projects")),
                 timeout: cdk.Duration.seconds(10),
@@ -635,7 +635,7 @@ export class CreateProjectStack extends cdk.Stack {
 
             const deleteProjectFunction = new lambda.Function(this, "DeleteProjectFunction", {
                 functionName: 'delete-project',
-                runtime: lambda.Runtime.NODEJS_20_X,
+                runtime: lambda.Runtime.NODEJS_22_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/delete-project")),
                 timeout: cdk.Duration.seconds(10),
@@ -655,7 +655,7 @@ export class CreateProjectStack extends cdk.Stack {
 
             const sendConfirmationCodeFunction = new lambda.Function(this, "SendConfirmationCodeFunction", {
                 functionName: 'send-confirmation-code',
-                runtime: lambda.Runtime.NODEJS_20_X,
+                runtime: lambda.Runtime.NODEJS_22_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/send-confirmation-code")),
                 timeout: cdk.Duration.seconds(10),
@@ -675,7 +675,7 @@ export class CreateProjectStack extends cdk.Stack {
 
             const validateConfirmationCodeFunction = new lambda.Function(this, "ValidateConfirmationCodeFunction", {
                 functionName: 'validate-confirmation-code',
-                runtime: lambda.Runtime.NODEJS_20_X,
+                runtime: lambda.Runtime.NODEJS_22_X,
                 handler: "index.handler",
                 code: lambda.Code.fromAsset(path.join(__dirname, "lambda/validate-confirmation-code")),
                 timeout: cdk.Duration.seconds(30),
